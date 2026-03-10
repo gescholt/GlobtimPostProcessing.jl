@@ -12,7 +12,7 @@ TDD tests for loading experiment data directly from CSV files,
 bypassing the truncated JSON results_summary.json files.
 
 This is a workaround for the JSON truncation issue documented in:
-globtimcore/docs/DATA_COLLECTION_TRUNCATION_ISSUE.md
+globtim/docs/DATA_COLLECTION_TRUNCATION_ISSUE.md
 
 Strategy:
 1. Test basic CSV file discovery in experiment directories

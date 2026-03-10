@@ -6,7 +6,7 @@
 
 ## Overview
 
-Phase 1 of the critical point refinement migration has been successfully completed. The refinement functionality has been moved from `globtimcore` to `globtimpostprocessing` and reorganized into a clean, modular architecture.
+Phase 1 of the critical point refinement migration has been successfully completed. The refinement functionality has been moved from `globtim` to `globtimpostprocessing` and reorganized into a clean, modular architecture.
 
 ## What Was Implemented
 
@@ -103,7 +103,7 @@ function my_objective(p::Vector{Float64})
     return cost
 end
 
-# Refine critical points from globtimcore output
+# Refine critical points from globtim output
 refined = refine_experiment_results(
     "../globtim_results/my_experiment_20251122",
     my_objective,
@@ -179,7 +179,7 @@ After running `refine_experiment_results()`, verify these files are created:
 
 ```
 experiment_directory/
-├── critical_points_raw_deg_18.csv          # Input (from globtimcore)
+├── critical_points_raw_deg_18.csv          # Input (from globtim)
 ├── critical_points_refined_deg_18.csv      # Output: refined points only
 ├── refinement_comparison_deg_18.csv        # Output: raw vs refined side-by-side
 └── refinement_summary.json                 # Output: statistics and metadata
@@ -190,23 +190,23 @@ experiment_directory/
 **Current State**:
 - ✅ globtimpostprocessing Phase 1 is INDEPENDENT
 - ✅ Can be tested standalone with any objective function
-- ⏳ Waiting for globtimcore Phase 2 to export `critical_points_raw_deg_X.csv`
+- ⏳ Waiting for globtim Phase 2 to export `critical_points_raw_deg_X.csv`
 
 **Future Integration** (after Phase 2):
-- globtimcore will export raw critical points
+- globtim will export raw critical points
 - globtimpostprocessing will refine them
 - No circular dependencies
 
 ## Next Steps (Phase 2)
 
-Phase 1 (this package) is complete. Next steps are in globtimcore:
+Phase 1 (this package) is complete. Next steps are in globtim:
 
 1. Remove old `CriticalPointRefinement.jl` module
 2. Update `StandardExperiment.jl` to export only raw points
 3. Rename CSV output: `critical_points_deg_X.csv` → `critical_points_raw_deg_X.csv`
 4. Add 1-arg function support (no wrapper needed)
 
-See `globtimcore/REFINEMENT_PHASE2_TASKS.md` for details.
+See `globtim/REFINEMENT_PHASE2_TASKS.md` for details.
 
 ## Known Issues
 
@@ -234,4 +234,4 @@ For questions about Phase 1 implementation, see:
 
 ---
 
-**Summary**: Phase 1 is production-ready. The refinement API is fully functional and can be used standalone for any optimization problem. Waiting for Phase 2 (globtimcore) to complete the migration.
+**Summary**: Phase 1 is production-ready. The refinement API is fully functional and can be used standalone for any optimization problem. Waiting for Phase 2 (globtim) to complete the migration.

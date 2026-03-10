@@ -170,7 +170,7 @@ Despite the bugs, these components function correctly:
 - ✅ `batch_assess_fidelity()` - Batch processing works
 
 ### Structural Quality
-- ✅ **Architectural compliance** - Code belongs in `globtimpostprocessing` (not globtimcore or globtimplots)
+- ✅ **Architectural compliance** - Code belongs in `globtimpostprocessing` (not globtim or globtimplots)
 - ✅ **No inappropriate dependencies** - Uses only LinearAlgebra, Statistics, DataFrames
 - ✅ **Modular design** - Well-separated concerns
 - ✅ **Documentation** - Comprehensive docstrings with examples

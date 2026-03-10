@@ -1,7 +1,7 @@
 """
 Test suite for Phase 3: Error Categorization Integration (Issue #20)
 
-Tests for integrating globtimcore's ErrorCategorization module into post-processing:
+Tests for integrating globtim's ErrorCategorization module into post-processing:
 - Error category loading from experiment results
 - Campaign-wide error distribution analysis
 - Priority-based error reporting
@@ -22,8 +22,8 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
 @testset "Phase 3: Error Categorization Integration" begin
 
     @testset "1. ErrorCategorization Module Access" begin
-        @testset "1.1 Load ErrorCategorization from globtimcore" begin
-            # Test that we can access globtimcore's ErrorCategorization
+        @testset "1.1 Load ErrorCategorization from globtim" begin
+            # Test that we can access globtim's ErrorCategorization
             @test isdefined(GlobtimPostProcessing, :categorize_campaign_errors)
             @test isdefined(GlobtimPostProcessing, :generate_error_summary)
         end

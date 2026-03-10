@@ -45,7 +45,7 @@ New code in branch `claude/classify-critical-points-01X8GGvTCxt6G6teFHGaDwGA` ad
 
 ### Current Workflow (Before)
 ```julia
-# 1. Run experiment (globtimcore)
+# 1. Run experiment (globtim)
 using Globtim
 experiment = StandardExperiment(...)
 results = run_experiment(experiment)  # Produces critical_points_deg_N.csv
@@ -67,7 +67,7 @@ fig = plot_critical_points(loaded.critical_points)
 # 3. NEW: Assess landscape fidelity
 using Optim  # For local refinement
 
-# Define objective (from globtimcore registry or custom)
+# Define objective (from globtim registry or custom)
 f = Globtim.create_objective_from_model("lotka_volterra_4d")
 
 # For each polynomial minimum, run local optimization
@@ -191,7 +191,7 @@ demo_4_batch_processing()
 ---
 
 #### Test 1.4: Real Experiment Integration
-**Objective**: Test on actual globtimcore experiment results
+**Objective**: Test on actual globtim experiment results
 
 **Prerequisites**:
 - Need a completed experiment with `critical_points_deg_N.csv`

@@ -1,8 +1,8 @@
 # GlobtimPostProcessing.jl
 
-> **Core Purpose**: Take raw critical point **candidates** from globtimcore's polynomial approximation and **refine** them to high numerical accuracy using local optimization. The polynomial approximation finds *where* critical points might be (~1e-3 to 1e-6 accuracy); this package determines *if* they are true critical points and computes their precise coordinates (~1e-12 accuracy).
+> **Core Purpose**: Take raw critical point **candidates** from globtim's polynomial approximation and **refine** them to high numerical accuracy using local optimization. The polynomial approximation finds *where* critical points might be (~1e-3 to 1e-6 accuracy); this package determines *if* they are true critical points and computes their precise coordinates (~1e-12 accuracy).
 
-Local refinement engine for critical points computed by globtimcore. This package loads, refines, validates, and reports on experimental results.
+Local refinement engine for critical points computed by globtim. This package loads, refines, validates, and reports on experimental results.
 
 > **Note**: For visualization/plotting, use the separate `globtimplots` package.
 
@@ -28,7 +28,7 @@ Local refinement engine for critical points computed by globtimcore. This packag
 
 ### Refine Critical Points
 
-The primary workflow: load raw critical points from `globtimcore` and refine them.
+The primary workflow: load raw critical points from `globtim` and refine them.
 
 ```julia
 using GlobtimPostProcessing
@@ -194,7 +194,7 @@ When running `refine_experiment_results()`, these files are created:
 
 ```mermaid
 flowchart LR
-    subgraph globtimcore
+    subgraph globtim
         A["Polynomial Approximation<br/>~1e-3 to 1e-6 accuracy"]
     end
 
@@ -234,7 +234,7 @@ save_plot(fig, "analysis.png")
 ```julia
 using GlobtimPostProcessing
 
-# 1. Refine critical points from globtimcore output
+# 1. Refine critical points from globtim output
 refined = refine_experiment_results("experiment_dir", my_objective)
 
 # 2. Check results

@@ -19,7 +19,7 @@ cd /path/to/globtimpostprocessing
 
 # Test with a campaign directory
 julia --project=. examples/test_minimal_l2_plot.jl \
-    ../globtimcore/experiments/lotka_volterra_4d_study/configs_20251006_160051/hpc_results
+    ../globtim/experiments/lotka_volterra_4d_study/configs_20251006_160051/hpc_results
 ```
 
 ### What It Does
@@ -40,7 +40,7 @@ julia --project=. examples/test_minimal_l2_plot.jl \
 Testing Minimal L2 Plot
 ============================================================
 
-Campaign: ../globtimcore/experiments/.../hpc_results
+Campaign: ../globtim/experiments/.../hpc_results
 
 [1/4] Loading campaign...
 ✓ Loaded 4 experiments

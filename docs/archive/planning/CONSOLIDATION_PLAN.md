@@ -89,7 +89,7 @@
 
 ---
 
-## 2. Current File Format Standard (from globtimcore)
+## 2. Current File Format Standard (from globtim)
 
 ### Output Structure per Experiment
 
@@ -285,7 +285,7 @@ Recommendation:
   GlobTim Post-Processing: Interactive Analysis
 ═══════════════════════════════════════════════════════
 
-Searching for experiments in: /path/to/globtimcore
+Searching for experiments in: /path/to/globtim
 
 Found 5 campaigns (sorted by newest first):
   1. configs_20251014_120530/hpc_results [LATEST]
@@ -490,7 +490,7 @@ function load_all_critical_points(path::String) -> Dict{Int, DataFrame}
 
 2. **Test on recommended dataset**:
    ```
-   Path: globtimcore/experiments/daisy_ex3_4d_study/configs_20251006_160051/hpc_results
+   Path: globtim/experiments/daisy_ex3_4d_study/configs_20251006_160051/hpc_results
 
    Why this dataset:
    ✓ Has p_true in config (tests parameter recovery)
@@ -534,7 +534,7 @@ function load_all_critical_points(path::String) -> Dict{Int, DataFrame}
 
 ### Test Dataset
 
-**Path**: `/path/to/globtimcore/experiments/daisy_ex3_4d_study/configs_20251006_160051/hpc_results`
+**Path**: `/path/to/globtim/experiments/daisy_ex3_4d_study/configs_20251006_160051/hpc_results`
 
 **Contents**:
 - `lotka_volterra_4d_exp1_range0.4_20251006_160126/` (degrees 4-12)

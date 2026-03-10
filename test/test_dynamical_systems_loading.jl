@@ -6,10 +6,10 @@ the globtimpostprocessing package environment — Globtim is not declared in its
 Project.toml.
 =#
 """
-Test: Can we load DynamicalSystems module from globtimcore?
+Test: Can we load DynamicalSystems module from globtim?
 
 This test validates Phase 1 of the trajectory evaluation system:
-- Can we add globtimcore as a dependency?
+- Can we add globtim as a dependency?
 - Can we access DynamicalSystems module?
 - Can we call model definition functions?
 - Can we call make_error_distance?
@@ -23,7 +23,7 @@ using Pkg
 # Activate globtimpostprocessing environment
 Pkg.activate(dirname(@__DIR__))
 
-println("Testing DynamicalSystems module loading from globtimcore...")
+println("Testing DynamicalSystems module loading from globtim...")
 println("=" ^ 70)
 
 # Test 1: Load Globtim package
@@ -34,7 +34,7 @@ try
 catch e
     println("✗ Failed to load Globtim package")
     println("  Error: $e")
-    println("\n  ACTION NEEDED: Add Globtim (globtimcore) to Project.toml dependencies")
+    println("\n  ACTION NEEDED: Add Globtim (globtim) to Project.toml dependencies")
     exit(1)
 end
 

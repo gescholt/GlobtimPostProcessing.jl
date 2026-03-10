@@ -2,10 +2,10 @@
 
 ## Summary
 
-Comprehensive integration tests using real globtimcore fixtures have been **successfully implemented and committed**.
+Comprehensive integration tests using real globtim fixtures have been **successfully implemented and committed**.
 
 **Branch**: `claude/review-consolidation-plan-01Rrxv7gQC8XcaTb9jxNAxJs`
-**Commit**: `e226d43` - "test: Add comprehensive integration tests with real globtimcore fixtures"
+**Commit**: `e226d43` - "test: Add comprehensive integration tests with real globtim fixtures"
 **Date**: 2025-11-24
 
 ---
@@ -43,7 +43,7 @@ INTEGRATION_TESTS_SUMMARY.md             - Implementation summary
 ```
 
 ### 3. **Test Data Integration**
-Uses **real globtimcore fixtures**:
+Uses **real globtim fixtures**:
 - ✅ `experiment_config.json` - 4D Deuflhard configuration
 - ✅ `results_summary.json` - L2 norms, condition numbers
 - ✅ `critical_points_raw_deg_4.csv` - 81 critical points
@@ -66,7 +66,7 @@ Load Fixtures → Refine Critical Points → Assess Quality → Report Results
 ```
 
 **Specific validations**:
-- ✅ Load real globtimcore experiment data (Phase 2 format)
+- ✅ Load real globtim experiment data (Phase 2 format)
 - ✅ Refine 81-289 critical points with real objective function
 - ✅ Quality assessment using configurable thresholds
 - ✅ Multi-degree convergence analysis (degree 4 vs 6)
@@ -214,10 +214,10 @@ commit e226d43
 Author: georgy <scholtengeorgy@gmail.com>
 Date:   2025-11-24
 
-    test: Add comprehensive integration tests with real globtimcore fixtures
+    test: Add comprehensive integration tests with real globtim fixtures
 
     Implement end-to-end integration tests validating the complete analysis workflow
-    using real data from globtimcore (Deuflhard_4d, 81+289 critical points).
+    using real data from globtim (Deuflhard_4d, 81+289 critical points).
 
     Features:
     - Complete workflow testing: Load → Refine → Analyze → Quality Assessment
@@ -240,11 +240,11 @@ Date:   2025-11-24
 ### **Before** ❌
 - Modules existed but not validated with real data
 - No end-to-end workflow testing
-- Uncertain if real globtimcore output would work
+- Uncertain if real globtim output would work
 - No regression protection
 
 ### **After** ✅
-- **Proven to work** with real globtimcore output (81-289 points)
+- **Proven to work** with real globtim output (81-289 points)
 - **Complete workflow validated**: Load → Refine → Analyze → Quality
 - **Refinement tested** on challenging 4D Deuflhard function
 - **Quality diagnostics functional** with real L2 norms
@@ -268,14 +268,14 @@ Date:   2025-11-24
 ## Maintenance
 
 **When to update tests**:
-- After globtimcore CSV format changes
+- After globtim CSV format changes
 - After quality threshold adjustments
 - After refinement algorithm updates
 - When adding new analysis features
 
 **How to regenerate fixtures**:
 ```bash
-cd /path/to/globtimcore/test/fixtures
+cd /path/to/globtim/test/fixtures
 julia --project=../.. generate_postprocessing_fixtures.jl
 ```
 
@@ -287,7 +287,7 @@ julia --project=../.. generate_postprocessing_fixtures.jl
 
 ✅ **Integration tests are fully implemented and working**
 
-The core analysis modules (ResultsLoader, CriticalPointRefinement, QualityDiagnostics) are now **validated to work correctly with real globtimcore data**.
+The core analysis modules (ResultsLoader, CriticalPointRefinement, QualityDiagnostics) are now **validated to work correctly with real globtim data**.
 
 **Ready for next step**: Integrate quality diagnostics and parameter recovery into the interactive `analyze_experiments.jl` script (Modes 1-5 from CONSOLIDATION_PLAN.md).
 

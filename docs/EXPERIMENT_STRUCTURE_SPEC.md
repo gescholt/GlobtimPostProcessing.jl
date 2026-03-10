@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines the standardized file structure for globtimcore HPC experiment outputs and the TDD implementation plan for enhanced parameter display during post-processing.
+This document defines the standardized file structure for globtim HPC experiment outputs and the TDD implementation plan for enhanced parameter display during post-processing.
 
 ## Problem Statement
 

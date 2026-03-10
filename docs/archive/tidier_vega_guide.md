@@ -20,7 +20,7 @@ GlobtimPostProcessing now includes a comprehensive suite of interactive visualiz
 ExperimentResults → Tidier Transform → Tidy DataFrame → VegaLite Spec → Interactive Viz
 ```
 
-1. **Campaign Data**: Raw experiment results from globtimcore
+1. **Campaign Data**: Raw experiment results from globtim
 2. **Tidier Transformations**: Data cleaning, aggregation, derived metrics
 3. **Tidy DataFrame**: Long-format data optimized for visualization
 4. **VegaLite Specification**: Declarative visualization grammar

@@ -2,7 +2,7 @@
 """
 Run Integration Tests with Real Fixtures
 
-This script runs only the integration tests using real globtimcore data.
+This script runs only the integration tests using real globtim data.
 Use this for quick validation of the complete workflow.
 
 Usage:

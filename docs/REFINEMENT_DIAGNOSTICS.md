@@ -2,7 +2,7 @@
 
 **Status**: Requirements Document
 **Last Updated**: 2025-11-24
-**Related Packages**: globtimpostprocessing (primary), globtimcore (reference)
+**Related Packages**: globtimpostprocessing (primary), globtim (reference)
 
 ## Overview
 
@@ -36,9 +36,9 @@ This document specifies requirements and future directions for capturing compreh
 
 ## Current State
 
-### globtimcore - Real-Time HPC Analysis
+### globtim - Real-Time HPC Analysis
 
-**Location**: `globtimcore/src/refine.jl`
+**Location**: `globtim/src/refine.jl`
 **Function**: `analyze_critical_points()`
 
 **Current Diagnostics Captured**:
@@ -417,7 +417,7 @@ method_used::Symbol  # :BFGS, :NelderMead, :SimulatedAnnealing
 
 | Package | Role | Refinement Use | Diagnostics Level |
 |---------|------|----------------|-------------------|
-| **globtimcore** | Optimization algorithms | Online during HPC runs | Minimal (lean for performance) |
+| **globtim** | Optimization algorithms | Online during HPC runs | Minimal (lean for performance) |
 | **globtimpostprocessing** | Analysis & reporting | Offline post-experiment | Comprehensive (extract all info) |
 | **globtimplots** | Visualization | Plot trajectories/convergence | Uses data from postprocessing |
 
@@ -428,16 +428,16 @@ method_used::Symbol  # :BFGS, :NelderMead, :SimulatedAnnealing
 - ✅ No plotting (stays within architecture boundaries)
 - ✅ No circular dependencies (postprocessing doesn't export to core)
 
-### Relationship to globtimcore
+### Relationship to globtim
 
-**globtimcore** has `analyze_critical_points()` which also uses Optim.jl for refinement:
+**globtim** has `analyze_critical_points()` which also uses Optim.jl for refinement:
 
-**Should globtimcore also add these diagnostics?**
-- **No** (keep globtimcore lean for HPC)
+**Should globtim also add these diagnostics?**
+- **No** (keep globtim lean for HPC)
 - Different use case: real-time analysis vs offline deep-dive
 - Acceptable duplication for separation of concerns
 
-**Exception**: Tier 1 diagnostics (zero-cost) could be added to globtimcore if needed for online analysis, but not required.
+**Exception**: Tier 1 diagnostics (zero-cost) could be added to globtim if needed for online analysis, but not required.
 
 ## Implementation Roadmap
 
@@ -555,7 +555,7 @@ end
 ## Related Documentation
 
 - [globtimpostprocessing/.claude/CLAUDE.md](../../globtimpostprocessing/.claude/CLAUDE.md) - Package architecture
-- [globtimcore/src/refine.jl](../src/refine.jl) - Core refinement implementation (for comparison)
+- [globtim/src/refine.jl](../src/refine.jl) - Core refinement implementation (for comparison)
 - [Optim.jl Documentation](https://julianlsolvers.github.io/Optim.jl/stable/) - Upstream API reference
 
 ## Changelog

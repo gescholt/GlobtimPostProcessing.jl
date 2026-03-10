@@ -1,6 +1,6 @@
-# Integration Tests with Real globtimcore Fixtures
+# Integration Tests with Real globtim Fixtures
 
-This document describes the comprehensive integration tests that validate the complete GlobtimPostProcessing workflow using real data from globtimcore.
+This document describes the comprehensive integration tests that validate the complete GlobtimPostProcessing workflow using real data from globtim.
 
 ## Overview
 
@@ -11,7 +11,7 @@ This document describes the comprehensive integration tests that validate the co
 Load fixtures → Refine critical points → Quality diagnostics → Report generation
 ```
 
-**Data Source**: Real globtimcore output (Deuflhard_4d benchmark, 81+289 critical points)
+**Data Source**: Real globtim output (Deuflhard_4d benchmark, 81+289 critical points)
 
 ## What's Tested
 
@@ -192,12 +192,12 @@ cat quality_thresholds.toml  # Check format
 If fixtures become outdated or need updating:
 
 ```bash
-cd /path/to/globtimcore/test/fixtures
+cd /path/to/globtim/test/fixtures
 julia --project=../.. generate_postprocessing_fixtures.jl
 ```
 
 **When to regenerate**:
-- After globtimcore CSV format changes
+- After globtim CSV format changes
 - After critical point filtering logic updates
 - To update with latest algorithms
 

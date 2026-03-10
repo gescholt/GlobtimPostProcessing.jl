@@ -322,7 +322,7 @@ Refinement Quality:
 
 ## Notes
 
-- All enhancements use **existing data** (no changes to globtimcore experiments)
+- All enhancements use **existing data** (no changes to globtim experiments)
 - **Schema v1.1.0 required**: Strict schema compliance, no backward compatibility
 - **No fallbacks**: Errors immediately if required data is missing
 - Experiment data must be regenerated if using older schema versions

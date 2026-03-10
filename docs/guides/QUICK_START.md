@@ -12,19 +12,19 @@ julia --project=. examples/test_minimal_l2_plot.jl
 ## What Happens
 
 1. **Script searches** for campaign directories in:
-   - `../globtimcore/experiments`
-   - `../globtimcore/hpc_results`
-   - `../globtimcore`
+   - `../globtim/experiments`
+   - `../globtim/hpc_results`
+   - `../globtim`
 
 2. **You select** a campaign from the list:
    ```
    Found 3 campaign(s):
 
-   [1] ../globtimcore/experiments/.../hpc_results
+   [1] ../globtim/experiments/.../hpc_results
        → 4 experiment(s)
-   [2] ../globtimcore/experiments/.../hpc_results
+   [2] ../globtim/experiments/.../hpc_results
        → 1 experiment(s)
-   [3] ../globtimcore/hpc_results/...
+   [3] ../globtim/hpc_results/...
        → 12 experiment(s)
 
    Select campaign (1-3, or 'q' to quit): _
@@ -60,11 +60,11 @@ Searching for campaign directories...
 
 Found 3 campaign(s):
 
-[1] ../globtimcore/experiments/lotka_volterra_4d_study/configs_20251006_160051/hpc_results
+[1] ../globtim/experiments/lotka_volterra_4d_study/configs_20251006_160051/hpc_results
     → 1 experiment(s)
-[2] ../globtimcore/experiments/lotka_volterra_4d_study/configs_20251005_105246/hpc_results
+[2] ../globtim/experiments/lotka_volterra_4d_study/configs_20251005_105246/hpc_results
     → 4 experiment(s)
-[3] ../globtimcore/experiments/lotka_volterra_4d_study/configs_20250915_224434/hpc_results
+[3] ../globtim/experiments/lotka_volterra_4d_study/configs_20250915_224434/hpc_results
     → 12 experiment(s)
 
 ============================================================
@@ -74,7 +74,7 @@ Select campaign (1-3, or 'q' to quit): 2
 Testing Minimal L2 Plot
 ============================================================
 
-Campaign: ../globtimcore/experiments/lotka_volterra_4d_study/configs_20251005_105246/hpc_results
+Campaign: ../globtim/experiments/lotka_volterra_4d_study/configs_20251005_105246/hpc_results
 
 [1/4] Loading campaign...
 ✓ Loaded 4 experiments

@@ -6,7 +6,7 @@ Tests hierarchical and flat experiment discovery, validation, and grouping.
 Related Issues:
 - globaloptim/globtimpostprocessing#9: Modularize and test experiment collection
 - globaloptim/globtimpostprocessing#10: Support hierarchical experiment structure
-- globaloptim/globtimcore#174: Hierarchical experiment output structure
+- globaloptim/globtim#174: Hierarchical experiment output structure
 """
 
 using Test
@@ -285,7 +285,7 @@ end
     end
 
     # ============================================================================
-    # New tests for hierarchical structure support (Issues #9, #10, globtimcore#174)
+    # New tests for hierarchical structure support (Issues #9, #10, globtim#174)
     # ============================================================================
 
     @testset "detect_directory_structure" begin
@@ -594,7 +594,7 @@ end
 
     @testset "Integration: Real-world hierarchical structure" begin
         mktempdir() do tmpdir
-            # Simulate globtimcore test_results/ with hierarchical organization
+            # Simulate globtim test_results/ with hierarchical organization
             test_results = joinpath(tmpdir, "test_results")
             mkpath(test_results)
 

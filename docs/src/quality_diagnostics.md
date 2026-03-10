@@ -292,7 +292,7 @@ end
 
 **Solutions:**
 ```julia
-# Increase polynomial degree in globtimcore experiment
+# Increase polynomial degree in globtim experiment
 # Or reduce domain size
 # Or use adaptive refinement
 ```

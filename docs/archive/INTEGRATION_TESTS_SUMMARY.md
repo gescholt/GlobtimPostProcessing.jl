@@ -11,7 +11,7 @@
 **Test Coverage**:
 - ✅ 14 test sets covering complete workflow
 - ✅ Load → Refine → Analyze → Quality Assessment pipeline
-- ✅ Real globtimcore fixtures (81 + 289 critical points)
+- ✅ Real globtim fixtures (81 + 289 critical points)
 - ✅ Real objective function (`deuflhard_4d_fixture`)
 - ✅ Phase 2 CSV format validation
 - ✅ Refinement convergence analysis
@@ -120,7 +120,7 @@ julia --project=. -e 'using Pkg; Pkg.test()'
 4. ✅ Integration between all modules
 
 ### Workflows Validated
-- ✅ Load real globtimcore experiment data
+- ✅ Load real globtim experiment data
 - ✅ Refine critical points with real objective function
 - ✅ Assess quality using configurable thresholds
 - ✅ Multi-degree convergence analysis
@@ -160,7 +160,7 @@ INTEGRATION_TESTS_SUMMARY.md            # This file
 
 **What's validated**:
 1. ✅ Core modules work (ParameterRecovery, QualityDiagnostics, Refinement)
-2. ✅ Real data loading from globtimcore format
+2. ✅ Real data loading from globtim format
 3. ✅ Quality thresholds configurable and functional
 4. ✅ Complete analysis workflow executable
 
@@ -176,7 +176,7 @@ INTEGRATION_TESTS_SUMMARY.md            # This file
 **Before**: Modules existed but were not validated with real data
 
 **After**:
-- ✅ Proven to work with real globtimcore output
+- ✅ Proven to work with real globtim output
 - ✅ Refinement works on 81-289 point datasets
 - ✅ Quality diagnostics functional with real L2 norms
 - ✅ Complete workflow validated end-to-end
@@ -226,19 +226,19 @@ Integration: Real Fixtures End-to-End            |  XXX    XXX
 ## Maintenance
 
 **When to update**:
-- After globtimcore CSV format changes
+- After globtim CSV format changes
 - After quality threshold adjustments
 - After refinement algorithm updates
 - When adding new analysis features
 
 **How to regenerate fixtures**:
 ```bash
-cd /path/to/globtimcore/test/fixtures
+cd /path/to/globtim/test/fixtures
 julia --project=../.. generate_postprocessing_fixtures.jl
 ```
 
 ---
 
-**Summary**: Integration tests with real globtimcore fixtures are now **fully implemented and functional** ✅. The core analysis modules are validated to work correctly with real data. Ready to proceed with interactive tool integration (Modes 1-5).
+**Summary**: Integration tests with real globtim fixtures are now **fully implemented and functional** ✅. The core analysis modules are validated to work correctly with real data. Ready to proceed with interactive tool integration (Modes 1-5).
 
 **Next Priority**: Integrate quality diagnostics into `analyze_experiments.jl` Mode 1.

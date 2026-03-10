@@ -217,7 +217,7 @@ julia analyze_experiments.jl
 
 ### Fits into GlobTim Workflow:
 ```
-1. Run experiment (globtimcore) → generates critical_points_deg_N.csv
+1. Run experiment (globtim) → generates critical_points_deg_N.csv
 2. Post-processing (globtimpostprocessing):
    a. Mode 1: Single experiment statistics
    b. Mode 2: Campaign aggregation
@@ -273,7 +273,7 @@ julia analyze_experiments.jl
 
 2. Test interactive mode with real experiment data:
    ```bash
-   julia analyze_experiments.jl --path ../globtimcore/experiments/lotka_volterra_4d_study/hpc_results
+   julia analyze_experiments.jl --path ../globtim/experiments/lotka_volterra_4d_study/hpc_results
    ```
 
 ### Future Enhancements

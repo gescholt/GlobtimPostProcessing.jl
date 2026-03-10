@@ -19,7 +19,7 @@ This guide covers the critical point refinement system in GlobtimPostProcessing.
 ```mermaid
 flowchart TB
     subgraph "Input: Raw Candidates"
-        A["Critical point candidates<br/>from globtimcore<br/>(~1e-3 to 1e-6 accuracy)"]
+        A["Critical point candidates<br/>from globtim<br/>(~1e-3 to 1e-6 accuracy)"]
     end
 
     subgraph "Refinement Process"
@@ -43,7 +43,7 @@ flowchart TB
 Critical points found by polynomial approximation methods may have limited numerical accuracy. The refinement system uses local optimization (Optim.jl) to improve accuracy by starting from the polynomial critical points and converging to nearby objective function minima.
 
 **Key workflow:**
-1. Load raw critical points from globtimcore output
+1. Load raw critical points from globtim output
 2. Run local optimization from each point
 3. Validate convergence using gradient norms
 4. Save refined results with diagnostics

@@ -1,4 +1,4 @@
-# Tests for TreeDisplay utility functions (promoted from research/subdivision_experiments)
+# Tests for TreeDisplay utility functions
 # Run with: julia --project=pkg/globtimpostprocessing test/test_tree_display.jl
 #
 # These test pure formatting utilities — no SubdivisionTree required.

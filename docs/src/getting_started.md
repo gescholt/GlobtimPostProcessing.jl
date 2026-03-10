@@ -6,7 +6,7 @@ This guide walks you through the basic workflow of using GlobtimPostProcessing.j
 
 Before using this package, you need:
 
-1. **Experiment output** from `globtimcore` containing:
+1. **Experiment output** from `globtim` containing:
    - `critical_points_deg_*.csv` - Critical point coordinates
    - `experiment_config.json` - Experiment configuration
    - `l2_errors_*.csv` (optional) - L2 approximation errors
@@ -45,7 +45,7 @@ Critical points from polynomial approximation can be refined using local optimiz
 ```julia
 # Define your objective function
 function my_objective(p::Vector{Float64})
-    # Your cost function - must match what was used in globtimcore
+    # Your cost function - must match what was used in globtim
     return compute_cost(p)
 end
 
@@ -188,4 +188,4 @@ generate_campaign_report(campaign, campaign_stats)
 - Increase `max_iterations` in `RefinementConfig`
 - Check if critical points are far from true minima
 
-For more help, see the [troubleshooting guide](https://git.mpi-cbg.de/globaloptim/globtimpostprocessing/-/issues) or open an issue.
+For more help, see the [troubleshooting guide](https://github.com/gescholt/globopt_merged/tree/main/pkg/globtimpostprocessing/-/issues) or open an issue.

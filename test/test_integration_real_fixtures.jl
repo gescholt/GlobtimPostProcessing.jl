@@ -1,6 +1,6 @@
-# Integration Tests with Real globtimcore Fixtures
+# Integration Tests with Real globtim Fixtures
 # Tests the complete workflow: load → refine → analyze → report
-# Uses real data from globtimcore (Deuflhard_4d, 81+289 critical points)
+# Uses real data from globtim (Deuflhard_4d, 81+289 critical points)
 
 using Test
 using GlobtimPostProcessing

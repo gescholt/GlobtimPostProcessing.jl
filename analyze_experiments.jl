@@ -14,7 +14,7 @@ Simplified workflow:
 
 Requirements:
     GLOBTIM_RESULTS_ROOT environment variable must be set.
-    Run: cd globtimcore && ./scripts/setup_results_root.sh
+    Run: cd globtim && ./scripts/setup_results_root.sh
 
 Usage:
     julia analyze_experiments.jl [--path <custom_path>]

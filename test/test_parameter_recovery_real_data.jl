@@ -22,7 +22,7 @@ using Statistics
 const TEST_DATASET_ROOT = joinpath(
     dirname(@__DIR__),
     "..",
-    "globtim",  # Active directory (globtimcore is archived)
+    "globtim",  # Active directory (globtim is archived)
     "experiments",
     "daisy_ex3_4d_study",
     "configs_20251006_160051",

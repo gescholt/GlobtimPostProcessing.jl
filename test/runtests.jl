@@ -85,7 +85,7 @@ include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
         include("test_capture_analysis.jl")
     end
 
-    # Run Integration tests with Real Fixtures (uses real globtimcore data)
+    # Run Integration tests with Real Fixtures (uses real globtim data)
     @testset "Integration: Real Fixtures" begin
         include("test_integration_real_fixtures.jl")
     end
