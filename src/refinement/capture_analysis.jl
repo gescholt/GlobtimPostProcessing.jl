@@ -712,6 +712,7 @@ function build_known_cps_from_refinement(
     max_iterations::Int = 100,
     max_time_per_point::Float64 = 60.0,
     hessian_tol::Float64 = 1e-6,
+    hessian_relative_tol::Float64 = 0.0,
     dedup_fraction::Float64 = 0.01,
     patience::Int = 10,
     min_improvement_ratio::Float64 = 0.99,
@@ -775,6 +776,7 @@ function build_known_cps_from_refinement(
             max_iterations = max_iterations,
             bounds = bounds,
             hessian_tol = hessian_tol,
+            hessian_relative_tol = hessian_relative_tol,
             patience = patience,
             min_improvement_ratio = min_improvement_ratio,
             trace = trace,
@@ -796,6 +798,7 @@ function build_known_cps_from_refinement(
             _wrap_neldermead_as_cpresult(r, objective;
                 gradient_method = gradient_method,
                 hessian_tol = hessian_tol,
+                hessian_relative_tol = hessian_relative_tol,
                 bounds = bounds,
                 initial_point = rp,
             )
