@@ -160,12 +160,21 @@ export run_valley_analysis
 
 
 
-# Subdivision tree analysis exports
+# Subdivision tree analysis exports (load + analyze saved JLD2/JSON trees)
 export load_subdivision_tree, analyze_subdivision_tree, SubdivisionTreeStats
 export tree_leaves_to_dataframe, tree_depth_summary
 export print_subdivision_tree_report
 export compare_subdivision_trees, print_tree_comparison_table
 export SubdivisionResult, load_subdivision_result
+
+# Tree display exports (live terminal display during adaptive_refine)
+export TreeDisplayConfig
+export make_tracker, live_tracker
+export print_summary, print_legend
+export print_tree_compact, print_tree_summary_only, print_tree_auto
+export print_volume_distribution
+export progress_bar, format_error, format_time, compute_display_error
+export count_splits_per_dim, get_path_to_root, format_path_compact
 
 # Enhanced analysis exports (moved from globtim - January 2026)
 # Statistical table types
@@ -256,6 +265,9 @@ include("ValleyWalking.jl")
 
 # Subdivision tree analysis (adaptive subdivision postprocessing - January 2026)
 include("SubdivisionTreeAnalysis.jl")
+
+# Tree display (live terminal display during adaptive_refine - promoted March 2026)
+include("TreeDisplay.jl")
 
 # Landscape capture data types (promoted from sandbox - March 2026)
 include("LandscapeCaptureTypes.jl")
