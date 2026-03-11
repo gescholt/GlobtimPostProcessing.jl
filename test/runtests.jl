@@ -130,6 +130,11 @@ include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
         include("test_landscape_capture_types.jl")
     end
 
+    # CP verification oracle (Level 0 — March 2026)
+    @testset "CP Verification Oracle" begin
+        include("test_cp_verification.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end
