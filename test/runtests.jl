@@ -140,6 +140,16 @@ include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
         include("test_ground_truth.jl")
     end
 
+    # Gradient/Hessian accuracy (Level 2 — March 2026)
+    @testset "Gradient/Hessian Accuracy" begin
+        include("test_gradient_hessian_accuracy.jl")
+    end
+
+    # Hessian classification correctness (Level 3 — March 2026)
+    @testset "Hessian Classification Correctness" begin
+        include("test_hessian_classification_correctness.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end
