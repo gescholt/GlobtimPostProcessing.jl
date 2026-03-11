@@ -239,8 +239,8 @@ function find_all_critical_points(f, bounds::Vector{<:Tuple}, dim::Int;
         # Random start within bounds
         x0 = [lo + rand() * (hi - lo) for (lo, hi) in bounds]
 
-        # Minimize g(x) = ‖∇f(x)‖² using simple gradient descent with line search
-        x = _minimize_grad_norm_squared(g, x0, bounds, max_iter, grad_tol)
+        # Solve ∇f = 0 via Newton with gradient descent fallback
+        x = _minimize_grad_norm_squared(g, x0, bounds, max_iter, grad_tol; f=f)
 
         # Check if we found a critical point of f
         gf = grad_f(x)
@@ -271,18 +271,23 @@ function find_all_critical_points(f, bounds::Vector{<:Tuple}, dim::Int;
 end
 
 """
-    _minimize_grad_norm_squared(g, x0, bounds, max_iter, tol)
+    _minimize_grad_norm_squared(g, x0, bounds, max_iter, tol; f=nothing)
 
-Minimize g(x) = ‖∇f(x)‖² using gradient descent with backtracking line search.
-Stops when g(x) < tol² or max_iter reached.
+Find a critical point of `f` by solving ∇f(x) = 0 using Newton's method
+with fallback to gradient descent on g(x) = ‖∇f(x)‖².
+
+When `f` is provided, uses Newton's method: x_{k+1} = x_k - H⁻¹ ∇f(x_k)
+with backtracking line search on g. Falls back to gradient descent on g
+when the Hessian is singular.
 """
 function _minimize_grad_norm_squared(g, x0::Vector{Float64},
                                       bounds::Vector{<:Tuple},
-                                      max_iter::Int, tol::Float64)
+                                      max_iter::Int, tol::Float64;
+                                      f=nothing)
     x = copy(x0)
     target = tol^2  # g = ‖∇f‖², so g < tol² means ‖∇f‖ < tol
+    dim = length(x)
 
-    α_init = 0.1  # initial step size
     β = 0.5       # backtracking factor
     min_α = 1e-15
 
@@ -292,21 +297,44 @@ function _minimize_grad_norm_squared(g, x0::Vector{Float64},
             break
         end
 
-        # Gradient of g
-        dg = ForwardDiff.gradient(g, x)
-        dg_norm = norm(dg)
-        if dg_norm < 1e-16
-            break  # stuck
+        # Try Newton step on ∇f = 0 if f is available
+        step = nothing
+        if f !== nothing
+            try
+                grad = ForwardDiff.gradient(f, x)
+                H = ForwardDiff.hessian(f, x)
+                # Use damped solve to handle near-singular Hessians
+                F = lu(H; check=false)
+                if issuccess(F)
+                    newton_step = F \ grad
+                    if norm(newton_step) < 100 * norm(x .+ 1)  # sanity check
+                        step = newton_step
+                    end
+                end
+            catch
+                # Hessian computation failed — fall through to gradient descent
+            end
         end
 
-        # Backtracking line search
-        α = α_init
-        x_new = x .- α .* dg
+        # Fall back to gradient descent on g if Newton failed
+        if step === nothing
+            dg = ForwardDiff.gradient(g, x)
+            dg_norm = norm(dg)
+            if dg_norm < 1e-16
+                break  # stuck
+            end
+            # Normalize and use adaptive step size
+            step = dg ./ dg_norm * min(0.1, sqrt(gval))
+        end
+
+        # Backtracking line search on g
+        α = 1.0
+        x_new = x .- α .* step
         _clamp_to_bounds!(x_new, bounds)
 
         while g(x_new) >= gval && α > min_α
             α *= β
-            x_new .= x .- α .* dg
+            x_new .= x .- α .* step
             _clamp_to_bounds!(x_new, bounds)
         end
 

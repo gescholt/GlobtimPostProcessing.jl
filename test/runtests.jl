@@ -135,6 +135,11 @@ include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
         include("test_cp_verification.jl")
     end
 
+    # Ground truth reference data (Level 1 — March 2026)
+    @testset "Ground Truth Reference Data" begin
+        include("test_ground_truth.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end
