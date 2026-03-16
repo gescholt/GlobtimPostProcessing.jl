@@ -6,7 +6,10 @@ using Test
 using GlobtimPostProcessing
 using LinearAlgebra
 
-# Test fixtures (test_functions.jl) are included once in runtests.jl
+# Test fixtures — load if not already loaded by runtests.jl
+if !@isdefined(deuflhard_2d)
+    include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
+end
 
 @testset "Capture Analysis" begin
 
@@ -700,6 +703,10 @@ using LinearAlgebra
             @test result.cp_type == :min
             @test norm(result.point) < 1e-6
             @test all(λ -> λ > 0, result.eigenvalues)
+            # New fields: eigenvectors, condition_number, min_eigenvalue
+            @test size(result.eigenvectors) == (2, 2)
+            @test result.condition_number ≈ 1.0  # f = x₁² + x₂² has equal eigenvalues
+            @test result.min_eigenvalue > 0
         end
 
         @testset "Finds minimum of quadratic (FiniteDiff)" begin
@@ -848,6 +855,40 @@ using LinearAlgebra
             @test result2.objective_value < 1.0   # f-accepted
             @test result2.cp_type in [:min, :max, :saddle, :degenerate]
         end
+    end
+
+    @testset "trace_gradient_norms recorded when trace=true" begin
+        f_quad(x) = x[1]^2 + x[2]^2
+        result = refine_to_critical_point(f_quad, [0.5, 0.3];
+            gradient_method=:forwarddiff, trace=true)
+        @test result.converged
+        @test !isempty(result.trace)
+        @test !isempty(result.trace_gradient_norms)
+        @test length(result.trace_gradient_norms) == length(result.trace)  # parallel: initial + one per accepted step
+        @test all(isfinite, result.trace_gradient_norms)
+        # Gradient norms should be decreasing (quadratic converges monotonically)
+        for i in 2:length(result.trace_gradient_norms)
+            @test result.trace_gradient_norms[i] <= result.trace_gradient_norms[i-1] + 1e-10
+        end
+    end
+
+    @testset "trace_gradient_norms empty when trace=false" begin
+        f_quad(x) = x[1]^2 + x[2]^2
+        result = refine_to_critical_point(f_quad, [0.5, 0.3];
+            gradient_method=:forwarddiff, trace=false)
+        @test isempty(result.trace_gradient_norms)
+    end
+
+    @testset "classify_eigenvalues public API" begin
+        @test classify_eigenvalues([2.0, 3.0], 1e-6) == :min
+        @test classify_eigenvalues([-2.0, -3.0], 1e-6) == :max
+        @test classify_eigenvalues([2.0, -1.0], 1e-6) == :saddle
+        @test classify_eigenvalues([2.0, 1e-10], 1e-6) == :degenerate_min
+        @test classify_eigenvalues([-2.0, 1e-10], 1e-6) == :degenerate_max
+        @test classify_eigenvalues([2.0, -1.0, 1e-10], 1e-6) == :degenerate_saddle
+        @test classify_eigenvalues([1e-10, -1e-10], 1e-6) == :degenerate
+        # With relative_tol
+        @test classify_eigenvalues([100.0, 0.5], 1e-6; relative_tol=0.01) == :degenerate_min
     end
 
     @testset "build_known_cps_from_refinement" begin

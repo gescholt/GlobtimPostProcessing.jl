@@ -9,7 +9,10 @@ using Statistics
 using LinearAlgebra
 using JSON3
 
-# Test fixtures (test_functions.jl) are included once in runtests.jl
+# Test fixtures — load if not already loaded by runtests.jl
+if !@isdefined(deuflhard_2d)
+    include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
+end
 fixtures_dir = joinpath(@__DIR__, "fixtures")
 
 @testset "Integration: Real Fixtures End-to-End" begin

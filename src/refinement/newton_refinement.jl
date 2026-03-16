@@ -74,59 +74,51 @@ end
 
 Result of refining a single point to a critical point via Newton's method on ∇f = 0.
 
-# Fields
+# Fields — Critical point
 - `point::Vector{Float64}`: The refined critical point
-- `gradient_norm::Float64`: ||∇f(point)|| at convergence
 - `objective_value::Float64`: f(point) at the refined point
-- `converged::Bool`: Whether Newton's method converged to tolerance
-- `iterations::Int`: Number of Newton iterations performed
 - `cp_type::Symbol`: Classification (`:min`, `:max`, `:saddle`, `:degenerate`, `:unknown`)
 - `eigenvalues::Vector{Float64}`: Hessian eigenvalues at the refined point (empty if skipped)
+- `eigenvectors::Matrix{Float64}`: Hessian eigenvectors (columns) at the refined point (0×0 if skipped)
+- `condition_number::Float64`: Ratio max(|λ|)/min(|λ|) of Hessian eigenvalues (NaN if skipped/degenerate)
+- `min_eigenvalue::Float64`: Smallest eigenvalue — indicates "strength" of minimum (NaN if skipped)
+
+# Fields — Convergence diagnostics
+- `gradient_norm::Float64`: ||∇f(point)|| at convergence
+- `converged::Bool`: Whether Newton's method converged to tolerance
+- `iterations::Int`: Number of Newton iterations performed
 - `initial_gradient_norm::Float64`: ||∇f|| at the starting point (for diagnostics)
+
+# Fields — Trust-region diagnostics
 - `final_trust_radius::Float64`: Trust-region radius Δ at termination (NaN if not applicable)
 - `rejected_steps::Int`: Number of trust-region step rejections (ρ < 0)
 - `f_safeguard_count::Int`: Number of times the f-value safeguard prevented a plateau jump
+
+# Fields — Trace
 - `trace::Vector{Vector{Float64}}`: Iteration trajectory (empty unless `trace=true` was passed)
+- `trace_gradient_norms::Vector{Float64}`: Per-iteration ||∇f|| values (empty unless `trace=true`)
 """
-struct CriticalPointRefinementResult
+Base.@kwdef struct CriticalPointRefinementResult
+    # Critical point
     point::Vector{Float64}
-    gradient_norm::Float64
-    objective_value::Float64
-    converged::Bool
-    iterations::Int
-    cp_type::Symbol
-    eigenvalues::Vector{Float64}
-    initial_gradient_norm::Float64
-    final_trust_radius::Float64
-    rejected_steps::Int
-    f_safeguard_count::Int
-    trace::Vector{Vector{Float64}}
-end
-
-# Backward-compatible constructor: existing callers pass 11 positional args (pre-trace)
-function CriticalPointRefinementResult(
-    point::Vector{Float64}, gradient_norm::Float64, objective_value::Float64,
-    converged::Bool, iterations::Int, cp_type::Symbol,
-    eigenvalues::Vector{Float64}, initial_gradient_norm::Float64,
-    final_trust_radius::Float64, rejected_steps::Int, f_safeguard_count::Int,
-)
-    CriticalPointRefinementResult(
-        point, gradient_norm, objective_value, converged, iterations,
-        cp_type, eigenvalues, initial_gradient_norm,
-        final_trust_radius, rejected_steps, f_safeguard_count, Vector{Float64}[],
-    )
-end
-
-# Backward-compatible constructor: existing callers pass 8 positional args
-function CriticalPointRefinementResult(
-    point::Vector{Float64}, gradient_norm::Float64, objective_value::Float64,
-    converged::Bool, iterations::Int, cp_type::Symbol,
-    eigenvalues::Vector{Float64}, initial_gradient_norm::Float64,
-)
-    CriticalPointRefinementResult(
-        point, gradient_norm, objective_value, converged, iterations,
-        cp_type, eigenvalues, initial_gradient_norm, NaN, 0, 0, Vector{Float64}[],
-    )
+    objective_value::Float64                = NaN
+    cp_type::Symbol                         = :unknown
+    eigenvalues::Vector{Float64}            = Float64[]
+    eigenvectors::Matrix{Float64}           = Matrix{Float64}(undef, 0, 0)
+    condition_number::Float64               = NaN
+    min_eigenvalue::Float64                 = NaN
+    # Convergence diagnostics
+    gradient_norm::Float64                  = Inf
+    converged::Bool                         = false
+    iterations::Int                         = 0
+    initial_gradient_norm::Float64          = Inf
+    # Trust-region diagnostics
+    final_trust_radius::Float64             = NaN
+    rejected_steps::Int                     = 0
+    f_safeguard_count::Int                  = 0
+    # Trace
+    trace::Vector{Vector{Float64}}          = Vector{Float64}[]
+    trace_gradient_norms::Vector{Float64}   = Float64[]
 end
 
 """
@@ -221,8 +213,9 @@ function refine_to_critical_point(
     n = length(initial_point)
     x = copy(initial_point)
 
-    # Trajectory recording: collect accepted iterates when trace=true
+    # Trajectory recording: collect accepted iterates and gradient norms when trace=true
     trace_points = trace ? [copy(x)] : Vector{Float64}[]
+    trace_grad_norms = Float64[]
 
     # Unpack bounds for internal clamping
     lb, ub = split_bounds(bounds)
@@ -264,13 +257,15 @@ function refine_to_critical_point(
     grad = compute_grad(x)
     if !all(isfinite, grad)
         return CriticalPointRefinementResult(
-            x, Inf, NaN, false, 0, :unknown, Float64[], Inf, Δ, 0, 0,
+            point = x,
+            final_trust_radius = Δ,
         )
     end
     grad_norm = LinearAlgebra.norm(grad)
     initial_grad_norm = grad_norm
     best_grad_norm = grad_norm
     f_current = objective(x)  # needed for f-value safeguard
+    trace && push!(trace_grad_norms, grad_norm)  # seed with initial gradient norm
 
     converged = grad_norm < tol
     iterations = 0
@@ -372,7 +367,10 @@ function refine_to_critical_point(
             f_current = f_trial
             best_grad_norm = min(best_grad_norm, grad_norm)
             converged = grad_norm < tol
-            trace && push!(trace_points, copy(x))
+            if trace
+                push!(trace_points, copy(x))
+                push!(trace_grad_norms, grad_norm)
+            end
         else
             # Reject step — x, grad, f_current unchanged
             rejected_steps += 1
@@ -395,25 +393,41 @@ function refine_to_critical_point(
     # evaluation on spurious CPs.
     f_accepted = f_accept_tol !== nothing && obj_value < f_accept_tol
     is_useful = converged || grad_norm < accept_tol || f_accepted
+
+    cp_type = :unknown
+    eigenvalues = Float64[]
+    eigvecs = Matrix{Float64}(undef, 0, 0)
+    cond_num = NaN
+    min_eig = NaN
+
     if is_useful
         H_final = compute_hess(x)
         if all(isfinite, H_final)
-            eig_final = LinearAlgebra.eigvals(LinearAlgebra.Symmetric(H_final))
-            cp_type = _classify_eigenvalues(eig_final, hessian_tol; relative_tol=hessian_relative_tol)
-            eigenvalues = collect(eig_final)
-        else
-            cp_type = :unknown
-            eigenvalues = Float64[]
+            eig = LinearAlgebra.eigen(LinearAlgebra.Symmetric(H_final))
+            eigenvalues = collect(eig.values)
+            eigvecs = eig.vectors
+            cp_type = _classify_eigenvalues(eigenvalues, hessian_tol; relative_tol=hessian_relative_tol)
+            cond_num, min_eig = _eigenvalue_diagnostics(eigenvalues)
         end
-    else
-        cp_type = :unknown
-        eigenvalues = Float64[]
     end
 
     return CriticalPointRefinementResult(
-        x, grad_norm, obj_value, converged, iterations,
-        cp_type, eigenvalues, initial_grad_norm, Δ, rejected_steps, f_safeguard_count,
-        trace_points,
+        point = x,
+        objective_value = obj_value,
+        cp_type = cp_type,
+        eigenvalues = eigenvalues,
+        eigenvectors = eigvecs,
+        condition_number = cond_num,
+        min_eigenvalue = min_eig,
+        gradient_norm = grad_norm,
+        converged = converged,
+        iterations = iterations,
+        initial_gradient_norm = initial_grad_norm,
+        final_trust_radius = Δ,
+        rejected_steps = rejected_steps,
+        f_safeguard_count = f_safeguard_count,
+        trace = trace_points,
+        trace_gradient_norms = trace_grad_norms,
     )
 end
 
@@ -446,6 +460,7 @@ function refine_to_critical_points(
     points::Vector{Vector{Float64}};
     accept_tol::Float64 = Inf,
     f_accept_tol::Union{Nothing, Float64} = nothing,
+    io::IO = stdout,
     kwargs...
 )::Vector{CriticalPointRefinementResult}
     n_pts = length(points)
@@ -499,7 +514,7 @@ function refine_to_critical_points(
 
             f_str = is_f_accepted && !r.converged && r.gradient_norm >= accept_tol ?
                 @sprintf("  f<%.0e", f_accept_tol) : ""
-            @printf("    ✓ CP %d/%d: %s %3d iters%s (%4.1fs)  |∇f| %.2e  f=%.2e  Δ=%.2e  (%s)%s\n",
+            @printf(io, "    ✓ CP %d/%d: %s %3d iters%s (%4.1fs)  |∇f| %.2e  f=%.2e  Δ=%.2e  (%s)%s\n",
                 i, n_pts, status, r.iterations, tr_str, elapsed,
                 r.gradient_norm, r.objective_value,
                 r.final_trust_radius, r.cp_type, f_str)
@@ -517,15 +532,15 @@ function refine_to_critical_points(
                 ""
             end
             pct = round(Int, 100 * i / n_pts)
-            @printf("    Refining: %d/%d (%d%%) | %d conv, %d acc, %d rej | %d TR rej%s\r",
+            @printf(io, "    Refining: %d/%d (%d%%) | %d conv, %d acc, %d rej | %d TR rej%s\r",
                 i, n_pts, pct, n_conv, n_accepted, n_rejected, total_tr_rejections,
                 isempty(eta_str) ? "" : " | $eta_str")
-            flush(stdout)
+            flush(io)
         end
     end
 
     # Clear progress line and print final summary
-    print("    " * " "^80 * "\r")
+    print(io, "    " * " "^80 * "\r")
     total_time = time() - t_total
     n_grad_accepted = count(r -> !r.converged && r.gradient_norm < accept_tol, results)
     n_f_accepted_final = count(r -> !r.converged && r.gradient_norm >= accept_tol &&
@@ -533,15 +548,15 @@ function refine_to_critical_points(
 
     # Main CP summary
     if f_accept_tol !== nothing && n_f_accepted_final > 0
-        @printf("    Summary: %d converged, %d grad-accepted, %d f-accepted (f<%.0e), %d rejected  (%.1fs)\n",
+        @printf(io, "    Summary: %d converged, %d grad-accepted, %d f-accepted (f<%.0e), %d rejected  (%.1fs)\n",
             n_conv, n_grad_accepted, n_f_accepted_final, f_accept_tol, n_rejected, total_time)
     else
-        @printf("    Summary: %d converged, %d accepted, %d rejected  (%.1fs)\n",
+        @printf(io, "    Summary: %d converged, %d accepted, %d rejected  (%.1fs)\n",
             n_conv, n_accepted, n_rejected, total_time)
     end
     # Trust-region summary (only if there were any rejections or safeguards)
     if total_tr_rejections > 0 || total_f_safeguards > 0
-        @printf("    Trust-region: %d step rejections, %d f-safeguards across %d CPs\n",
+        @printf(io, "    Trust-region: %d step rejections, %d f-safeguards across %d CPs\n",
             total_tr_rejections, total_f_safeguards, n_pts)
     end
     return results
@@ -550,6 +565,23 @@ end
 # ═══════════════════════════════════════════════════════════════════════════════
 # Utilities
 # ═══════════════════════════════════════════════════════════════════════════════
+
+"""
+    _eigenvalue_diagnostics(eigenvalues) -> (condition_number, min_eigenvalue)
+
+Compute condition number and minimum eigenvalue from a vector of Hessian eigenvalues.
+Returns `(NaN, NaN)` for empty eigenvalue vectors.
+"""
+function _eigenvalue_diagnostics(eigenvalues::Vector{Float64})
+    if isempty(eigenvalues)
+        return (NaN, NaN)
+    end
+    abs_eigs = abs.(eigenvalues)
+    min_abs = minimum(abs_eigs)
+    max_abs = maximum(abs_eigs)
+    cond = min_abs > 0 ? max_abs / min_abs : Inf
+    return (cond, minimum(eigenvalues))
+end
 
 """
     _clamp_to_bounds!(x, lower_bounds, upper_bounds)
@@ -622,9 +654,12 @@ function _wrap_neldermead_as_cpresult(
         Inf
     end
 
-    # Compute Hessian eigenvalues for CP classification
+    # Compute Hessian eigenvalues + eigenvectors for CP classification
     cp_type = :unknown
     eigenvalues = Float64[]
+    eigvecs = Matrix{Float64}(undef, 0, 0)
+    cond_num = NaN
+    min_eig = NaN
     if all(isfinite, grad)
         H = if gradient_method == :forwarddiff
             ForwardDiff.hessian(objective, point)
@@ -632,14 +667,16 @@ function _wrap_neldermead_as_cpresult(
             FiniteDiff.finite_difference_hessian(objective, point)
         end
         if all(isfinite, H)
-            eig_vals = LinearAlgebra.eigvals(LinearAlgebra.Symmetric(H))
-            cp_type = _classify_eigenvalues(eig_vals, hessian_tol; relative_tol=hessian_relative_tol)
-            eigenvalues = collect(eig_vals)
+            eig = LinearAlgebra.eigen(LinearAlgebra.Symmetric(H))
+            eigenvalues = collect(eig.values)
+            eigvecs = eig.vectors
+            cp_type = _classify_eigenvalues(eigenvalues, hessian_tol; relative_tol=hessian_relative_tol)
+            cond_num, min_eig = _eigenvalue_diagnostics(eigenvalues)
         end
     end
 
     # Build trace: prefer stored trace from Optim (LBFGS), fall back to 2-point
-    trace = if !isempty(r.trace)
+    result_trace = if !isempty(r.trace)
         r.trace
     elseif initial_point !== nothing
         [copy(initial_point), copy(point)]
@@ -648,23 +685,22 @@ function _wrap_neldermead_as_cpresult(
     end
 
     return CriticalPointRefinementResult(
-        point,
-        gradient_norm,
-        r.value_refined,
-        r.converged,
-        r.iterations,
-        cp_type,
-        eigenvalues,
-        Inf,    # initial_gradient_norm — not available from Optim methods
-        NaN,    # final_trust_radius — N/A for Optim methods
-        0,      # rejected_steps — N/A
-        0,      # f_safeguard_count — N/A
-        trace,
+        point = point,
+        objective_value = r.value_refined,
+        cp_type = cp_type,
+        eigenvalues = eigenvalues,
+        eigenvectors = eigvecs,
+        condition_number = cond_num,
+        min_eigenvalue = min_eig,
+        gradient_norm = gradient_norm,
+        converged = r.converged,
+        iterations = r.iterations,
+        trace = result_trace,
     )
 end
 
 """
-    _classify_eigenvalues(eigenvalues, tol; relative_tol=0.0) -> Symbol
+    classify_eigenvalues(eigenvalues, tol; relative_tol=0.0) -> Symbol
 
 Classify a critical point based on Hessian eigenvalues.
 
@@ -672,15 +708,27 @@ Returns `:min`, `:max`, `:saddle`, or degenerate sub-types:
 `:degenerate_min`, `:degenerate_max`, `:degenerate_saddle`, `:degenerate`.
 
 # Arguments
-- `eigenvalues`: Hessian eigenvalues
+- `eigenvalues`: Hessian eigenvalues (sorted or unsorted)
 - `tol::Float64`: Absolute tolerance for zero-eigenvalue detection
 - `relative_tol::Float64`: Relative tolerance — effective tolerance is
   `max(tol, relative_tol * max(|eigenvalues|))`. Default: 0.0 (disabled).
+
+# Example
+```julia
+classify_eigenvalues([2.0, 3.0], 1e-6)           # → :min
+classify_eigenvalues([2.0, -1.0], 1e-6)          # → :saddle
+classify_eigenvalues([2.0, 1e-10], 1e-6)         # → :degenerate_min
+classify_eigenvalues([2.0, 1e-10], 1e-6;
+                     relative_tol=0.01)           # → :degenerate_min (adaptive tol)
+```
 """
-function _classify_eigenvalues(
+function classify_eigenvalues(
     eigenvalues::AbstractVector{<:Real},
     tol::Float64;
     relative_tol::Float64 = 0.0,
 )::Symbol
     return _classify_eigenvalues_sub(eigenvalues, tol, relative_tol)
 end
+
+# Internal alias — keeps existing private callers working during transition
+const _classify_eigenvalues = classify_eigenvalues

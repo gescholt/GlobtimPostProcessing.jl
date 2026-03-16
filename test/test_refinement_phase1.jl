@@ -522,7 +522,10 @@ using Statistics
 using CSV
 using DataFrames
 
-# Test fixtures (test_functions.jl) are included once in runtests.jl
+# Test fixtures — load if not already loaded by runtests.jl
+if !@isdefined(deuflhard_2d)
+    include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
+end
 fixtures_dir = joinpath(@__DIR__, "fixtures")
 
 @testset "Raw Critical Point Gradient Validation" begin

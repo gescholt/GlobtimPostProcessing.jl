@@ -142,6 +142,7 @@ export GradientValidationResult
 # Newton-based critical point refinement exports
 export CriticalPointRefinementResult
 export refine_to_critical_point, refine_to_critical_points
+export classify_eigenvalues
 
 # Capture analysis exports
 export KnownCriticalPoints, CaptureResult, capture_rate_at

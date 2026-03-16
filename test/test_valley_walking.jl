@@ -660,24 +660,24 @@ end
         # - CP at (1,0) on the unit circle of f_circle: degenerate (one zero eigenvalue)
         # - CP at (0,0) of f_quadratic: min (no zero eigenvalues)
         degenerate_cp = CriticalPointRefinementResult(
-            [1.0, 0.0],     # point
-            0.0,              # gradient_norm
-            0.0,              # objective_value
-            true,             # converged
-            5,                # iterations
-            :degenerate,      # cp_type
-            [0.0, 8.0],       # eigenvalues (one near-zero)
-            1.0               # initial_gradient_norm
+            point = [1.0, 0.0],
+            gradient_norm = 0.0,
+            objective_value = 0.0,
+            converged = true,
+            iterations = 5,
+            cp_type = :degenerate,
+            eigenvalues = [0.0, 8.0],
+            initial_gradient_norm = 1.0,
         )
         min_cp = CriticalPointRefinementResult(
-            [0.0, 0.0],     # point
-            0.0,
-            0.0,
-            true,
-            3,
-            :min,
-            [2.0, 2.0],
-            0.5
+            point = [0.0, 0.0],
+            gradient_norm = 0.0,
+            objective_value = 0.0,
+            converged = true,
+            iterations = 3,
+            cp_type = :min,
+            eigenvalues = [2.0, 2.0],
+            initial_gradient_norm = 0.5,
         )
 
         results = run_valley_analysis(f_circle, [min_cp, degenerate_cp])
@@ -689,10 +689,14 @@ end
 
     @testset "handles no degenerate CPs" begin
         min_cp = CriticalPointRefinementResult(
-            [0.0, 0.0], 0.0, 0.0, true, 3, :min, [2.0, 2.0], 0.5
+            point = [0.0, 0.0], gradient_norm = 0.0, objective_value = 0.0,
+            converged = true, iterations = 3, cp_type = :min,
+            eigenvalues = [2.0, 2.0], initial_gradient_norm = 0.5,
         )
         saddle_cp = CriticalPointRefinementResult(
-            [0.0, 0.0], 0.0, 0.0, true, 3, :saddle, [2.0, -2.0], 0.5
+            point = [0.0, 0.0], gradient_norm = 0.0, objective_value = 0.0,
+            converged = true, iterations = 3, cp_type = :saddle,
+            eigenvalues = [2.0, -2.0], initial_gradient_norm = 0.5,
         )
 
         results = run_valley_analysis(f_circle, [min_cp, saddle_cp])
