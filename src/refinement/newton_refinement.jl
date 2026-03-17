@@ -97,6 +97,9 @@ Result of refining a single point to a critical point via Newton's method on ∇
 # Fields — Trace
 - `trace::Vector{Vector{Float64}}`: Iteration trajectory (empty unless `trace=true` was passed)
 - `trace_gradient_norms::Vector{Float64}`: Per-iteration ||∇f|| values (empty unless `trace=true`)
+
+# Fields — Method metadata
+- `gradient_method::Symbol`: Differentiation backend used (`:finitediff`, `:forwarddiff`, or `:unknown`)
 """
 Base.@kwdef struct CriticalPointRefinementResult
     # Critical point
@@ -119,6 +122,8 @@ Base.@kwdef struct CriticalPointRefinementResult
     # Trace
     trace::Vector{Vector{Float64}}          = Vector{Float64}[]
     trace_gradient_norms::Vector{Float64}   = Float64[]
+    # Method metadata
+    gradient_method::Symbol                 = :unknown
 end
 
 """
@@ -259,6 +264,7 @@ function refine_to_critical_point(
         return CriticalPointRefinementResult(
             point = x,
             final_trust_radius = Δ,
+            gradient_method = gradient_method,
         )
     end
     grad_norm = LinearAlgebra.norm(grad)
@@ -428,6 +434,7 @@ function refine_to_critical_point(
         f_safeguard_count = f_safeguard_count,
         trace = trace_points,
         trace_gradient_norms = trace_grad_norms,
+        gradient_method = gradient_method,
     )
 end
 
@@ -696,6 +703,7 @@ function _wrap_neldermead_as_cpresult(
         converged = r.converged,
         iterations = r.iterations,
         trace = result_trace,
+        gradient_method = gradient_method,
     )
 end
 
