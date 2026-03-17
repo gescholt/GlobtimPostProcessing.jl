@@ -991,3 +991,77 @@ end
         end
     end
 end
+
+# ─── FiniteDiff gradient_method tests ────────────────────────────────────────
+# ValleyWalking now supports gradient_method=:finitediff for ODE-based objectives
+# that are not ForwardDiff-compatible. Verify it produces equivalent results on
+# algebraic test functions where both methods work.
+
+@testset "gradient_method=:finitediff" begin
+    config_fd = ValleyWalkConfig(
+        gradient_tolerance=1e-4,
+        eigenvalue_threshold=1e-2,
+        gradient_method=:forwarddiff,
+    )
+    config_nd = ValleyWalkConfig(
+        gradient_tolerance=1e-3,  # relaxed: FiniteDiff gradients are less precise
+        eigenvalue_threshold=1e-2,
+        gradient_method=:finitediff,
+    )
+
+    @testset "detect_valley with FiniteDiff" begin
+        # Unit circle — should detect valley with both methods
+        point = [1.0, 0.0]
+        is_v_fd, dirs_fd, vdim_fd = detect_valley(f_circle, point, config_fd)
+        is_v_nd, dirs_nd, vdim_nd = detect_valley(f_circle, point, config_nd)
+        @test is_v_fd == true
+        @test is_v_nd == true
+        @test vdim_fd == vdim_nd == 1
+
+        # Tangent directions should agree (up to sign)
+        dot_val = abs(dot(dirs_fd[:, 1], dirs_nd[:, 1]))
+        @test dot_val > 0.99
+    end
+
+    @testset "project_to_valley with FiniteDiff" begin
+        point = [1.05, 0.0]
+        proj_fd = project_to_valley(f_circle, point; gradient_method=:forwarddiff)
+        proj_nd = project_to_valley(f_circle, point; gradient_method=:finitediff)
+        # Both should land on the unit circle
+        @test abs(norm(proj_fd) - 1.0) < 1e-6
+        @test abs(norm(proj_nd) - 1.0) < 1e-4  # relaxed for FiniteDiff
+    end
+
+    @testset "project_to_valley_tangent with FiniteDiff" begin
+        point = [1.05, 0.0]
+        tangent = [0.0, 1.0]
+        proj_fd = project_to_valley_tangent(f_circle, point, tangent; gradient_method=:forwarddiff)
+        proj_nd = project_to_valley_tangent(f_circle, point, tangent; gradient_method=:finitediff)
+        @test abs(norm(proj_fd) - 1.0) < 1e-6
+        @test abs(norm(proj_nd) - 1.0) < 1e-4
+    end
+
+    @testset "trace_valley with FiniteDiff" begin
+        config_trace = ValleyWalkConfig(
+            gradient_tolerance=1e-3,
+            eigenvalue_threshold=1e-2,
+            initial_step_size=0.05,
+            max_steps=50,
+            gradient_method=:finitediff,
+        )
+        result = trace_valley(f_circle, [1.0, 0.0], config_trace)
+        @test result.converged == true
+        @test result.valley_dimension == 1
+        @test result.n_points > 10  # should trace a meaningful path
+
+        # All traced points should lie on (or very near) the unit circle
+        for p in vcat(result.path_positive, result.path_negative)
+            @test abs(norm(p) - 1.0) < 1e-3  # relaxed for FiniteDiff
+        end
+    end
+
+    @testset "invalid gradient_method raises error" begin
+        bad_config = ValleyWalkConfig(gradient_method=:bogus)
+        @test_throws ErrorException detect_valley(f_circle, [1.0, 0.0], bad_config)
+    end
+end
