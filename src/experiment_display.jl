@@ -1021,13 +1021,16 @@ function postprocess_experiment(
     println(io, "  Using degree $highest_deg ($(raw_highest.n_points) raw CPs)")
 
     known_cps = nothing
+    ref_method = if reference_goal == :minimum
+        OptimNelderMead(; gradient_method)
+    else
+        NewtonCP(; gradient_method, accept_tol = reference_accept_tol,
+                  f_accept_tol = reference_f_accept_tol)
+    end
     ref_result = try
         build_known_cps_from_refinement(
             objective, raw_highest.points, bounds;
-            refinement_goal = reference_goal,
-            gradient_method = gradient_method,
-            accept_tol = reference_accept_tol,
-            f_accept_tol = reference_f_accept_tol,
+            method = ref_method,
             top_k = reference_top_k,
         )
     catch e

@@ -901,7 +901,7 @@ end
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
 
             result = build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                gradient_method=:forwarddiff, dedup_fraction=0.01)
+                method=NewtonCP(; gradient_method=:forwarddiff), dedup_fraction=0.01)
             @test result !== nothing
             known = result.known_cps
             @test result.refinement_results isa Vector
@@ -927,8 +927,8 @@ end
             b2d = [(-2.0, 2.0), (-2.0, 2.0)]
 
             result = build_known_cps_from_refinement(f_two_min, raw_points, b2d;
-                refinement_goal=:critical_point,
-                gradient_method=:forwarddiff, dedup_fraction=0.01)
+                method=NewtonCP(; gradient_method=:forwarddiff),
+                dedup_fraction=0.01)
             @test result !== nothing
             known = result.known_cps
 
@@ -943,48 +943,48 @@ end
         @testset "Error on empty raw_points" begin
             @test_throws ErrorException build_known_cps_from_refinement(
                 f_quad, Vector{Float64}[], [(-1.0, 1.0), (-1.0, 1.0)];
-                gradient_method=:forwarddiff)
+                method=NewtonCP(; gradient_method=:forwarddiff))
         end
 
         @testset "Error on dimension mismatch" begin
             @test_throws ErrorException build_known_cps_from_refinement(
                 f_quad, [[0.5, 0.3]], [(-1.0, 1.0)];  # 1D bounds, 2D points
-                gradient_method=:forwarddiff)
+                method=NewtonCP(; gradient_method=:forwarddiff))
         end
 
         @testset "f_accept_tol includes CPs that gradient criterion rejects (Newton)" begin
             # Rosenbrock from far-ish starts with very tight gradient acceptance
             # These won't converge in 5 Newton iterations, so gradient criterion rejects them.
             # But f(x) will be small enough for f_accept_tol to save them.
-            # Uses :critical_point explicitly since this tests Newton-specific acceptance behavior.
+            # Uses NewtonCP explicitly since this tests Newton-specific acceptance behavior.
             f_rosen(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
             raw_points = [[0.8, 0.64], [1.2, 1.44]]
             b2d = [(-2.0, 2.0), (-2.0, 2.0)]
 
             # Without f_accept_tol: very tight accept_tol=1e-20 rejects everything
             result_without = build_known_cps_from_refinement(f_rosen, raw_points, b2d;
-                refinement_goal=:critical_point,
-                gradient_method=:forwarddiff, accept_tol=1e-20,
-                max_iterations=5, dedup_fraction=0.01)
+                method=NewtonCP(; gradient_method=:forwarddiff, accept_tol=1e-20,
+                                 max_iterations=5),
+                dedup_fraction=0.01)
             @test result_without === nothing
 
             # With f_accept_tol: same tight gradient acceptance, but accept by f(x)
             result_with = build_known_cps_from_refinement(f_rosen, raw_points, b2d;
-                refinement_goal=:critical_point,
-                gradient_method=:forwarddiff, accept_tol=1e-20,
-                f_accept_tol=1.0, max_iterations=5, dedup_fraction=0.01)
+                method=NewtonCP(; gradient_method=:forwarddiff, accept_tol=1e-20,
+                                 f_accept_tol=1.0, max_iterations=5),
+                dedup_fraction=0.01)
             @test result_with !== nothing
             @test length(result_with.known_cps.points) >= 1
             @test result_with.refinement_results isa Vector
         end
 
-        @testset "refinement_goal=:minimum uses NelderMead, finds minima" begin
+        @testset "OptimNelderMead finds minima" begin
             raw_points = [[0.5, 0.3], [-0.2, 0.4], [0.1, -0.1], [-0.3, -0.2]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
 
             result = build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                refinement_goal=:minimum,
-                gradient_method=:forwarddiff, dedup_fraction=0.01)
+                method=OptimNelderMead(; gradient_method=:forwarddiff),
+                dedup_fraction=0.01)
             @test result !== nothing
             known = result.known_cps
             @test result.refinement_results isa Vector
@@ -1004,14 +1004,14 @@ end
             end
         end
 
-        @testset "refinement_goal=:critical_point preserves Newton behavior" begin
-            # Same test as Basic, but with explicit refinement_goal=:critical_point
+        @testset "NewtonCP preserves Newton behavior" begin
+            # Same test as Basic, but with explicit NewtonCP method
             raw_points = [[0.5, 0.3], [-0.2, 0.4], [0.1, -0.1], [-0.3, -0.2]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
 
             result = build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                refinement_goal=:critical_point,
-                gradient_method=:forwarddiff, dedup_fraction=0.01)
+                method=NewtonCP(; gradient_method=:forwarddiff),
+                dedup_fraction=0.01)
             @test result !== nothing
             known = result.known_cps
             @test length(known.points) == 1
@@ -1019,11 +1019,12 @@ end
             @test norm(known.points[1]) < 1e-4
         end
 
-        @testset "refinement_goal validation" begin
+        @testset "method type validation" begin
             raw_points = [[0.5, 0.3]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
-            @test_throws ErrorException build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                refinement_goal=:invalid_goal, gradient_method=:forwarddiff)
+            # method kwarg must be a RefinementMethod subtype; passing a Symbol errors
+            @test_throws TypeError build_known_cps_from_refinement(f_quad, raw_points, b2d;
+                method=:invalid_goal)
         end
     end
 

@@ -144,6 +144,13 @@ export CriticalPointRefinementResult
 export refine_to_critical_point, refine_to_critical_points
 export classify_eigenvalues
 
+# Modular refinement method exports
+export RefinementMethod
+export NewtonCP, NewtonMinimize
+export OptimNelderMead, OptimLBFGS, OptimBFGS, OptimConjugateGradient, OptimGradientDescent
+export refinement_method, refine_point, refine_points
+export method_name, needs_gradient, needs_hessian
+
 # Capture analysis exports
 export KnownCriticalPoints, CaptureResult, capture_rate_at
 export compute_capture_analysis, missed_critical_points
@@ -254,6 +261,8 @@ include("refinement/config.jl")           # RefinementConfig struct + bounds hel
 include("refinement/core_refinement.jl")  # Core refinement algorithms
 include("refinement/gradient_validation.jl")  # Gradient norm validation (before io.jl - defines GradientValidationResult)
 include("refinement/newton_refinement.jl")      # Newton-based critical point refinement (∇f=0)
+include("refinement/methods.jl")               # Modular refinement method types + factory
+include("refinement/unified_dispatch.jl")      # Unified refine_point dispatch
 include("refinement/capture_analysis.jl")      # Capture analysis for known critical points
 include("refinement/io.jl")               # Load/save utilities
 include("refinement/api.jl")              # High-level API

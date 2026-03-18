@@ -645,14 +645,14 @@ end
 # ═══════════════════════════════════════════════════════════════════════════════
 
 """
-    _wrap_neldermead_as_cpresult(
+    _wrap_optim_as_cpresult(
         r::RefinementResult, objective;
         gradient_method, hessian_tol, bounds, initial_point
     ) -> CriticalPointRefinementResult
 
-Convert a NelderMead `RefinementResult` (from `core_refinement.jl`) into a
+Convert an Optim.jl `RefinementResult` (from `core_refinement.jl`) into a
 `CriticalPointRefinementResult` so both refinement paths produce the same type
-for downstream consumers.
+for downstream consumers. Works for all Optim methods (NelderMead, LBFGS, BFGS, etc.).
 
 Computes gradient norm and Hessian eigenvalues at the refined point for CP
 classification. This is a one-shot evaluation (not iterative), so cost is
@@ -662,7 +662,7 @@ When `initial_point` is provided, builds a 2-point trace `[initial_point, refine
 for trajectory visualization on level set plots. If the `RefinementResult` already
 contains a non-empty trace (from `store_trace=true`), that trace is used instead.
 """
-function _wrap_neldermead_as_cpresult(
+function _wrap_optim_as_cpresult(
     r::RefinementResult,
     objective;
     gradient_method::Symbol = :finitediff,
