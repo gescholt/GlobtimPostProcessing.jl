@@ -148,8 +148,14 @@ function _resolve_optim_method(method::Symbol; step_size::Float64=1.0)
         Optim.NelderMead()
     elseif method === :lbfgs
         Optim.LBFGS(alphaguess=LineSearches.InitialStatic(alpha=step_size))
+    elseif method === :bfgs
+        Optim.BFGS()
+    elseif method === :conjugategradient
+        Optim.ConjugateGradient()
+    elseif method === :gradientdescent
+        Optim.GradientDescent()
     else
-        error("Unknown optimization method symbol: $method. Use :neldermead or :lbfgs")
+        error("Unknown optimization method symbol: $method. Use :neldermead, :lbfgs, :bfgs, :conjugategradient, or :gradientdescent")
     end
 end
 _resolve_optim_method(method; step_size::Float64=1.0) = method  # passthrough for Optim objects

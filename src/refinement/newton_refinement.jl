@@ -145,14 +145,21 @@ end
         min_improvement_ratio::Float64 = 0.99,
     ) -> CriticalPointRefinementResult
 
-Refine a raw polynomial critical point to a true critical point of `f` by solving
-`∇f(x) = 0` via trust-region Newton's method.
+Refine a raw polynomial critical point to a true critical point of `f` via trust-region
+Newton's method.
+
+Two modes are available:
+- `mode = :critical_point` (default): Solve ∇f(x) = 0 — finds critical points of ALL types
+  (minima, maxima, saddle points). Newton step uses the true Hessian eigenvalues.
+- `mode = :minimize`: Modified Newton — replaces each Hessian eigenvalue λ with |λ| in the
+  Newton step, making the effective Hessian positive-definite so every step is a descent
+  direction. Quality ratio ρ is measured by objective decrease instead of gradient norm
+  reduction. This avoids convergence to saddle points at the cost of not finding maxima.
 
 The Newton step `H⁻¹∇f` is computed via eigendecomposition (robust to singular Hessians),
 then clipped to a trust-region radius Δ. The trust region expands when steps are productive
-(good agreement between the quadratic model and actual ‖∇f‖² reduction) and shrinks when
-steps are unproductive. An objective-value safeguard prevents steps that jump to flat
-plateaus far from the current basin.
+and shrinks when steps are unproductive. An objective-value safeguard prevents steps that
+jump to flat plateaus far from the current basin.
 
 Most polynomial CPs are spurious. The early-exit mechanism (controlled by `patience` and
 `min_improvement_ratio`) cheaply rejects CPs that show no progress.
@@ -188,6 +195,8 @@ Most polynomial CPs are spurious. The early-exit mechanism (controlled by `patie
 - `patience::Int`: Check for progress every this many iterations (default: 10)
 - `min_improvement_ratio::Float64`: Bail if best gradient norm hasn't improved by
   this ratio of the initial (default: 0.99 = require at least 1% improvement)
+- `mode::Symbol`: `:critical_point` (default) solves ∇f = 0 to find any critical point type;
+  `:minimize` uses modified Newton (|λ| eigenvalues) to only find local minima.
 
 # Returns
 - `CriticalPointRefinementResult`: Refined point with convergence info, CP classification,
@@ -213,7 +222,10 @@ function refine_to_critical_point(
     patience::Int = 10,
     min_improvement_ratio::Float64 = 0.99,
     trace::Bool = false,
+    mode::Symbol = :critical_point,
 )::CriticalPointRefinementResult
+
+    mode in (:critical_point, :minimize) || error("Unknown mode: $mode. Use :critical_point or :minimize")
 
     n = length(initial_point)
     x = copy(initial_point)
@@ -311,11 +323,14 @@ function refine_to_critical_point(
         reg_threshold = max(1e-12, 1e-10 * abs_max_eig)
 
         # Compute full Newton step in eigenbasis: step = -V * diag(1/λ_i) * V' * grad
+        # In :minimize mode, use |λ_i| instead of λ_i (modified Newton) so the
+        # effective Hessian is PD and the step is always a descent direction.
         Vt_grad = V' * grad
         step = zeros(n)
         for i in 1:n
             if abs(eigenvalues[i]) > reg_threshold
-                step .-= (Vt_grad[i] / eigenvalues[i]) .* V[:, i]
+                λ_eff = mode == :minimize ? abs(eigenvalues[i]) : eigenvalues[i]
+                step .-= (Vt_grad[i] / λ_eff) .* V[:, i]
             end
         end
 
@@ -350,18 +365,30 @@ function refine_to_critical_point(
             continue
         end
 
-        # Quality ratio: ρ = (actual reduction in ||∇f||²) / (predicted reduction)
-        # Predicted reduction from quadratic model: ||g||² - ||g + H*s||²
-        Hs = H_sym * step
-        predicted_grad_after = grad .+ Hs
-        actual_reduction   = grad_norm^2 - grad_norm_trial^2
-        predicted_reduction = grad_norm^2 - LinearAlgebra.norm(predicted_grad_after)^2
-
-        ρ = if abs(predicted_reduction) < 1e-30
-            # Predicted reduction ≈ 0: model is flat here, accept if actual improved
-            actual_reduction > 0 ? 1.0 : 0.0
+        # Quality ratio ρ: measures agreement between model and reality.
+        # - :critical_point mode: ρ = (actual ||∇f||² reduction) / (predicted ||∇f||² reduction)
+        # - :minimize mode: ρ = (actual f decrease) / (predicted f decrease from quadratic model)
+        ρ = if mode == :minimize
+            # Quadratic model prediction: f(x+s) ≈ f(x) + g'·s + 0.5·s'·H·s
+            # Predicted decrease: -(g'·s + 0.5·s'·H·s)
+            Hs = H_sym * step
+            pred = -(LinearAlgebra.dot(grad, step) + 0.5 * LinearAlgebra.dot(step, Hs))
+            actual = f_current - f_trial
+            if abs(pred) < 1e-30
+                actual > 0 ? 1.0 : 0.0
+            else
+                actual / pred
+            end
         else
-            actual_reduction / predicted_reduction
+            Hs = H_sym * step
+            predicted_grad_after = grad .+ Hs
+            actual_reduction   = grad_norm^2 - grad_norm_trial^2
+            predicted_reduction = grad_norm^2 - LinearAlgebra.norm(predicted_grad_after)^2
+            if abs(predicted_reduction) < 1e-30
+                actual_reduction > 0 ? 1.0 : 0.0
+            else
+                actual_reduction / predicted_reduction
+            end
         end
 
         # Step acceptance/rejection
