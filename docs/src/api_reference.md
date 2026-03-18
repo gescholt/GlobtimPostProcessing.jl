@@ -4,7 +4,46 @@ Complete function reference for GlobtimPostProcessing.jl.
 
 ## Refinement API
 
-Functions for improving critical point accuracy using local optimization.
+Two refinement systems are available: trust-region Newton (interactive, second-order) and Optim.jl-based (batch post-processing).
+
+### Trust-Region Newton Refinement
+
+```@docs
+refine_to_critical_point
+refine_to_critical_points
+CriticalPointRefinementResult
+```
+
+| Function | Description |
+|----------|-------------|
+| `refine_to_critical_point(objective, point; kwargs...)` | Newton refinement with Hessian CP classification |
+| `refine_to_critical_points(objective, points; kwargs...)` | Batch Newton refinement with progress display |
+
+#### CriticalPointRefinementResult Fields
+
+```julia
+struct CriticalPointRefinementResult
+    point::Vector{Float64}              # Refined coordinates
+    objective_value::Float64            # f(point)
+    cp_type::Symbol                     # :minimum, :maximum, :saddle, :degenerate, :unknown
+    eigenvalues::Vector{Float64}        # Hessian eigenvalues
+    eigenvectors::Matrix{Float64}       # Hessian eigenvectors
+    condition_number::Float64           # cond(H)
+    min_eigenvalue::Float64             # min(|λ|)
+    gradient_norm::Float64              # ‖∇f(point)‖
+    converged::Bool                     # ‖∇f‖ < tol
+    iterations::Int                     # Newton iterations
+    initial_gradient_norm::Float64      # ‖∇f(start)‖
+    final_trust_radius::Float64         # Final Δ
+    rejected_steps::Int                 # Trust-region rejections
+    f_safeguard_count::Int              # f-value safeguard activations
+    trace::Vector{Vector{Float64}}      # Iteration path (if trace=true)
+    trace_gradient_norms::Vector{Float64}  # ‖∇f‖ per iteration
+    gradient_method::Symbol             # :finitediff or :forwarddiff
+end
+```
+
+### Optim.jl-Based Refinement (Batch Post-Processing)
 
 ```@docs
 refine_experiment_results
@@ -16,13 +55,11 @@ RefinedExperimentResult
 RefinementResult
 ```
 
-### Refinement Functions
-
 | Function | Description |
 |----------|-------------|
-| `refine_experiment_results(dir, objective)` | Main refinement workflow |
+| `refine_experiment_results(dir, objective)` | Main batch refinement workflow |
 | `refine_critical_points(raw_result, objective)` | Refine from result object |
-| `refine_critical_point(objective, point)` | Single point refinement |
+| `refine_critical_point(objective, point)` | Single point refinement (Optim.jl) |
 | `refine_critical_points_batch(objective, points)` | Batch refinement |
 
 ### Configuration

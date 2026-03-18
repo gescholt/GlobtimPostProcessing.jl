@@ -40,7 +40,11 @@ flowchart TB
 
 ## Overview
 
-Critical points found by polynomial approximation methods may have limited numerical accuracy. The refinement system uses local optimization (Optim.jl) to improve accuracy by starting from the polynomial critical points and converging to nearby objective function minima.
+Critical points found by polynomial approximation methods may have limited numerical accuracy. The refinement system provides two complementary approaches:
+
+1. **Trust-region Newton** (`refine_to_critical_point`): Solves ∇f(x) = 0 directly using second-order information (Hessian eigendecomposition). Classifies critical points as minimum/maximum/saddle via Hessian eigenvalues. Recommended for interactive exploration and high-precision refinement.
+
+2. **Optim.jl-based refinement** (`refine_experiment_results`): Uses first-order (BFGS, L-BFGS) or gradient-free (NelderMead) optimizers from Optim.jl. Designed for batch post-processing of experiment results with CSV/JSON output.
 
 **Key workflow:**
 1. Load raw critical points from globtim output
@@ -293,9 +297,109 @@ l2_result = check_l2_quality(experiment_dir)
 config = RefinementConfig(gradient_tolerance = 1e-4)
 ```
 
+## Trust-Region Newton Refinement
+
+The `refine_to_critical_point` function uses trust-region Newton's method with Hessian eigendecomposition. This is the recommended method for interactive exploration and when full critical point classification (minimum/maximum/saddle) is needed.
+
+### Basic Usage
+
+```julia
+using GlobtimPostProcessing
+
+result = refine_to_critical_point(objective, [1.0, 1.5];
+    bounds = [(0.0, 10.0), (0.0, 10.0)],
+    trace = true,
+)
+
+println("Point: $(result.point)")
+println("Type: $(result.cp_type)")          # :minimum, :maximum, :saddle, :degenerate
+println("‖∇f‖: $(result.gradient_norm)")
+println("Eigenvalues: $(result.eigenvalues)")
+println("Converged: $(result.converged)")
+```
+
+### Two Modes
+
+```julia
+# Critical point mode (default): solve ∇f = 0 — finds minima, maxima, AND saddles
+result_cp = refine_to_critical_point(objective, start;
+    mode = :critical_point)
+
+# Minimize mode: modified Newton with |λ| eigenvalues — descent only, avoids saddles
+result_min = refine_to_critical_point(objective, start;
+    mode = :minimize)
+```
+
+In `:minimize` mode, each Hessian eigenvalue λ is replaced with |λ| in the Newton step, making the effective Hessian positive-definite. The quality ratio ρ measures objective decrease instead of gradient norm reduction.
+
+### Key Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `tol` | 1e-8 | Convergence: ‖∇f‖ < tol |
+| `accept_tol` | Inf | Relaxed acceptance: classify if ‖∇f‖ < accept_tol |
+| `f_accept_tol` | nothing | Accept if f(x) < threshold (for ODE objectives with large gradients) |
+| `max_iterations` | 100 | Maximum Newton iterations |
+| `hessian_tol` | 1e-6 | Absolute eigenvalue threshold for min/max/saddle classification |
+| `hessian_relative_tol` | 0.0 | Relative eigenvalue threshold (adapts to eigenvalue scale) |
+| `trust_radius_fraction` | 0.1 | Initial trust radius as fraction of domain diameter |
+| `patience` | 10 | Iterations without improvement before early exit |
+| `min_improvement_ratio` | 0.99 | Bail if best ‖∇f‖ hasn't improved by this ratio |
+| `gradient_method` | :finitediff | `:finitediff` or `:forwarddiff` |
+| `mode` | :critical_point | `:critical_point` or `:minimize` |
+
+### CriticalPointRefinementResult
+
+The result struct contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `point` | `Vector{Float64}` | Refined coordinates |
+| `objective_value` | `Float64` | f(point) |
+| `cp_type` | `Symbol` | `:minimum`, `:maximum`, `:saddle`, `:degenerate`, or `:unknown` |
+| `eigenvalues` | `Vector{Float64}` | Hessian eigenvalues (empty if rejected) |
+| `condition_number` | `Float64` | Hessian condition number |
+| `gradient_norm` | `Float64` | Final ‖∇f(point)‖ |
+| `converged` | `Bool` | Whether ‖∇f‖ < tol |
+| `iterations` | `Int` | Newton iterations used |
+| `trace` | `Vector{Vector{Float64}}` | Iteration path (if trace=true) |
+| `rejected_steps` | `Int` | Trust-region step rejections |
+| `gradient_method` | `Symbol` | Differentiation backend used |
+
+### Batch Newton Refinement
+
+```julia
+results = refine_to_critical_points(objective, points;
+    accept_tol = 1e-2,
+    f_accept_tol = 1e-6,
+    kwargs...
+)
+```
+
+### Choosing Between Objectives: Display vs Refinement
+
+For ODE parameter estimation with log-distance objectives (e.g., `log_L2_norm`), the log transform creates a singularity at the true parameter values where `log(0) → -∞`. This makes gradient-based refinement fail because:
+
+- ‖∇f‖ remains large even at the true minimum (cusp at sqrt(0))
+- cond(H) ~ 1e10 (numerically intractable Hessian)
+- Newton CP mode finds p_true only 1/15 times vs 14/15 for BFGS on raw L2_norm
+
+**Solution**: Use `Dynamic_objectives.create_refinement_objective(entry)` which auto-detects `log_` distance functions and substitutes the raw variant (e.g., `L2_norm` for `log_L2_norm`). Keep `create_objective(entry)` for visualization (log scale provides better dynamic range for contour plots).
+
+```julia
+using Dynamic_objectives
+
+entry = load_catalogue("catalogue.jsonl")[1]
+display_obj = create_objective(entry)                # log_L2_norm — good for plots
+refine_obj  = create_refinement_objective(entry)     # auto-detected L2_norm — good for Newton
+
+# Refinement uses the non-log objective
+result = refine_to_critical_point(refine_obj, start_point; bounds=...)
+```
+
 ## Advanced Usage
 
-### Single Point Refinement
+### Single Point Refinement (Optim.jl)
 
 ```julia
 point = [0.1, 0.2, 0.3, 0.4]

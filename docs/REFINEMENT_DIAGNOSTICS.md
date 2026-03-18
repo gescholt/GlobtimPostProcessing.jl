@@ -28,11 +28,17 @@ This document specifies requirements and future directions for capturing compreh
 - ⏳ Convergence speed metrics
 - Requires memory overhead (opt-in feature)
 
-### Phase 3 (Tier 3): ⏳ **NOT STARTED**
-- Hessian approximation extraction
-- Multi-method refinement strategies
-- Adaptive tolerance selection
-- Research-driven features
+### Phase 3 (Tier 3): 🟡 **PARTIAL**
+- ✅ Hessian eigendecomposition — **IMPLEMENTED** (2026-03) via `refine_to_critical_point`
+  - Full eigenvalue/eigenvector extraction for CP classification (min/max/saddle/degenerate)
+  - Trust-region Newton with eigendecomposition-based step computation
+  - Robust to singular Hessians (eigenvalue clipping)
+- ✅ Multi-method refinement — **IMPLEMENTED** (2026-03)
+  - Two Newton modes: `:critical_point` (∇f=0) and `:minimize` (modified Newton, |λ| eigenvalues)
+  - Interactive explorer exposes all Newton parameters with info buttons
+  - Display vs refinement objective separation (`create_refinement_objective`)
+- ⏳ Adaptive tolerance selection
+- ⏳ Basin characterization metrics
 
 ## Current State
 
