@@ -7,7 +7,7 @@
 # documented, and adjustable quality criteria.
 
 [l2_norm_thresholds]
-# L2 norm quality thresholds by dimension
+# Absolute L2 norm quality thresholds by dimension
 # Lower values indicate better approximation quality
 #
 # These are exponential because higher dimensions naturally have larger errors
@@ -17,6 +17,28 @@ dim_4 = 1.0e-1
 dim_5 = 5.0e-1
 dim_6 = 1.0
 default = 10.0  # Used for dimensions > 6
+
+[relative_l2_thresholds]
+# Relative L2 error thresholds — empirically derived from 20+ experiments (March 2026)
+# These are dimension-independent: the relative L2 error normalizes by function norm,
+# so the same thresholds apply across 2D, 3D, and 4D ODE models.
+#
+# Evidence base:
+#   - Recovery (< 0.03): LV-2D T=10 (0.018), Goodwin-4D (0.024), DAISY-4D (0.027),
+#     FHN-3D (0.029), LV-2D T=100 (0.027), locally-id 2D (0.024)
+#   - Partial (0.03–0.05): LV-3D (0.034), LV-4D simple (0.037), Levy 3D (0.038)
+#   - Unreliable (0.05–0.10): LV-2D wide domain (0.056, no recovery)
+#   - No structure (> 0.10): Griewank 3D plateau at 0.33, daisy4d_entry5 at 0.74
+#
+reliable_recovery = 0.03    # Below this: true minima found, Newton converges
+structure_visible = 0.05    # Below this: CPs found, recovery may be partial
+unreliable = 0.10           # Above this: polynomial doesn't capture landscape
+#
+# Adaptive algorithm heuristic (bead globopt_merged-stt):
+#   1. Fit polynomial → check relative L2
+#   2. If rel L2 > structure_visible (0.05): try increasing degree
+#   3. If degree increase stagnates (see [convergence]): subdivide domain
+#   4. If rel L2 < reliable_recovery (0.03): proceed to CP solving
 
 [parameter_recovery]
 # Parameter recovery thresholds
