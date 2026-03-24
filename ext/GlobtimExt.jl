@@ -11,7 +11,7 @@ import GlobtimPostProcessing: TreeDisplayConfig, DEFAULT_CONFIG,
     progress_bar, format_time, format_error
 
 # Hessian classification override — provides actual classification when Globtim is loaded
-function GlobtimPostProcessing.classify_refined_points(objective_func, points::Vector{Vector{Float64}})
+function GlobtimPostProcessing.classify_refined_points(objective_func::Function, points::Vector{Vector{Float64}})
     points_matrix = reduce(vcat, [pt' for pt in points])
     hessians = compute_hessians(objective_func, points_matrix)
     return classify_critical_points(hessians)
