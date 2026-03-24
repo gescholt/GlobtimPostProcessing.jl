@@ -167,10 +167,20 @@ function refine_experiment_results(
         nothing
     end
 
-    # 8. Save results (with Tier 1 diagnostics and gradient validation)
+    # 7c. Hessian classification at refined points — minimum/saddle/maximum/degenerate
+    hessian_classifications = if n_converged > 0
+        points_matrix = reduce(vcat, [pt' for pt in refined_points])
+        hessians = Globtim.compute_hessians(objective_func, points_matrix)
+        Globtim.classify_critical_points(hessians)
+    else
+        Symbol[]
+    end
+
+    # 8. Save results (with Tier 1 diagnostics, gradient validation, and Hessian classification)
     save_refined_results(experiment_dir, result, raw_data.degree, refinement_results;
                         gradient_validation=gradient_validation,
-                        raw_gradient_norms=raw_gradient_norms)
+                        raw_gradient_norms=raw_gradient_norms,
+                        hessian_classifications=hessian_classifications)
 
     # 9. Print formatted summary
     print_refinement_summary(result, gradient_validation, raw_gradient_norms)

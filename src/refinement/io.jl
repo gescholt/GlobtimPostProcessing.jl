@@ -185,6 +185,7 @@ Save refined critical points and comparison data to experiment directory.
 - `refinement_results::Vector{RefinementResult}`: Detailed per-point refinement results (for Tier 1 diagnostics)
 - `gradient_validation::Union{GradientValidationResult, Nothing}=nothing`: Optional refined gradient validation results
 - `raw_gradient_norms::Union{Vector{Float64}, Nothing}=nothing`: Optional ||∇f(x_raw)|| for each raw point
+- `hessian_classifications::Union{Vector{Symbol}, Nothing}=nothing`: Optional Hessian-based classification (:minimum, :saddle, :maximum, :degenerate, :error) for each refined point
 
 # Examples
 ```julia
@@ -203,7 +204,8 @@ function save_refined_results(
     degree::Int,
     refinement_results::Vector{RefinementResult};
     gradient_validation::Union{GradientValidationResult, Nothing} = nothing,
-    raw_gradient_norms::Union{Vector{Float64}, Nothing} = nothing
+    raw_gradient_norms::Union{Vector{Float64}, Nothing} = nothing,
+    hessian_classifications::Union{Vector{Symbol}, Nothing} = nothing
 )
     # 1. Save refined critical points CSV
     refined_csv_path = joinpath(experiment_dir, "critical_points_refined_deg_$degree.csv")
@@ -222,6 +224,11 @@ function save_refined_results(
         refined_df[!, :objective_value] = result.refined_values
         refined_df[!, :improvement] = result.improvements
         refined_df[!, :iterations] = result.iterations[result.convergence_status]
+
+        # Add Hessian-based critical point classification
+        if hessian_classifications !== nothing && length(hessian_classifications) == nrow(refined_df)
+            refined_df[!, :critical_point_type] = String.(hessian_classifications)
+        end
 
         CSV.write(refined_csv_path, refined_df)
     end
@@ -283,6 +290,18 @@ function save_refined_results(
     # Add raw gradient norms — ||∇f(x_raw)|| for each raw point
     if raw_gradient_norms !== nothing
         comparison_df[!, :raw_gradient_norm] = raw_gradient_norms
+    end
+
+    # Add Hessian classification — only covers converged points, expand to n_raw
+    if hessian_classifications !== nothing && !isempty(hessian_classifications)
+        cp_type_col = fill("", result.n_raw)
+        for (j, converged) in enumerate(result.convergence_status)
+            if converged
+                converged_idx = sum(result.convergence_status[1:j])
+                cp_type_col[j] = String(hessian_classifications[converged_idx])
+            end
+        end
+        comparison_df[!, :critical_point_type] = cp_type_col
     end
 
     # Add refined gradient validation columns if provided
@@ -377,6 +396,19 @@ function save_refined_results(
         nothing
     end
 
+    # Hessian classification counts
+    hessian_stats = if hessian_classifications !== nothing && !isempty(hessian_classifications)
+        Dict(
+            "n_minimum" => count(==(Symbol("minimum")), hessian_classifications),
+            "n_saddle" => count(==(Symbol("saddle")), hessian_classifications),
+            "n_maximum" => count(==(Symbol("maximum")), hessian_classifications),
+            "n_degenerate" => count(==(Symbol("degenerate")), hessian_classifications),
+            "n_error" => count(==(Symbol("error")), hessian_classifications),
+        )
+    else
+        nothing
+    end
+
     summary = Dict(
         "degree" => degree,
         "n_raw_points" => result.n_raw,
@@ -396,6 +428,8 @@ function save_refined_results(
         # Gradient validation
         "raw_gradient_validation" => raw_gradient_stats,
         "gradient_validation" => gradient_stats,
+        # Hessian classification
+        "hessian_classification" => hessian_stats,
         "config" => Dict(
             "method" => string(typeof(result.refinement_config.method)),
             "max_time_per_point" => result.refinement_config.max_time_per_point,
