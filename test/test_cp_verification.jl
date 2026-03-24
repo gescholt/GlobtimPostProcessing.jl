@@ -18,9 +18,10 @@ using Test
 using LinearAlgebra
 using ForwardDiff
 
-# Include the module under test
-include(joinpath(@__DIR__, "test_utils", "cp_verification.jl"))
-
+# Include the module under test (guarded for runtests.jl which pre-includes it)
+if !@isdefined(CPVerification)
+    include(joinpath(@__DIR__, "test_utils", "cp_verification.jl"))
+end
 using .CPVerification
 
 # ============================================================================

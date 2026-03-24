@@ -6,6 +6,18 @@ using GlobtimPostProcessing
 # duplicate method definition warnings)
 include(joinpath(@__DIR__, "fixtures", "test_functions.jl"))
 
+# Include shared test utility modules once (used by test_cp_verification, test_ground_truth,
+# test_gradient_hessian_accuracy, test_hessian_classification_correctness — previously
+# each included them independently, causing module redefinition errors)
+include(joinpath(@__DIR__, "test_utils", "cp_verification.jl"))
+include(joinpath(@__DIR__, "test_utils", "ground_truth_functions.jl"))
+using .CPVerification
+using .GroundTruthFunctions
+
+# Shared constant used by test_ground_truth, test_gradient_hessian_accuracy,
+# test_hessian_classification_correctness
+const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
+
 @testset "GlobtimPostProcessing.jl" begin
     @testset "Module Loading" begin
         @test isdefined(GlobtimPostProcessing, :load_experiment_results)

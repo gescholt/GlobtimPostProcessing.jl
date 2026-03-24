@@ -4,10 +4,18 @@ using GlobtimPostProcessing
 using AbstractTrees
 using Printf: @sprintf
 using Globtim: SubdivisionTree, total_error, n_leaves, n_active, get_max_depth, volume
+using Globtim: compute_hessians, classify_critical_points
 
 import GlobtimPostProcessing: TreeDisplayConfig, DEFAULT_CONFIG,
     DIM_COLORS, get_dim_color, split_position_viz, get_error_reduction,
     progress_bar, format_time, format_error
+
+# Hessian classification override — provides actual classification when Globtim is loaded
+function GlobtimPostProcessing.classify_refined_points(objective_func, points::Vector{Vector{Float64}})
+    points_matrix = reduce(vcat, [pt' for pt in points])
+    hessians = compute_hessians(objective_func, points_matrix)
+    return classify_critical_points(hessians)
+end
 
 # Tree node wrapper for AbstractTrees interface
 struct TreeNode

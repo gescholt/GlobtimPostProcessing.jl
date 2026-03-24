@@ -21,14 +21,19 @@ using ForwardDiff
 using CSV
 using DataFrames
 
-# Include oracle and function definitions
-include(joinpath(@__DIR__, "test_utils", "cp_verification.jl"))
-include(joinpath(@__DIR__, "test_utils", "ground_truth_functions.jl"))
-
+# Include oracle and function definitions (guarded for runtests.jl which pre-includes them)
+if !@isdefined(CPVerification)
+    include(joinpath(@__DIR__, "test_utils", "cp_verification.jl"))
+end
+if !@isdefined(GroundTruthFunctions)
+    include(joinpath(@__DIR__, "test_utils", "ground_truth_functions.jl"))
+end
 using .CPVerification
 using .GroundTruthFunctions
 
-const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
+if !@isdefined(GT_DIR)
+    const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
+end
 
 # ============================================================================
 # Helper: load a ground truth CSV
