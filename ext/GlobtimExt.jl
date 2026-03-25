@@ -3,6 +3,7 @@ module GlobtimExt
 using GlobtimPostProcessing
 using AbstractTrees
 using Printf: @sprintf
+using FiniteDiff: finite_difference_hessian
 using Globtim: SubdivisionTree, total_error, n_leaves, n_active, get_max_depth, volume
 using Globtim: compute_hessians, classify_critical_points
 
@@ -10,10 +11,33 @@ import GlobtimPostProcessing: TreeDisplayConfig, DEFAULT_CONFIG,
     DIM_COLORS, get_dim_color, split_position_viz, get_error_reduction,
     progress_bar, format_time, format_error
 
-# Hessian classification override — provides actual classification when Globtim is loaded
-function GlobtimPostProcessing.classify_refined_points(objective_func::Function, points::Vector{Vector{Float64}})
-    points_matrix = reduce(vcat, [pt' for pt in points])
-    hessians = compute_hessians(objective_func, points_matrix)
+# Hessian classification override — provides actual classification when Globtim is loaded.
+# Constrained to ::Function for Julia extension dispatch (callers wrap non-Function callables
+# via _as_function before calling). Uses ForwardDiff for analytical objectives, or FiniteDiff
+# for ODE objectives where ForwardDiff can't propagate Dual types through the ODE solver.
+function GlobtimPostProcessing.classify_refined_points(objective_func::Function, points::Vector{Vector{Float64}}; gradient_method::Symbol=:forwarddiff)
+    if gradient_method == :finitediff
+        # Finite-difference Hessians — works for any callable including ODE-based TolerantObjective
+        n_dims = length(first(points))
+        hessians = Vector{Matrix{Float64}}(undef, length(points))
+        failed_points = Int[]
+        for (i, pt) in enumerate(points)
+            try
+                hessians[i] = finite_difference_hessian(objective_func, pt)
+            catch e
+                push!(failed_points, i)
+                @debug "Point $i: finite-difference Hessian failed" exception=(e, catch_backtrace())
+                hessians[i] = fill(NaN, n_dims, n_dims)
+            end
+        end
+        if !isempty(failed_points)
+            @warn "Finite-difference Hessian failed for $(length(failed_points))/$(length(points)) points" failed_points=first(failed_points, 5)
+        end
+    else
+        # ForwardDiff Hessians — fast and exact for analytical (non-ODE) objectives
+        points_matrix = reduce(vcat, [pt' for pt in points])
+        hessians = compute_hessians(objective_func, points_matrix)
+    end
     return classify_critical_points(hessians)
 end
 

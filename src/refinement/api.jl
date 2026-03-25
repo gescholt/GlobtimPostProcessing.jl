@@ -8,14 +8,26 @@ Created: 2025-11-22 (Architecture cleanup)
 
 # Note: Colors are handled via PrettyTables Crayons in print_refinement_summary()
 
+# Wrap non-Function callables (e.g. TolerantObjective) in a lambda.
+# This is needed because the GlobtimExt dispatch method requires ::Function.
+# For ODE objectives, always use gradient_method=:finitediff (ForwardDiff can't
+# propagate Dual types through ODE solvers).
+_as_function(f::Function) = f
+_as_function(f) = x -> f(x)
+
 """
-    classify_refined_points(objective_func, points::Vector{Vector{Float64}}) -> Vector{Symbol}
+    classify_refined_points(objective_func, points::Vector{Vector{Float64}}; gradient_method=:forwarddiff) -> Vector{Symbol}
 
 Compute Hessian eigenvalue classification for refined critical points.
 Returns `Symbol[]` when Globtim is not loaded (extension not active).
 Overridden by GlobtimExt to use `Globtim.compute_hessians` + `Globtim.classify_critical_points`.
+
+# Arguments
+- `objective_func`: Objective callable (Function or callable struct like TolerantObjective)
+- `points`: Refined critical points
+- `gradient_method`: `:forwarddiff` (default, exact AD) or `:finitediff` (for ODE objectives)
 """
-function classify_refined_points(objective_func, points::Vector{Vector{Float64}})
+function classify_refined_points(objective_func, points::Vector{Vector{Float64}}; gradient_method::Symbol=:forwarddiff)
     return Symbol[]
 end
 
@@ -181,7 +193,9 @@ function refine_experiment_results(
     # 7c. Hessian classification at refined points — minimum/saddle/maximum/degenerate
     # Uses extension dispatch: classify_refined_points returns Symbol[] without Globtim,
     # or actual classifications when GlobtimExt is loaded.
-    hessian_classifications = n_converged > 0 ? classify_refined_points(objective_func, refined_points) : Symbol[]
+    # _as_function wraps non-Function callables (e.g. TolerantObjective) in a lambda
+    # so they dispatch to the GlobtimExt ::Function method.
+    hessian_classifications = n_converged > 0 ? classify_refined_points(_as_function(objective_func), refined_points; gradient_method=config.gradient_method) : Symbol[]
 
     # 8. Save results (with Tier 1 diagnostics, gradient validation, and Hessian classification)
     save_refined_results(experiment_dir, result, raw_data.degree, refinement_results;
