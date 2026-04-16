@@ -46,7 +46,9 @@ using LineSearches  # Step size control for LBFGS
 using ForwardDiff  # Gradient computation for validation (algebraic objectives)
 using FiniteDiff   # Numerical gradients for ODE-based objectives
 using PrettyTables  # Rich terminal table formatting
-using PrettyTables: Highlighter  # owned binding for re-export (Aqua requires it)
+# Explicit owned bindings: PrettyTables v3 does not export these top-level
+# names, so `using PrettyTables` alone leaves them unresolved at runtime.
+using PrettyTables: Highlighter, tf_unicode_rounded, ft_printf
 using JLD2          # Tree serialization
 
 # Core functionality exports
