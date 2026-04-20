@@ -42,7 +42,7 @@ The function uses `detect_experiment_type()` to determine the experiment type:
 2. Parse experiment_config.json for system_type or function_name
 3. Fall back to UNKNOWN if type cannot be determined
 """
-function load_experiment(path::String; type::Union{ExperimentType, Nothing}=nothing)
+function load_experiment(path::String; type::Union{ExperimentType,Nothing} = nothing)
     # Validate path exists
     if !isdir(path)
         error("Experiment directory not found: $path")
@@ -141,7 +141,7 @@ function _load_generic_experiment(path::String, type::ExperimentType)::BaseExper
         type,
         config,
         degree_results,
-        critical_points
+        critical_points,
     )
 end
 
@@ -155,17 +155,17 @@ do not have a config file (e.g. legacy or third-party output). Callers must chec
 whether the returned dict is empty before accessing keys. For contexts where a
 missing config is an error, use `load_experiment_config` from the parent module instead.
 """
-function _load_config_safe(path::String)::Dict{String, Any}
+function _load_config_safe(path::String)::Dict{String,Any}
     config_path = joinpath(path, "experiment_config.json")
     if isfile(config_path)
         try
             return JSON.parsefile(config_path)
         catch e
-            @debug "Failed to parse experiment_config.json" exception=e
-            return Dict{String, Any}()
+            @debug "Failed to parse experiment_config.json" exception = e
+            return Dict{String,Any}()
         end
     end
-    return Dict{String, Any}()
+    return Dict{String,Any}()
 end
 
 """
@@ -201,7 +201,7 @@ function _load_degree_results(path::String)::DataFrame
 
         return DataFrame()
     catch e
-        @debug "Failed to parse results_summary.json" exception=e
+        @debug "Failed to parse results_summary.json" exception = e
         return DataFrame()
     end
 end
@@ -212,16 +212,17 @@ end
 Convert array-format results_summary to DataFrame.
 """
 function _results_array_to_dataframe(results::Vector)::DataFrame
-    rows = Dict{String, Any}[]
+    rows = Dict{String,Any}[]
 
     for r in results
         r isa AbstractDict || continue
         get(r, "success", false) || continue
 
-        row = Dict{String, Any}()
+        row = Dict{String,Any}()
         row["degree"] = get(r, "degree", 0)
         row["L2_norm"] = _extract_l2_norm(r)
-        row["critical_points"] = get(r, "critical_points", get(r, "total_critical_points", 0))
+        row["critical_points"] =
+            get(r, "critical_points", get(r, "total_critical_points", 0))
         row["condition_number"] = _parse_condition_number(get(r, "condition_number", NaN))
         row["computation_time"] = get(r, "total_computation_time", NaN)
 
@@ -245,7 +246,7 @@ end
 Convert dict-format results_summary to DataFrame.
 """
 function _results_dict_to_dataframe(results_summary::AbstractDict)::DataFrame
-    rows = Dict{String, Any}[]
+    rows = Dict{String,Any}[]
 
     for (key, r) in results_summary
         r isa AbstractDict || continue
@@ -255,7 +256,7 @@ function _results_dict_to_dataframe(results_summary::AbstractDict)::DataFrame
         degree = tryparse(Int, degree_str)
         degree === nothing && continue
 
-        row = Dict{String, Any}()
+        row = Dict{String,Any}()
         row["degree"] = degree
         row["L2_norm"] = _extract_l2_norm(r)
         row["critical_points"] = get(r, "critical_points", 0)
@@ -308,10 +309,9 @@ end
 
 Load and combine all critical_points_deg_*.csv files.
 """
-function _load_critical_points(path::String)::Union{DataFrame, Nothing}
+function _load_critical_points(path::String)::Union{DataFrame,Nothing}
     csv_files = filter(readdir(path)) do f
-        (startswith(f, "critical_points_deg_") || startswith(f, "critical_points_raw_deg_")) &&
-        endswith(f, ".csv")
+        (startswith(f, "critical_points_deg_") || startswith(f, "critical_points_raw_deg_")) && endswith(f, ".csv")
     end
 
     isempty(csv_files) && return nothing
@@ -328,11 +328,11 @@ function _load_critical_points(path::String)::Union{DataFrame, Nothing}
             df[!, :degree] .= degree
             push!(dfs, df)
         catch e
-            @debug "Failed to load $csv_file" exception=e
+            @debug "Failed to load $csv_file" exception = e
         end
     end
 
-    return isempty(dfs) ? nothing : vcat(dfs..., cols=:union)
+    return isempty(dfs) ? nothing : vcat(dfs..., cols = :union)
 end
 
 # ============================================================================
@@ -363,8 +363,14 @@ Type-specific dispatches (e.g., LV4DType) are defined in their respective module
 """
 function is_single_experiment(::ExperimentType, path::String)::Bool
     files = readdir(path)
-    has_csv = any(f -> endswith(f, ".csv") &&
-        (startswith(f, "critical_points_raw_deg_") || startswith(f, "critical_points_deg_")), files)
+    has_csv = any(
+        f ->
+            endswith(f, ".csv") && (
+                startswith(f, "critical_points_raw_deg_") ||
+                startswith(f, "critical_points_deg_")
+            ),
+        files,
+    )
     has_results = "results_summary.json" in files || "results_summary.jld2" in files
     return has_csv || has_results
 end
@@ -385,14 +391,17 @@ Load multiple experiments.
 # Returns
 - Vector of experiment data structures (may be mixed types if type=nothing)
 """
-function load_experiments(paths::Vector{String}; type::Union{ExperimentType, Nothing}=nothing)
+function load_experiments(
+    paths::Vector{String};
+    type::Union{ExperimentType,Nothing} = nothing,
+)
     results = []
     for path in paths
         try
-            data = load_experiment(path; type=type)
+            data = load_experiment(path; type = type)
             push!(results, data)
         catch e
-            @debug "Failed to load experiment" path=path exception=e
+            @debug "Failed to load experiment" path = path exception = e
         end
     end
     return results
@@ -411,14 +420,16 @@ Find and load all experiments in a directory.
 # Returns
 - Vector of loaded experiment data
 """
-function find_and_load_experiments(root::String;
-                                   type::Union{ExperimentType, Nothing}=nothing,
-                                   pattern::Union{String, Regex, Nothing}=nothing)
+function find_and_load_experiments(
+    root::String;
+    type::Union{ExperimentType,Nothing} = nothing,
+    pattern::Union{String,Regex,Nothing} = nothing,
+)
     !isdir(root) && return []
 
     # Find experiment directories
     exp_dirs = String[]
-    for entry in readdir(root, join=true)
+    for entry in readdir(root, join = true)
         !isdir(entry) && continue
 
         # Filter by pattern if provided
@@ -439,7 +450,7 @@ function find_and_load_experiments(root::String;
     end
 
     # Sort by modification time (most recent first)
-    sort!(exp_dirs, by=mtime, rev=true)
+    sort!(exp_dirs, by = mtime, rev = true)
 
-    return load_experiments(exp_dirs; type=type)
+    return load_experiments(exp_dirs; type = type)
 end

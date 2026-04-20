@@ -81,7 +81,7 @@ end
 Load experiment_config.json from an experiment directory.
 Delegates to the canonical `load_experiment_config` from the parent module.
 """
-function load_experiment_config_json(experiment_dir::String)::Dict{String, Any}
+function load_experiment_config_json(experiment_dir::String)::Dict{String,Any}
     return load_experiment_config(experiment_dir)
 end
 
@@ -119,7 +119,7 @@ end
 Load critical point metrics (gradient_norm, z values) from CSV files.
 Returns DataFrame with columns: domain, degree, GN, gradient_norm, z
 """
-function load_critical_point_metrics(experiment_dir::String)::Union{DataFrame, Nothing}
+function load_critical_point_metrics(experiment_dir::String)::Union{DataFrame,Nothing}
     dirname = basename(experiment_dir)
     params = parse_experiment_name(dirname)
     params === nothing && return nothing
@@ -143,13 +143,16 @@ function load_critical_point_metrics(experiment_dir::String)::Union{DataFrame, N
 
             if has_grad || has_z
                 for i in 1:nrow(df)
-                    push!(rows, DataFrame(
-                        domain = params.domain,
-                        degree = degree,
-                        GN = params.GN,
-                        gradient_norm = has_grad ? Float64(df.gradient_norm[i]) : NaN,
-                        z = has_z ? Float64(df.z[i]) : NaN
-                    ))
+                    push!(
+                        rows,
+                        DataFrame(
+                            domain = params.domain,
+                            degree = degree,
+                            GN = params.GN,
+                            gradient_norm = has_grad ? Float64(df.gradient_norm[i]) : NaN,
+                            z = has_z ? Float64(df.z[i]) : NaN,
+                        ),
+                    )
                 end
             end
         catch e
@@ -186,7 +189,8 @@ function load_lv4d_experiment(experiment_dir::String)::LV4DExperimentData
     p_center = Float64.(config["p_center"])
     # Handle both config formats: "sample_range" (standard) and "domain_range" (subdivision)
     domain_size = Float64(get(config, "sample_range", get(config, "domain_range", NaN)))
-    isnan(domain_size) && error("Config missing both 'sample_range' and 'domain_range' keys")
+    isnan(domain_size) &&
+        error("Config missing both 'sample_range' and 'domain_range' keys")
     dim = length(p_true)
 
     # Load results summary and convert to DataFrame
@@ -201,8 +205,7 @@ function load_lv4d_experiment(experiment_dir::String)::LV4DExperimentData
         x_cols = [Symbol("x$i") for i in 1:dim]
         if all(c -> hasproperty(critical_points, c), x_cols)
             distances = [
-                norm([row[c] for c in x_cols] .- p_true)
-                for row in eachrow(critical_points)
+                norm([row[c] for c in x_cols] .- p_true) for row in eachrow(critical_points)
             ]
             critical_points[!, :dist_to_true] = distances
         end
@@ -216,12 +219,10 @@ function load_lv4d_experiment(experiment_dir::String)::LV4DExperimentData
         LV4D,
         config,
         degree_results,
-        cp_result
+        cp_result,
     )
 
-    return LV4DExperimentData(
-        base, params, p_true, p_center, domain_size, dim
-    )
+    return LV4DExperimentData(base, params, p_true, p_center, domain_size, dim)
 end
 
 """
@@ -229,8 +230,11 @@ end
 
 Parse results_summary.json into a DataFrame.
 """
-function _parse_results_summary(results::Vector, params::ExperimentParams,
-                                config::Dict)::DataFrame
+function _parse_results_summary(
+    results::Vector,
+    params::ExperimentParams,
+    config::Dict,
+)::DataFrame
     rows = DataFrame[]
 
     for r in results
@@ -271,7 +275,7 @@ function _parse_results_summary(results::Vector, params::ExperimentParams,
             hessian_saddle = get(r, "hessian_saddle", 0),
             hessian_degenerate = get(r, "hessian_degenerate", 0),
             computation_time = get(r, "total_computation_time", NaN),
-            experiment_dir = basename(get(config, "experiment_dir", ""))
+            experiment_dir = basename(get(config, "experiment_dir", "")),
         )
         push!(rows, row)
     end
@@ -296,7 +300,7 @@ Result of loading experiments with success/failure tracking.
 struct LoadResult
     loaded::Vector{LV4DExperimentData}
     failed::Vector{String}
-    errors::Dict{String, String}
+    errors::Dict{String,String}
 end
 
 """
@@ -314,11 +318,12 @@ Vector of `LV4DExperimentData` for all matching experiments.
 
 See also: [`load_sweep_experiments_with_report`](@ref) for detailed failure info.
 """
-function load_sweep_experiments(results_root::Union{String, Nothing};
-                               pattern::Union{String, Regex, Nothing}=nothing,
-                               report_failures::Bool=false
-                               )::Vector{LV4DExperimentData}
-    result = load_sweep_experiments_with_report(results_root; pattern=pattern)
+function load_sweep_experiments(
+    results_root::Union{String,Nothing};
+    pattern::Union{String,Regex,Nothing} = nothing,
+    report_failures::Bool = false,
+)::Vector{LV4DExperimentData}
+    result = load_sweep_experiments_with_report(results_root; pattern = pattern)
 
     if report_failures && !isempty(result.failed)
         println("Skipped $(length(result.failed)) experiments that failed to load:")
@@ -356,13 +361,14 @@ if !isempty(result.failed)
 end
 ```
 """
-function load_sweep_experiments_with_report(results_root::Union{String, Nothing};
-                                           pattern::Union{String, Regex, Nothing}=nothing
-                                           )::LoadResult
-    exp_dirs = find_experiments(results_root; pattern=pattern)
+function load_sweep_experiments_with_report(
+    results_root::Union{String,Nothing};
+    pattern::Union{String,Regex,Nothing} = nothing,
+)::LoadResult
+    exp_dirs = find_experiments(results_root; pattern = pattern)
     loaded = LV4DExperimentData[]
     failed = String[]
-    errors = Dict{String, String}()
+    errors = Dict{String,String}()
 
     for exp_dir in exp_dirs
         try
@@ -395,8 +401,11 @@ NamedTuple with:
 - `fraction_in`: Fraction of points inside domain
 - `per_dim_violations`: Vector of counts of violations per dimension
 """
-function analyze_domain_membership(df::DataFrame, center::Vector{Float64},
-                                   domain_size::Float64)
+function analyze_domain_membership(
+    df::DataFrame,
+    center::Vector{Float64},
+    domain_size::Float64,
+)
     dim = length(center)
     x_cols = [Symbol("x$i") for i in 1:dim]
 
@@ -426,6 +435,6 @@ function analyze_domain_membership(df::DataFrame, center::Vector{Float64},
         in_domain = in_domain_count,
         out_of_domain = nrow(df) - in_domain_count,
         fraction_in = in_domain_count / max(1, nrow(df)),
-        per_dim_violations = per_dim_violations
+        per_dim_violations = per_dim_violations,
     )
 end

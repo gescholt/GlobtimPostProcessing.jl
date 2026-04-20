@@ -74,7 +74,6 @@ export degree_results, critical_points, has_critical_points, available_degrees
 export batch_analyze_campaign, load_campaign_with_progress
 export aggregate_campaign_statistics_with_progress, batch_analyze_campaign_with_progress
 
-
 # Parameter recovery exports (Issue #7)
 export param_distance, load_experiment_config, load_critical_points_for_degree
 export detect_csv_schema, get_coordinate_columns
@@ -168,8 +167,6 @@ export trace_valley, trace_valleys_from_critical_points
 export walk_newton_projection, walk_predictor_corrector, walk_tangent_projection
 export run_valley_analysis
 
-
-
 # Subdivision tree analysis exports (load + analyze saved JLD2/JSON trees)
 export load_subdivision_tree, analyze_subdivision_tree, SubdivisionTreeStats
 export tree_leaves_to_dataframe, tree_depth_summary
@@ -217,12 +214,12 @@ Container for a single experiment's results and metadata.
 """
 struct ExperimentResult
     experiment_id::String
-    metadata::Dict{String, Any}
+    metadata::Dict{String,Any}
     enabled_tracking::Vector{String}
     tracking_capabilities::Vector{String}
-    critical_points::Union{DataFrame, Nothing}
-    performance_metrics::Union{Dict, Nothing}
-    tolerance_validation::Union{Dict, Nothing}
+    critical_points::Union{DataFrame,Nothing}
+    performance_metrics::Union{Dict,Nothing}
+    tolerance_validation::Union{Dict,Nothing}
     source_path::String
 end
 
@@ -240,7 +237,7 @@ Container for multi-experiment campaign results.
 struct CampaignResults
     campaign_id::String
     experiments::Vector{ExperimentResult}
-    campaign_metadata::Dict{String, Any}
+    campaign_metadata::Dict{String,Any}
     collection_timestamp::DateTime
 end
 
@@ -294,12 +291,14 @@ include("unified/UnifiedPipeline.jl")
 
 # Re-export unified pipeline symbols
 using .UnifiedPipeline: postprocess, load_experiment
-using .UnifiedPipeline: ExperimentType, LV4DType, DeuflhardType, FitzHughNagumoType, UnknownType
+using .UnifiedPipeline:
+    ExperimentType, LV4DType, DeuflhardType, FitzHughNagumoType, UnknownType
 using .UnifiedPipeline: LV4D, DEUFLHARD, FITZHUGH_NAGUMO, UNKNOWN
 using .UnifiedPipeline: detect_experiment_type, type_name
 using .UnifiedPipeline: BaseExperimentData, get_base
 using .UnifiedPipeline: experiment_id, experiment_path, experiment_type
-using .UnifiedPipeline: degree_results, critical_points, has_critical_points, available_degrees
+using .UnifiedPipeline:
+    degree_results, critical_points, has_critical_points, available_degrees
 
 # LV4D analysis module (unified LV4D post-processing - January 2026)
 include("lv4d/LV4DAnalysis.jl")

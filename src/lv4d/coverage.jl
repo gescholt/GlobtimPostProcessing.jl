@@ -21,7 +21,10 @@ struct ExperimentKey
 end
 
 function Base.show(io::IO, key::ExperimentKey)
-    print(io, "ExperimentKey(GN=$(key.GN), domain=$(key.domain), degree=$(key.degree), seed=$(key.seed))")
+    print(
+        io,
+        "ExperimentKey(GN=$(key.GN), domain=$(key.domain), degree=$(key.degree), seed=$(key.seed))",
+    )
 end
 
 """
@@ -76,11 +79,13 @@ report = analyze_coverage(nothing;  # Search all results directories
 print_coverage_report(report)
 ```
 """
-function analyze_coverage(results_root::Union{String, Nothing};
-                          expected_gn::Vector{Int} = [8, 12, 16],
-                          expected_domains::Vector{Float64},
-                          expected_degrees::AbstractVector{Int} = 4:2:12,
-                          expected_seeds::AbstractVector{Int} = [1])
+function analyze_coverage(
+    results_root::Union{String,Nothing};
+    expected_gn::Vector{Int} = [8, 12, 16],
+    expected_domains::Vector{Float64},
+    expected_degrees::AbstractVector{Int} = 4:2:12,
+    expected_seeds::AbstractVector{Int} = [1],
+)
 
     # 1. Build expected set
     expected = Set{ExperimentKey}()
@@ -116,7 +121,7 @@ function analyze_coverage(results_root::Union{String, Nothing};
 
     # 3. Compute missing
     missing_set = setdiff(expected, found)
-    missing_keys = sort(collect(missing_set); by=k -> (k.GN, k.domain, k.degree, k.seed))
+    missing_keys = sort(collect(missing_set); by = k -> (k.GN, k.domain, k.degree, k.seed))
 
     # 4. Coverage percentage
     found_expected = length(intersect(expected, found))
@@ -127,7 +132,7 @@ function analyze_coverage(results_root::Union{String, Nothing};
         gn = expected_gn,
         domains = expected_domains,
         degrees = collect(expected_degrees),
-        seeds = collect(expected_seeds)
+        seeds = collect(expected_seeds),
     )
 
     return CoverageReport(expected, found, missing_keys, coverage_pct, expected_params)
@@ -160,7 +165,7 @@ Print a formatted coverage report to terminal.
 - `report::CoverageReport`: Coverage analysis result
 - `max_missing::Int=50`: Maximum number of missing combinations to display
 """
-function print_coverage_report(report::CoverageReport; max_missing::Int=50)
+function print_coverage_report(report::CoverageReport; max_missing::Int = 50)
     params = report.expected_params
 
     println()
@@ -176,12 +181,21 @@ function print_coverage_report(report::CoverageReport; max_missing::Int=50)
     # Infer step from degrees vector (assumes uniform spacing)
     deg_step = length(params.degrees) > 1 ? params.degrees[2] - params.degrees[1] : 2
     println()
-    println("Checking: GN={$(_format_list(params.gn))} × domains={$(_format_list(params.domains))}")
-    println("          degrees=$(first(params.degrees)):$deg_step:$(last(params.degrees)) × seeds=$(_format_seeds(params.seeds))")
+    println(
+        "Checking: GN={$(_format_list(params.gn))} × domains={$(_format_list(params.domains))}",
+    )
+    println(
+        "          degrees=$(first(params.degrees)):$deg_step:$(last(params.degrees)) × seeds=$(_format_seeds(params.seeds))",
+    )
     println()
     println("-"^60)
 
-    @printf("Coverage: %.1f%% (%d/%d experiments)\n", report.coverage_pct, n_found, n_expected)
+    @printf(
+        "Coverage: %.1f%% (%d/%d experiments)\n",
+        report.coverage_pct,
+        n_found,
+        n_expected
+    )
 
     if n_missing == 0
         println("\nAll expected experiments are present.")
@@ -194,7 +208,7 @@ function print_coverage_report(report::CoverageReport; max_missing::Int=50)
     println("\nMissing ($n_missing experiments in $(length(grouped)) config groups):")
 
     displayed = 0
-    for ((gn, domain, degree), seeds) in sort(collect(grouped); by=first)
+    for ((gn, domain, degree), seeds) in sort(collect(grouped); by = first)
         displayed += 1
         if displayed > max_missing
             remaining = length(grouped) - max_missing
@@ -203,8 +217,7 @@ function print_coverage_report(report::CoverageReport; max_missing::Int=50)
         end
 
         seed_str = "seeds=$(_format_seeds(seeds))"
-        @printf("  GN=%-2d  domain=%-8.2e  degree=%-2d  %s\n",
-                gn, domain, degree, seed_str)
+        @printf("  GN=%-2d  domain=%-8.2e  degree=%-2d  %s\n", gn, domain, degree, seed_str)
     end
 
     println()
@@ -219,7 +232,7 @@ Group missing experiment keys by (GN, domain, degree), collecting seeds.
 Dict mapping (GN, domain, degree) tuples to vectors of missing seeds.
 """
 function group_missing_by_config(missing_keys::Vector{ExperimentKey})
-    grouped = Dict{Tuple{Int, Float64, Int}, Vector{Int}}()
+    grouped = Dict{Tuple{Int,Float64,Int},Vector{Int}}()
 
     for key in missing_keys
         config = (key.GN, key.domain, key.degree)
@@ -272,9 +285,7 @@ report = analyze_coverage(results_root; ...)
 configs = generate_gap_filling_configs(report; output_dir="experiments/fill_gaps/")
 ```
 """
-function generate_gap_filling_configs(report::CoverageReport;
-                                      output_dir::String)
-
+function generate_gap_filling_configs(report::CoverageReport; output_dir::String)
     if isempty(report.missing_keys)
         @info "No missing experiments - nothing to generate"
         return String[]
@@ -287,7 +298,7 @@ function generate_gap_filling_configs(report::CoverageReport;
 
     generated_files = String[]
 
-    for ((gn, domain, degree), seeds) in sort(collect(grouped); by=first)
+    for ((gn, domain, degree), seeds) in sort(collect(grouped); by = first)
         # Create config content
         config_content = _generate_config_toml(gn, domain, degree, seeds)
 

@@ -30,7 +30,8 @@ upper_bounds(bounds::Vector{Tuple{Float64,Float64}}) = [b[2] for b in bounds]
 Split paired bounds into (lower, upper) vectors. Returns (nothing, nothing) if bounds is nothing.
 """
 split_bounds(::Nothing) = (nothing, nothing)
-split_bounds(bounds::Vector{Tuple{Float64,Float64}}) = (lower_bounds(bounds), upper_bounds(bounds))
+split_bounds(bounds::Vector{Tuple{Float64,Float64}}) =
+    (lower_bounds(bounds), upper_bounds(bounds))
 
 # ============================================================================
 # RefinementConfig
@@ -76,7 +77,7 @@ config_custom = RefinementConfig(
 """
 struct RefinementConfig
     method::Optim.AbstractOptimizer
-    max_time_per_point::Union{Nothing, Float64}
+    max_time_per_point::Union{Nothing,Float64}
     f_abstol::Float64
     x_abstol::Float64
     max_iterations::Int
@@ -85,7 +86,7 @@ struct RefinementConfig
     show_progress::Bool
     gradient_method::Symbol
     gradient_tolerance::Float64
-    bounds::Union{Nothing, Vector{Tuple{Float64,Float64}}}
+    bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}}
 end
 
 """
@@ -123,7 +124,7 @@ config = RefinementConfig(gradient_method=:finitediff)
 """
 function RefinementConfig(;
     method::Optim.AbstractOptimizer = Optim.NelderMead(),
-    max_time_per_point::Union{Nothing, Float64} = 30.0,
+    max_time_per_point::Union{Nothing,Float64} = 30.0,
     f_abstol::Float64 = 1e-6,
     x_abstol::Float64 = 1e-6,
     max_iterations::Int = 300,
@@ -132,7 +133,7 @@ function RefinementConfig(;
     show_progress::Bool = true,
     gradient_method::Symbol = :forwarddiff,
     gradient_tolerance::Float64 = 1e-8,
-    bounds::Union{Nothing, Vector{Tuple{Float64,Float64}}} = nothing
+    bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
 )
     return RefinementConfig(
         method,
@@ -145,7 +146,7 @@ function RefinementConfig(;
         show_progress,
         gradient_method,
         gradient_tolerance,
-        bounds
+        bounds,
     )
 end
 
@@ -185,7 +186,7 @@ config = ode_refinement_config(f_abstol=1e-8)
 function ode_refinement_config(;
     max_time_per_point::Float64 = 60.0,
     gradient_tolerance::Float64 = 1e-4,
-    kwargs...
+    kwargs...,
 )
     return RefinementConfig(;
         method = Optim.NelderMead(),  # Gradient-free required for ODE
@@ -193,6 +194,6 @@ function ode_refinement_config(;
         robust_mode = true,  # Return Inf on ODE solver failure
         gradient_method = :finitediff,  # Numerical gradients for ODE objectives
         gradient_tolerance = gradient_tolerance,  # Realistic for ODE solver accuracy (~1e-6)
-        kwargs...
+        kwargs...,
     )
 end

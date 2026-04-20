@@ -12,7 +12,7 @@ Extract data organized by polynomial degree from results_summary format.
 Returns a dictionary mapping degree => data_dict.
 """
 function extract_per_degree_data(result::ExperimentResult)
-    per_degree = Dict{Int, Dict{String, Any}}()
+    per_degree = Dict{Int,Dict{String,Any}}()
 
     # Load original results_summary.json to get per-degree data
     results_file = joinpath(result.source_path, "results_summary.json")
@@ -54,7 +54,7 @@ function compute_approximation_quality(result::ExperimentResult, per_degree::Dic
         "mean_error" => isempty(valid_errors) ? NaN : mean(valid_errors),
         "min_error" => isempty(valid_errors) ? NaN : minimum(valid_errors),
         "max_error" => isempty(valid_errors) ? NaN : maximum(valid_errors),
-        "best_degree" => isempty(valid_errors) ? nothing : degrees[argmin(l2_errors)]
+        "best_degree" => isempty(valid_errors) ? nothing : degrees[argmin(l2_errors)],
     )
 end
 
@@ -77,7 +77,7 @@ function compute_numerical_stability(result::ExperimentResult, per_degree::Dict)
         "degrees" => degrees,
         "condition_numbers" => cond_numbers,
         "mean_condition" => isempty(valid_conds) ? NaN : mean(valid_conds),
-        "max_condition" => isempty(valid_conds) ? NaN : maximum(valid_conds)
+        "max_condition" => isempty(valid_conds) ? NaN : maximum(valid_conds),
     )
 end
 
@@ -105,7 +105,7 @@ function compute_parameter_recovery(result::ExperimentResult, per_degree::Dict)
         "mean_error" => isempty(valid_errors) ? NaN : mean(valid_errors),
         "min_error" => isempty(valid_errors) ? NaN : minimum(valid_errors),
         "best_degree" => isempty(valid_errors) ? nothing : degrees[argmin(recovery_errors)],
-        "true_parameters" => true_params
+        "true_parameters" => true_params,
     )
 end
 
@@ -164,7 +164,7 @@ function compute_critical_points_summary(result::ExperimentResult, per_degree::D
         "raw_critical_points" => raw_counts,
         "refined_critical_points" => refined_counts,
         "total_raw" => sum(raw_counts),
-        "total_refined" => sum(refined_counts)
+        "total_refined" => sum(refined_counts),
     )
 end
 
@@ -175,7 +175,7 @@ Compute polynomial approximation quality metrics.
 (Legacy function - use compute_statistics instead)
 """
 function compute_polynomial_quality_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "polynomial_quality", "available" => false)
+    stats = Dict{String,Any}("label" => "polynomial_quality", "available" => false)
 
     # Extract from performance metrics or metadata
     if result.performance_metrics !== nothing
@@ -218,7 +218,7 @@ end
 Compute convergence tracking statistics.
 """
 function compute_convergence_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "convergence_tracking", "available" => false)
+    stats = Dict{String,Any}("label" => "convergence_tracking", "available" => false)
 
     # Placeholder for future convergence data extraction
     # Would parse convergence history if tracked
@@ -232,7 +232,7 @@ end
 Compute Hessian eigenvalue statistics from critical points.
 """
 function compute_hessian_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "hessian_eigenvalues", "available" => false)
+    stats = Dict{String,Any}("label" => "hessian_eigenvalues", "available" => false)
 
     if result.critical_points === nothing || nrow(result.critical_points) == 0
         return stats
@@ -285,7 +285,7 @@ function compute_hessian_statistics(result::ExperimentResult)
         stats["eigenvalue_sign_distribution"] = Dict(
             "negative" => num_negative,
             "positive" => num_positive,
-            "near_zero" => num_zero
+            "near_zero" => num_zero,
         )
     end
 
@@ -298,7 +298,7 @@ end
 Compute gradient norm statistics at critical points.
 """
 function compute_gradient_norm_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "gradient_norms", "available" => false)
+    stats = Dict{String,Any}("label" => "gradient_norms", "available" => false)
 
     if result.critical_points === nothing || nrow(result.critical_points) == 0
         return stats
@@ -337,7 +337,7 @@ end
 Compute distance to known solutions (if available).
 """
 function compute_distance_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "distance_to_solutions", "available" => false)
+    stats = Dict{String,Any}("label" => "distance_to_solutions", "available" => false)
 
     # Placeholder - would require known solutions in metadata
     # Future implementation
@@ -351,7 +351,7 @@ end
 Compute sparsification metrics.
 """
 function compute_sparsification_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "sparsification_tracking", "available" => false)
+    stats = Dict{String,Any}("label" => "sparsification_tracking", "available" => false)
 
     # Placeholder for sparsification data
     # Future implementation
@@ -365,7 +365,7 @@ end
 Compute performance profiling statistics.
 """
 function compute_performance_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "performance_metrics", "available" => false)
+    stats = Dict{String,Any}("label" => "performance_metrics", "available" => false)
 
     if result.performance_metrics === nothing
         return stats
@@ -393,7 +393,7 @@ end
 Compute critical point distribution and classification statistics.
 """
 function compute_critical_point_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "critical_point_statistics", "available" => false)
+    stats = Dict{String,Any}("label" => "critical_point_statistics", "available" => false)
 
     if result.critical_points === nothing || nrow(result.critical_points) == 0
         return stats
@@ -405,7 +405,7 @@ function compute_critical_point_statistics(result::ExperimentResult)
 
     # Type distribution if available
     if "point_type" in names(df)
-        type_counts = Dict{String, Int}()
+        type_counts = Dict{String,Int}()
         for pt_type in unique(df.point_type)
             type_counts[string(pt_type)] = count(==(pt_type), df.point_type)
         end
@@ -430,7 +430,7 @@ end
 Compute approximation quality statistics from l2_approx_error across degrees.
 """
 function compute_approximation_quality_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "approximation_quality", "available" => false)
+    stats = Dict{String,Any}("label" => "approximation_quality", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -474,7 +474,7 @@ end
 Compute parameter recovery statistics from recovery_error across degrees.
 """
 function compute_parameter_recovery_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "parameter_recovery", "available" => false)
+    stats = Dict{String,Any}("label" => "parameter_recovery", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -521,7 +521,7 @@ end
 Compute numerical stability statistics from condition_number across degrees.
 """
 function compute_numerical_stability_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "numerical_stability", "available" => false)
+    stats = Dict{String,Any}("label" => "numerical_stability", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -561,7 +561,7 @@ end
 Compute timing statistics for a specific timing label.
 """
 function compute_timing_statistics(result::ExperimentResult, label::String)
-    stats = Dict{String, Any}("label" => label, "available" => false)
+    stats = Dict{String,Any}("label" => label, "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -573,7 +573,7 @@ function compute_timing_statistics(result::ExperimentResult, label::String)
         "polynomial_timing" => "polynomial_construction_time",
         "solving_timing" => "critical_point_solving_time",
         "refinement_timing" => "refinement_time",
-        "total_timing" => "total_computation_time"
+        "total_timing" => "total_computation_time",
     )
 
     field_name = get(field_map, label, nothing)
@@ -616,7 +616,7 @@ end
 Compute refinement quality statistics from refinement_stats across degrees.
 """
 function compute_refinement_quality_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "refinement_quality", "available" => false)
+    stats = Dict{String,Any}("label" => "refinement_quality", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -660,7 +660,7 @@ end
 Compute optimization quality statistics from best_objective across degrees.
 """
 function compute_optimization_quality_statistics(result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "optimization_quality", "available" => false)
+    stats = Dict{String,Any}("label" => "optimization_quality", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)

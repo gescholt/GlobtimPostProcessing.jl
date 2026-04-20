@@ -117,8 +117,13 @@ Uses the full Newton step `x -= H \\ ∇f` to find the nearest critical point.
 This correctly handles valleys where the minimum value is nonzero (e.g. parameter
 estimation error functions with irreducible residual).
 """
-function project_to_valley(f, point::AbstractVector;
-        max_iter::Int=10, tol::Float64=1e-10, gradient_method::Symbol=:forwarddiff)
+function project_to_valley(
+    f,
+    point::AbstractVector;
+    max_iter::Int = 10,
+    tol::Float64 = 1e-10,
+    gradient_method::Symbol = :forwarddiff,
+)
     x = Vector{Float64}(point)
     for _ in 1:max_iter
         g = _vw_gradient(f, x, gradient_method)
@@ -154,8 +159,12 @@ Because every step has zero component along `t`, the tangent coordinate of `x`
 is preserved exactly throughout all iterations.
 """
 function project_to_valley_tangent(
-    f, point::AbstractVector, tangent::AbstractVector;
-    max_iter::Int=10, tol::Float64=1e-10, gradient_method::Symbol=:forwarddiff,
+    f,
+    point::AbstractVector,
+    tangent::AbstractVector;
+    max_iter::Int = 10,
+    tol::Float64 = 1e-10,
+    gradient_method::Symbol = :forwarddiff,
 )
     x = Vector{Float64}(point)
     t = tangent / norm(tangent)
@@ -192,7 +201,12 @@ end
 Get tangent direction from Hessian null space, maintaining continuity with previous direction.
 Returns `nothing` if no valley tangent exists at this point.
 """
-function get_valley_tangent(f, point::AbstractVector, prev_dir::AbstractVector, config::ValleyWalkConfig)
+function get_valley_tangent(
+    f,
+    point::AbstractVector,
+    prev_dir::AbstractVector,
+    config::ValleyWalkConfig,
+)
     hess = _vw_hessian(f, point, config.gradient_method)
     eigendecomp = eigen(hess)
     mask = abs.(eigendecomp.values) .< config.eigenvalue_threshold
@@ -213,8 +227,12 @@ end
 Walk along valley using Newton projection method.
 Takes tangent steps then projects back onto the valley.
 """
-function walk_newton_projection(f, start_point::AbstractVector, initial_direction::AbstractVector,
-                                 config::ValleyWalkConfig)
+function walk_newton_projection(
+    f,
+    start_point::AbstractVector,
+    initial_direction::AbstractVector,
+    config::ValleyWalkConfig,
+)
     steps = [Vector{Float64}(start_point)]
     current = Vector{Float64}(start_point)
     direction = initial_direction / norm(initial_direction)
@@ -228,10 +246,13 @@ function walk_newton_projection(f, start_point::AbstractVector, initial_directio
         # Take tangent step
         candidate = current + step_size * direction
         # Project back onto valley
-        projected = project_to_valley(f, candidate;
-                                      max_iter=config.max_projection_iter,
-                                      tol=config.projection_tol,
-                                      gradient_method=config.gradient_method)
+        projected = project_to_valley(
+            f,
+            candidate;
+            max_iter = config.max_projection_iter,
+            tol = config.projection_tol,
+            gradient_method = config.gradient_method,
+        )
 
         # Accept if projection didn't move too far
         if norm(projected - candidate) < step_size
@@ -252,8 +273,12 @@ end
 Walk along valley using predictor-corrector method.
 Predicts with tangent step, corrects with Newton projection, adapts step size.
 """
-function walk_predictor_corrector(f, start_point::AbstractVector, initial_direction::AbstractVector,
-                                   config::ValleyWalkConfig)
+function walk_predictor_corrector(
+    f,
+    start_point::AbstractVector,
+    initial_direction::AbstractVector,
+    config::ValleyWalkConfig,
+)
     steps = [Vector{Float64}(start_point)]
     current = Vector{Float64}(start_point)
     direction = initial_direction / norm(initial_direction)
@@ -267,10 +292,13 @@ function walk_predictor_corrector(f, start_point::AbstractVector, initial_direct
         # Predictor: tangent step
         predicted = current + step_size * direction
         # Corrector: Newton projection
-        corrected = project_to_valley(f, predicted;
-                                      max_iter=config.max_projection_iter,
-                                      tol=config.projection_tol,
-                                      gradient_method=config.gradient_method)
+        corrected = project_to_valley(
+            f,
+            predicted;
+            max_iter = config.max_projection_iter,
+            tol = config.projection_tol,
+            gradient_method = config.gradient_method,
+        )
 
         correction_size = norm(corrected - predicted)
         if correction_size < 0.5 * step_size
@@ -302,8 +330,12 @@ corrections, preserving progress along the valley tangent direction.
 Compared to `walk_newton_projection`, this method avoids longitudinal drift
 along the valley and produces more uniformly spaced points.
 """
-function walk_tangent_projection(f, start_point::AbstractVector, initial_direction::AbstractVector,
-                                  config::ValleyWalkConfig)
+function walk_tangent_projection(
+    f,
+    start_point::AbstractVector,
+    initial_direction::AbstractVector,
+    config::ValleyWalkConfig,
+)
     steps = [Vector{Float64}(start_point)]
     current = Vector{Float64}(start_point)
     direction = initial_direction / norm(initial_direction)
@@ -317,10 +349,14 @@ function walk_tangent_projection(f, start_point::AbstractVector, initial_directi
         # Take tangent step
         candidate = current + step_size * direction
         # Project back onto valley using tangent-preserving corrector
-        projected = project_to_valley_tangent(f, candidate, direction;
-                                              max_iter=config.max_projection_iter,
-                                              tol=config.projection_tol,
-                                              gradient_method=config.gradient_method)
+        projected = project_to_valley_tangent(
+            f,
+            candidate,
+            direction;
+            max_iter = config.max_projection_iter,
+            tol = config.projection_tol,
+            gradient_method = config.gradient_method,
+        )
 
         # Accept if projection didn't move too far
         if norm(projected - candidate) < step_size
@@ -343,7 +379,11 @@ Trace a valley in both directions from a starting point.
 First detects if the point is on a valley, then walks in both positive and
 negative tangent directions using the specified method.
 """
-function trace_valley(f, start_point::AbstractVector, config::ValleyWalkConfig=ValleyWalkConfig())
+function trace_valley(
+    f,
+    start_point::AbstractVector,
+    config::ValleyWalkConfig = ValleyWalkConfig(),
+)
     is_valley, directions, vdim = detect_valley(f, start_point, config)
 
     if !is_valley
@@ -351,7 +391,11 @@ function trace_valley(f, start_point::AbstractVector, config::ValleyWalkConfig=V
             Vector{Float64}(start_point),
             [Vector{Float64}(start_point)],
             [Vector{Float64}(start_point)],
-            0.0, 1, 0, config.method, false
+            0.0,
+            1,
+            0,
+            config.method,
+            false,
         )
     end
 
@@ -366,8 +410,10 @@ function trace_valley(f, start_point::AbstractVector, config::ValleyWalkConfig=V
     elseif config.method == :newton_projection
         walk_newton_projection
     else
-        error("Unknown valley walking method: $(config.method). " *
-              "Valid methods: :newton_projection, :predictor_corrector, :tangent_projection")
+        error(
+            "Unknown valley walking method: $(config.method). " *
+            "Valid methods: :newton_projection, :predictor_corrector, :tangent_projection",
+        )
     end
 
     # Walk in both directions
@@ -375,15 +421,21 @@ function trace_valley(f, start_point::AbstractVector, config::ValleyWalkConfig=V
     path_neg = walk_func(f, start_point, -initial_dir, config)
 
     # Compute arc length
-    arc_len = sum(norm(path_pos[i+1] - path_pos[i]) for i in 1:length(path_pos)-1; init=0.0) +
-              sum(norm(path_neg[i+1] - path_neg[i]) for i in 1:length(path_neg)-1; init=0.0)
+    arc_len =
+        sum(norm(path_pos[i+1] - path_pos[i]) for i in 1:(length(path_pos)-1); init = 0.0) +
+        sum(norm(path_neg[i+1] - path_neg[i]) for i in 1:(length(path_neg)-1); init = 0.0)
 
     n_points = length(path_pos) + length(path_neg)
 
     return ValleyTraceResult(
         Vector{Float64}(start_point),
-        path_pos, path_neg,
-        arc_len, n_points, vdim, config.method, true
+        path_pos,
+        path_neg,
+        arc_len,
+        n_points,
+        vdim,
+        config.method,
+        true,
     )
 end
 
@@ -395,7 +447,11 @@ Trace valleys from all critical points in a DataFrame.
 Expects the DataFrame to have columns `:x1`, `:x2`, etc. for coordinates.
 Only traces from points that are detected as valley points.
 """
-function trace_valleys_from_critical_points(f, df::DataFrame, config::ValleyWalkConfig=ValleyWalkConfig())
+function trace_valleys_from_critical_points(
+    f,
+    df::DataFrame,
+    config::ValleyWalkConfig = ValleyWalkConfig(),
+)
     # Extract dimension columns
     dim_cols = sort(filter(c -> match(r"^x\d+$", String(c)) !== nothing, names(df)))
     isempty(dim_cols) && error("DataFrame must have columns x1, x2, ... for coordinates")
@@ -450,7 +506,9 @@ function run_valley_analysis(
         return ValleyTraceResult[]
     end
 
-    println("  $n_degen degenerate CP$(n_degen > 1 ? "s" : "") detected (of $n_total total)")
+    println(
+        "  $n_degen degenerate CP$(n_degen > 1 ? "s" : "") detected (of $n_total total)",
+    )
     println()
 
     results = ValleyTraceResult[]
@@ -461,8 +519,14 @@ function run_valley_analysis(
         trace = trace_valley(objective, cp.point, config)
 
         status = trace.converged ? "converged" : "not converged"
-        @printf("  CP %2d: dim=%d  arc_length=%.2f  points=%d  %s\n",
-            cp_idx, trace.valley_dimension, trace.arc_length, trace.n_points, status)
+        @printf(
+            "  CP %2d: dim=%d  arc_length=%.2f  points=%d  %s\n",
+            cp_idx,
+            trace.valley_dimension,
+            trace.arc_length,
+            trace.n_points,
+            status
+        )
 
         if trace.converged
             push!(results, trace)
@@ -474,7 +538,9 @@ function run_valley_analysis(
     if n_traced > 0
         println("  $n_traced valley$(n_traced > 1 ? "s" : "") successfully traced")
     else
-        println("  No valleys could be traced (CPs may not lie exactly on a valley manifold)")
+        println(
+            "  No valleys could be traced (CPs may not lie exactly on a valley manifold)",
+        )
     end
     println()
 

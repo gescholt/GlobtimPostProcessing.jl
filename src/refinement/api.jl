@@ -27,7 +27,11 @@ Overridden by GlobtimExt to use `Globtim.compute_hessians` + `Globtim.classify_c
 - `points`: Refined critical points
 - `gradient_method`: `:forwarddiff` (default, exact AD) or `:finitediff` (for ODE objectives)
 """
-function classify_refined_points(objective_func, points::Vector{Vector{Float64}}; gradient_method::Symbol=:forwarddiff)
+function classify_refined_points(
+    objective_func,
+    points::Vector{Vector{Float64}};
+    gradient_method::Symbol = :forwarddiff,
+)
     return Symbol[]
 end
 
@@ -92,10 +96,10 @@ function refine_experiment_results(
     experiment_dir::String,
     objective_func,
     config::RefinementConfig = RefinementConfig();
-    degree::Union{Int,Nothing} = nothing
+    degree::Union{Int,Nothing} = nothing,
 )
     # 1. Load raw critical points from CSV
-    raw_data = load_raw_critical_points(experiment_dir; degree=degree)
+    raw_data = load_raw_critical_points(experiment_dir; degree = degree)
 
     # 2. Refine using batch processor
     start_time = time()
@@ -109,7 +113,7 @@ function refine_experiment_results(
         f_abstol = config.f_abstol,
         x_abstol = config.x_abstol,
         max_iterations = config.max_iterations,
-        show_progress = config.show_progress
+        show_progress = config.show_progress,
     )
 
     total_time = time() - start_time
@@ -172,20 +176,24 @@ function refine_experiment_results(
         experiment_dir,          # output_dir
         raw_data.degree,         # degree
         total_time,              # total_time
-        config                   # refinement_config
+        config,                   # refinement_config
     )
 
     # 7a. Raw gradient validation — check ||∇f(x_raw)|| at raw critical points
     raw_gradient_norms = compute_gradient_norms(
-        raw_data.points, objective_func;
-        gradient_method=config.gradient_method
+        raw_data.points,
+        objective_func;
+        gradient_method = config.gradient_method,
     )
 
     # 7b. Refined gradient validation (if we have refined points)
     gradient_validation = if n_converged > 0
-        validate_critical_points(refined_points, objective_func;
-                                tolerance=config.gradient_tolerance,
-                                gradient_method=config.gradient_method)
+        validate_critical_points(
+            refined_points,
+            objective_func;
+            tolerance = config.gradient_tolerance,
+            gradient_method = config.gradient_method,
+        )
     else
         nothing
     end
@@ -195,13 +203,24 @@ function refine_experiment_results(
     # or actual classifications when GlobtimExt is loaded.
     # _as_function wraps non-Function callables (e.g. TolerantObjective) in a lambda
     # so they dispatch to the GlobtimExt ::Function method.
-    hessian_classifications = n_converged > 0 ? classify_refined_points(_as_function(objective_func), refined_points; gradient_method=config.gradient_method) : Symbol[]
+    hessian_classifications =
+        n_converged > 0 ?
+        classify_refined_points(
+            _as_function(objective_func),
+            refined_points;
+            gradient_method = config.gradient_method,
+        ) : Symbol[]
 
     # 8. Save results (with Tier 1 diagnostics, gradient validation, and Hessian classification)
-    save_refined_results(experiment_dir, result, raw_data.degree, refinement_results;
-                        gradient_validation=gradient_validation,
-                        raw_gradient_norms=raw_gradient_norms,
-                        hessian_classifications=hessian_classifications)
+    save_refined_results(
+        experiment_dir,
+        result,
+        raw_data.degree,
+        refinement_results;
+        gradient_validation = gradient_validation,
+        raw_gradient_norms = raw_gradient_norms,
+        hessian_classifications = hessian_classifications,
+    )
 
     # 9. Print formatted summary
     print_refinement_summary(result, gradient_validation, raw_gradient_norms)
@@ -242,18 +261,14 @@ refined = refine_critical_points(raw, my_objective, ode_refinement_config())
 function refine_critical_points(
     raw_result,
     objective_func,
-    config::RefinementConfig = RefinementConfig()
+    config::RefinementConfig = RefinementConfig(),
 )
     # Extract output directory from result object
     if !hasfield(typeof(raw_result), :output_dir)
         error("raw_result must have an output_dir field")
     end
 
-    return refine_experiment_results(
-        raw_result.output_dir,
-        objective_func,
-        config
-    )
+    return refine_experiment_results(raw_result.output_dir, objective_func, config)
 end
 
 """
@@ -266,18 +281,25 @@ raw critical points are to actual critical points of f), and refined gradient va
 """
 function print_refinement_summary(
     result::RefinedExperimentResult,
-    gradient_validation::Union{GradientValidationResult, Nothing},
-    raw_gradient_norms::Union{Vector{Float64}, Nothing} = nothing
+    gradient_validation::Union{GradientValidationResult,Nothing},
+    raw_gradient_norms::Union{Vector{Float64},Nothing} = nothing,
 )
     # Line 1: Convergence
-    conv_rate = round(100 * result.n_converged / result.n_raw, digits=1)
-    println("Critical points: $(result.n_raw) raw → $(result.n_converged) refined ($conv_rate%)")
+    conv_rate = round(100 * result.n_converged / result.n_raw, digits = 1)
+    println(
+        "Critical points: $(result.n_raw) raw → $(result.n_converged) refined ($conv_rate%)",
+    )
 
     # Line 2: Improvement (if converged)
     if result.n_converged > 0
-        improvement = round(100 * (1 - result.best_refined_value / result.best_raw_value), digits=1)
-        @printf("Best objective: %.2e → %.2e (%.1f%% improvement)\n",
-                result.best_raw_value, result.best_refined_value, improvement)
+        improvement =
+            round(100 * (1 - result.best_refined_value / result.best_raw_value), digits = 1)
+        @printf(
+            "Best objective: %.2e → %.2e (%.1f%% improvement)\n",
+            result.best_raw_value,
+            result.best_refined_value,
+            improvement
+        )
     end
 
     # Line 3: Raw gradient norms — how close are raw critical points to true critical points of f?
@@ -286,9 +308,15 @@ function print_refinement_summary(
         if !isempty(finite_norms)
             sorted = sort(finite_norms)
             med = sorted[div(length(sorted) + 1, 2)]
-            @printf("Raw ||∇f||: min=%.2e, median=%.2e, mean=%.2e, max=%.2e (%d/%d finite)\n",
-                    minimum(sorted), med, Statistics.mean(sorted), maximum(sorted),
-                    length(finite_norms), length(raw_gradient_norms))
+            @printf(
+                "Raw ||∇f||: min=%.2e, median=%.2e, mean=%.2e, max=%.2e (%d/%d finite)\n",
+                minimum(sorted),
+                med,
+                Statistics.mean(sorted),
+                maximum(sorted),
+                length(finite_norms),
+                length(raw_gradient_norms)
+            )
         else
             println("Raw ||∇f||: all gradient computations failed")
         end
@@ -297,10 +325,16 @@ function print_refinement_summary(
     # Line 4: Refined gradient validation (if available)
     if gradient_validation !== nothing
         n_total = length(gradient_validation.norms)
-        grad_rate = round(100 * gradient_validation.n_valid / n_total, digits=1)
-        mean_norm = isnan(gradient_validation.mean_norm) ? 0.0 : gradient_validation.mean_norm
-        @printf("Refined ||∇f||: %d/%d valid (%.1f%%), mean=%.2e\n",
-                gradient_validation.n_valid, n_total, grad_rate, mean_norm)
+        grad_rate = round(100 * gradient_validation.n_valid / n_total, digits = 1)
+        mean_norm =
+            isnan(gradient_validation.mean_norm) ? 0.0 : gradient_validation.mean_norm
+        @printf(
+            "Refined ||∇f||: %d/%d valid (%.1f%%), mean=%.2e\n",
+            gradient_validation.n_valid,
+            n_total,
+            grad_rate,
+            mean_norm
+        )
     end
     println()
 end
@@ -328,10 +362,10 @@ print_comparison_table(result; n_show=Inf, sort_by=:improvement)
 """
 function print_comparison_table(
     result::RefinedExperimentResult,
-    gradient_validation::Union{GradientValidationResult, Nothing} = nothing;
-    raw_gradient_norms::Union{Vector{Float64}, Nothing} = nothing,
-    n_show::Union{Int, Float64} = 10,
-    sort_by::Symbol = :refined_value
+    gradient_validation::Union{GradientValidationResult,Nothing} = nothing;
+    raw_gradient_norms::Union{Vector{Float64},Nothing} = nothing,
+    n_show::Union{Int,Float64} = 10,
+    sort_by::Symbol = :refined_value,
 )
     cr_bold = Crayon(bold = true)
     cr_cyan = Crayon(foreground = :cyan)
@@ -344,23 +378,30 @@ function print_comparison_table(
         sort!(indices, by = i -> result.raw_values[i])
     elseif sort_by == :refined_value
         # Sort converged first by refined value, then non-converged
-        sort!(indices, by = i -> begin
-            if result.convergence_status[i]
-                converged_idx = sum(result.convergence_status[1:i])
-                return result.refined_values[converged_idx]
-            else
-                return Inf
-            end
-        end)
+        sort!(
+            indices,
+            by = i -> begin
+                if result.convergence_status[i]
+                    converged_idx = sum(result.convergence_status[1:i])
+                    return result.refined_values[converged_idx]
+                else
+                    return Inf
+                end
+            end,
+        )
     elseif sort_by == :improvement
-        sort!(indices, by = i -> begin
-            if result.convergence_status[i]
-                converged_idx = sum(result.convergence_status[1:i])
-                return -result.improvements[converged_idx]  # Negative for descending
-            else
-                return 0.0
-            end
-        end, rev = true)
+        sort!(
+            indices,
+            by = i -> begin
+                if result.convergence_status[i]
+                    converged_idx = sum(result.convergence_status[1:i])
+                    return -result.improvements[converged_idx]  # Negative for descending
+                else
+                    return 0.0
+                end
+            end,
+            rev = true,
+        )
     end
     # :index keeps original order
 
@@ -435,10 +476,7 @@ function print_comparison_table(
     println(cr_bold(cr_cyan("Raw vs Refined (showing $n_display of $(result.n_raw))")))
     println()
 
-    styled_table(data;
-        header = header_vec,
-        alignment = alignment,
-    )
+    styled_table(data; header = header_vec, alignment = alignment)
     println()
 end
 
@@ -461,9 +499,9 @@ struct RefinementDistanceResult
     mean_distance::Float64
     max_distance::Float64
     best_point_distance::Float64
-    relative_distances::Union{Vector{Float64}, Nothing}
-    mean_relative::Union{Float64, Nothing}
-    best_point_relative::Union{Float64, Nothing}
+    relative_distances::Union{Vector{Float64},Nothing}
+    mean_relative::Union{Float64,Nothing}
+    best_point_relative::Union{Float64,Nothing}
 end
 
 """
@@ -488,12 +526,10 @@ println("Relative to domain: ", distances.best_point_relative * 100, "%")
 """
 function compute_refinement_distances(
     result::RefinedExperimentResult;
-    domain_size::Union{Float64, Nothing} = nothing
+    domain_size::Union{Float64,Nothing} = nothing,
 )
     if result.n_converged == 0
-        return RefinementDistanceResult(
-            Float64[], NaN, NaN, NaN, nothing, nothing, nothing
-        )
+        return RefinementDistanceResult(Float64[], NaN, NaN, NaN, nothing, nothing, nothing)
     end
 
     # Compute distances for each converged point
@@ -525,7 +561,12 @@ function compute_refinement_distances(
     end
 
     return RefinementDistanceResult(
-        distances, mean_dist, max_dist, best_dist,
-        relative, mean_rel, best_rel
+        distances,
+        mean_dist,
+        max_dist,
+        best_dist,
+        relative,
+        mean_rel,
+        best_rel,
     )
 end

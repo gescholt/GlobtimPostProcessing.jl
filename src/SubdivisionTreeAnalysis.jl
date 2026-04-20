@@ -14,11 +14,9 @@ using JSON
 using DataFrames
 using Statistics
 using Printf
-using PrettyTables
+using PrettyTables #==============================================================================#
 
-#==============================================================================#
 #                    TREE LOADING                                              #
-#==============================================================================#
 
 """
     load_subdivision_tree(filename::AbstractString) -> (tree, metadata)
@@ -43,11 +41,9 @@ function load_subdivision_tree(filename::AbstractString)
         metadata = haskey(file, "metadata") ? file["metadata"] : Dict()
         return (tree, metadata)
     end
-end
+end #==============================================================================#
 
-#==============================================================================#
 #                    JSON RESULT LOADING                                       #
-#==============================================================================#
 
 """
     SubdivisionResult
@@ -101,16 +97,16 @@ struct SubdivisionResult
     # Tree structure
     n_leaves::Int
     n_converged::Int
-    leaf_bounds::Union{Nothing, Vector{Vector{Vector{Float64}}}}
-    leaf_l2_errors::Union{Nothing, Vector{Float64}}
-    leaf_degrees::Union{Nothing, Vector{Union{Int, Vector{Int}}}}
+    leaf_bounds::Union{Nothing,Vector{Vector{Vector{Float64}}}}
+    leaf_l2_errors::Union{Nothing,Vector{Float64}}
+    leaf_degrees::Union{Nothing,Vector{Union{Int,Vector{Int}}}}
     # Recovery metrics
     raw_best_objective::Float64
-    raw_best_distance::Union{Nothing, Float64}
-    refined_best_objective::Union{Nothing, Float64}
-    refined_best_distance::Union{Nothing, Float64}
-    n_min::Union{Nothing, Int}
-    n_dedup::Union{Nothing, Int}
+    raw_best_distance::Union{Nothing,Float64}
+    refined_best_objective::Union{Nothing,Float64}
+    refined_best_distance::Union{Nothing,Float64}
+    n_min::Union{Nothing,Int}
+    n_dedup::Union{Nothing,Int}
     # Critical points
     cp_points::Vector{Vector{Float64}}
     cp_types::Vector{String}
@@ -127,7 +123,7 @@ per-dimension arrays (anisotropic).
 JSON examples: `[4, 4, [4, 8], 6]` or `[4, 4, 4]`.
 """
 function _parse_leaf_degrees(raw::Vector)
-    result = Union{Int, Vector{Int}}[]
+    result = Union{Int,Vector{Int}}[]
     for el in raw
         if el isa AbstractVector
             push!(result, Int.(el))
@@ -201,68 +197,86 @@ function load_subdivision_result(path::String)
     # Recovery (raw)
     recovery_raw = get(data, "recovery_raw", nothing)
     raw_obj = recovery_raw !== nothing ? Float64(recovery_raw["best_objective"]) : NaN
-    raw_dist = recovery_raw !== nothing ? (
-        haskey(recovery_raw, "best_distance") && recovery_raw["best_distance"] !== nothing ?
+    raw_dist =
+        recovery_raw !== nothing ?
+        (
+            haskey(recovery_raw, "best_distance") &&
+            recovery_raw["best_distance"] !== nothing ?
             Float64(recovery_raw["best_distance"]) : nothing
-    ) : nothing
+        ) : nothing
 
     # Refined results
     refined = get(data, "refined", nothing)
     has_refined = refined !== nothing && get(refined, "n_after_dedup", 0) > 0
-    ref_obj = has_refined && haskey(refined, "best_min_objective") ?
+    ref_obj =
+        has_refined && haskey(refined, "best_min_objective") ?
         Float64(refined["best_min_objective"]) : nothing
-    ref_dist = has_refined && haskey(refined, "best_min_distance") ?
+    ref_dist =
+        has_refined && haskey(refined, "best_min_distance") ?
         Float64(refined["best_min_distance"]) : nothing
 
     # Tree structure (leaf data for visualization)
-    leaf_bounds = haskey(tree, "leaf_bounds") ?
-        [Vector{Float64}[Float64.(b) for b in lb] for lb in tree["leaf_bounds"]] :
-        nothing
-    leaf_l2_errors = haskey(tree, "leaf_l2_errors") ?
-        Float64.(tree["leaf_l2_errors"]) : nothing
-    leaf_degrees = haskey(tree, "leaf_degrees") ?
-        _parse_leaf_degrees(tree["leaf_degrees"]) : nothing
+    leaf_bounds =
+        haskey(tree, "leaf_bounds") ?
+        [Vector{Float64}[Float64.(b) for b in lb] for lb in tree["leaf_bounds"]] : nothing
+    leaf_l2_errors =
+        haskey(tree, "leaf_l2_errors") ? Float64.(tree["leaf_l2_errors"]) : nothing
+    leaf_degrees =
+        haskey(tree, "leaf_degrees") ? _parse_leaf_degrees(tree["leaf_degrees"]) : nothing
 
     # Critical points (refined)
-    cp_points = has_refined && haskey(refined, "points") ?
+    cp_points =
+        has_refined && haskey(refined, "points") ?
         Vector{Float64}[Float64.(p) for p in refined["points"]] : Vector{Float64}[]
-    cp_types = has_refined && haskey(refined, "cp_types") ?
-        String.(refined["cp_types"]) : String[]
+    cp_types =
+        has_refined && haskey(refined, "cp_types") ? String.(refined["cp_types"]) : String[]
 
     # Raw critical points (pre-refinement)
     ref_details = get(data, "refinement_details", nothing)
-    raw_cp_points = ref_details !== nothing && haskey(ref_details, "raw_points") ?
+    raw_cp_points =
+        ref_details !== nothing && haskey(ref_details, "raw_points") ?
         Vector{Float64}[Float64.(p) for p in ref_details["raw_points"]] : Vector{Float64}[]
 
     # True parameters
-    p_true = recovery_raw !== nothing && haskey(recovery_raw, "p_true") ?
+    p_true =
+        recovery_raw !== nothing && haskey(recovery_raw, "p_true") ?
         Float64.(recovery_raw["p_true"]) : Float64[]
 
     # Build label
     aniso = Bool(get(params, "anisotropic", false))
     label = if max_deg > deg
-        aniso ? "Anisotropic deg bump ($deg→$max_deg)" :
-                "Isotropic deg bump ($deg→$max_deg)"
+        aniso ? "Anisotropic deg bump ($deg→$max_deg)" : "Isotropic deg bump ($deg→$max_deg)"
     else
         "Subdivision only (deg $deg)"
     end
 
     return SubdivisionResult(
         String(data["problem"]),
-        deg, max_deg, Int(params["max_depth"]),
-        Float64(params["l2_tolerance"]), aniso, label,
-        Int(tree["n_total_leaves"]), Int(tree["n_converged"]),
-        leaf_bounds, leaf_l2_errors, leaf_degrees,
-        raw_obj, raw_dist, ref_obj, ref_dist,
+        deg,
+        max_deg,
+        Int(params["max_depth"]),
+        Float64(params["l2_tolerance"]),
+        aniso,
+        label,
+        Int(tree["n_total_leaves"]),
+        Int(tree["n_converged"]),
+        leaf_bounds,
+        leaf_l2_errors,
+        leaf_degrees,
+        raw_obj,
+        raw_dist,
+        ref_obj,
+        ref_dist,
         has_refined ? get(refined, "n_min", nothing) : nothing,
         has_refined ? get(refined, "n_after_dedup", nothing) : nothing,
-        cp_points, cp_types, raw_cp_points, p_true,
+        cp_points,
+        cp_types,
+        raw_cp_points,
+        p_true,
     )
-end
+end #==============================================================================#
 
-#==============================================================================#
 #                    TREE ANALYSIS STATISTICS                                  #
-#==============================================================================#
 
 """
     SubdivisionTreeStats
@@ -298,8 +312,8 @@ struct SubdivisionTreeStats
     min_l2_error::Float64
     max_l2_error::Float64
     median_l2_error::Float64
-    depth_distribution::Dict{Int, Int}
-    error_quantiles::NamedTuple{(:q10, :q25, :q50, :q75, :q90), NTuple{5, Float64}}
+    depth_distribution::Dict{Int,Int}
+    error_quantiles::NamedTuple{(:q10, :q25, :q50, :q75, :q90),NTuple{5,Float64}}
     dimension::Int
     convergence_rate::Float64
 end
@@ -328,7 +342,7 @@ function analyze_subdivision_tree(tree)
     depths = [sd.depth for sd in leaves]
 
     # Depth distribution
-    depth_dist = Dict{Int, Int}()
+    depth_dist = Dict{Int,Int}()
     for d in depths
         depth_dist[d] = get(depth_dist, d, 0) + 1
     end
@@ -342,7 +356,7 @@ function analyze_subdivision_tree(tree)
         q25 = quantile(errors, 0.25),
         q50 = quantile(errors, 0.50),
         q75 = quantile(errors, 0.75),
-        q90 = quantile(errors, 0.90)
+        q90 = quantile(errors, 0.90),
     )
 
     n_leaves = length(leaf_ids)
@@ -363,13 +377,11 @@ function analyze_subdivision_tree(tree)
         depth_dist,
         quantiles,
         dim,
-        n_converged / n_leaves
+        n_converged / n_leaves,
     )
-end
+end #==============================================================================#
 
-#==============================================================================#
 #                    DATAFRAME EXTRACTION                                      #
-#==============================================================================#
 
 """
     tree_leaves_to_dataframe(tree) -> DataFrame
@@ -429,7 +441,7 @@ function tree_leaves_to_dataframe(tree)
         depth = depths,
         l2_error = l2_errors,
         status = statuses,
-        volume = volumes
+        volume = volumes,
     )
 
     # Add center and width columns
@@ -469,30 +481,31 @@ function tree_depth_summary(tree)
         std_l2_error = Float64[],
         min_l2_error = Float64[],
         max_l2_error = Float64[],
-        total_volume = Float64[]
+        total_volume = Float64[],
     )
 
     for depth in sort(unique(df.depth))
         depth_df = filter(row -> row.depth == depth, df)
 
-        push!(result, (
-            depth = depth,
-            n_leaves = nrow(depth_df),
-            n_converged = sum(depth_df.status .== "converged"),
-            mean_l2_error = mean(depth_df.l2_error),
-            std_l2_error = nrow(depth_df) > 1 ? std(depth_df.l2_error) : 0.0,
-            min_l2_error = minimum(depth_df.l2_error),
-            max_l2_error = maximum(depth_df.l2_error),
-            total_volume = sum(depth_df.volume)
-        ))
+        push!(
+            result,
+            (
+                depth = depth,
+                n_leaves = nrow(depth_df),
+                n_converged = sum(depth_df.status .== "converged"),
+                mean_l2_error = mean(depth_df.l2_error),
+                std_l2_error = nrow(depth_df) > 1 ? std(depth_df.l2_error) : 0.0,
+                min_l2_error = minimum(depth_df.l2_error),
+                max_l2_error = maximum(depth_df.l2_error),
+                total_volume = sum(depth_df.volume),
+            ),
+        )
     end
 
     return result
-end
+end #==============================================================================#
 
-#==============================================================================#
 #                    REPORTING                                                 #
-#==============================================================================#
 
 """
     print_subdivision_tree_report(tree; io::IO=stdout)
@@ -503,20 +516,25 @@ Print a detailed analysis report for a subdivision tree.
 - `tree`: SubdivisionTree or compatible object
 - `io`: Output stream (default: stdout)
 """
-function print_subdivision_tree_report(tree; io::IO=stdout)
+function print_subdivision_tree_report(tree; io::IO = stdout)
     stats = analyze_subdivision_tree(tree)
 
-    println(io, "=" ^ 70)
+    println(io, "="^70)
     println(io, "SUBDIVISION TREE ANALYSIS REPORT")
-    println(io, "=" ^ 70)
+    println(io, "="^70)
     println(io)
 
     # Structure summary
     println(io, "STRUCTURE")
-    println(io, "-" ^ 70)
+    println(io, "-"^70)
     @printf(io, "  Dimension:           %d\n", stats.dimension)
     @printf(io, "  Total leaves:        %d\n", stats.n_leaves)
-    @printf(io, "  Converged:           %d (%.1f%%)\n", stats.n_converged, stats.convergence_rate * 100)
+    @printf(
+        io,
+        "  Converged:           %d (%.1f%%)\n",
+        stats.n_converged,
+        stats.convergence_rate * 100
+    )
     @printf(io, "  Active:              %d\n", stats.n_active)
     @printf(io, "  Max depth:           %d\n", stats.max_depth)
     @printf(io, "  Mean depth:          %.2f\n", stats.mean_depth)
@@ -524,7 +542,7 @@ function print_subdivision_tree_report(tree; io::IO=stdout)
 
     # L2 error summary
     println(io, "L2 APPROXIMATION ERROR")
-    println(io, "-" ^ 70)
+    println(io, "-"^70)
     @printf(io, "  Total:               %.4e\n", stats.total_l2_error)
     @printf(io, "  Mean:                %.4e\n", stats.mean_l2_error)
     @printf(io, "  Std:                 %.4e\n", stats.std_l2_error)
@@ -544,17 +562,28 @@ function print_subdivision_tree_report(tree; io::IO=stdout)
 
     # Depth distribution table
     println(io, "DEPTH DISTRIBUTION")
-    println(io, "-" ^ 70)
+    println(io, "-"^70)
     depth_df = tree_depth_summary(tree)
 
-    styled_table(io, depth_df;
-        header = ["Depth", "Leaves", "Converged", "Mean L2", "Std L2", "Min L2", "Max L2", "Volume"],
+    styled_table(
+        io,
+        depth_df;
+        header = [
+            "Depth",
+            "Leaves",
+            "Converged",
+            "Mean L2",
+            "Std L2",
+            "Min L2",
+            "Max L2",
+            "Volume",
+        ],
         formatters = (ft_printf("%.2e", [4, 5, 6, 7]), ft_printf("%.3f", [8])),
         alignment = [:c, :c, :c, :r, :r, :r, :r, :r],
     )
 
     println(io)
-    println(io, "=" ^ 70)
+    println(io, "="^70)
 
     nothing
 end
@@ -571,7 +600,7 @@ Compare statistics across multiple subdivision trees.
 # Returns
 DataFrame with columns: label, n_leaves, n_converged, max_depth, mean_l2, total_l2
 """
-function compare_subdivision_trees(trees::Vector; labels=nothing)
+function compare_subdivision_trees(trees::Vector; labels = nothing)
     n = length(trees)
     labels = labels === nothing ? ["Tree $i" for i in 1:n] : labels
 
@@ -583,21 +612,24 @@ function compare_subdivision_trees(trees::Vector; labels=nothing)
         max_depth = Int[],
         mean_l2_error = Float64[],
         total_l2_error = Float64[],
-        dimension = Int[]
+        dimension = Int[],
     )
 
     for (tree, label) in zip(trees, labels)
         stats = analyze_subdivision_tree(tree)
-        push!(result, (
-            label = label,
-            n_leaves = stats.n_leaves,
-            n_converged = stats.n_converged,
-            convergence_rate = stats.convergence_rate,
-            max_depth = stats.max_depth,
-            mean_l2_error = stats.mean_l2_error,
-            total_l2_error = stats.total_l2_error,
-            dimension = stats.dimension
-        ))
+        push!(
+            result,
+            (
+                label = label,
+                n_leaves = stats.n_leaves,
+                n_converged = stats.n_converged,
+                convergence_rate = stats.convergence_rate,
+                max_depth = stats.max_depth,
+                mean_l2_error = stats.mean_l2_error,
+                total_l2_error = stats.total_l2_error,
+                dimension = stats.dimension,
+            ),
+        )
     end
 
     return result
@@ -608,14 +640,25 @@ end
 
 Print a comparison table for multiple subdivision trees.
 """
-function print_tree_comparison_table(trees::Vector; labels=nothing, io::IO=stdout)
-    df = compare_subdivision_trees(trees; labels=labels)
+function print_tree_comparison_table(trees::Vector; labels = nothing, io::IO = stdout)
+    df = compare_subdivision_trees(trees; labels = labels)
 
     println(io, "SUBDIVISION TREE COMPARISON")
-    println(io, "=" ^ 70)
+    println(io, "="^70)
 
-    styled_table(io, df;
-        header = ["Label", "Leaves", "Conv", "Conv%", "Depth", "Mean L2", "Total L2", "Dim"],
+    styled_table(
+        io,
+        df;
+        header = [
+            "Label",
+            "Leaves",
+            "Conv",
+            "Conv%",
+            "Depth",
+            "Mean L2",
+            "Total L2",
+            "Dim",
+        ],
         formatters = (ft_printf("%.1f%%", [4]), ft_printf("%.2e", [6, 7])),
         alignment = [:l, :c, :c, :c, :c, :r, :r, :c],
     )

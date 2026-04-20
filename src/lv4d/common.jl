@@ -21,7 +21,7 @@ Create a PrettyTables highlighter for "winner" rows (bold green).
 The condition function should have signature (data, row, col) -> Bool.
 """
 function make_winner_highlighter(condition::Function)
-    Highlighter(condition, bold=true, foreground=:green)
+    Highlighter(condition, bold = true, foreground = :green)
 end
 
 """
@@ -32,7 +32,7 @@ Create a PrettyTables highlighter for "loser" rows (red).
 The condition function should have signature (data, row, col) -> Bool.
 """
 function make_loser_highlighter(condition::Function)
-    Highlighter(condition, foreground=:red)
+    Highlighter(condition, foreground = :red)
 end
 
 # ============================================================================
@@ -57,7 +57,7 @@ struct ExperimentParams
     degree_min::Int
     degree_max::Int
     domain::Float64
-    seed::Union{Int, Nothing}
+    seed::Union{Int,Nothing}
     is_subdivision::Bool
 end
 
@@ -77,7 +77,7 @@ Handles patterns like:
 
 Returns `nothing` if the pattern doesn't match.
 """
-function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing}
+function parse_experiment_name(dirname::String)::Union{ExperimentParams,Nothing}
     # New format with scientific notation: lv4d_GN{gn}_deg{deg}_dom{scientific}_seed{seed}_
     # Example: lv4d_GN8_deg8_dom8.0e-2_seed1_20260120_123456
     m = match(r"lv4d(?:_subdivision)?_GN(\d+)_deg(\d+)_dom([\d.eE+-]+)_seed(\d+)_", dirname)
@@ -89,7 +89,7 @@ function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing
             degree,                          # degree_max
             parse(Float64, m.captures[3]),  # domain (scientific notation)
             parse(Int, m.captures[4]),      # seed
-            occursin("subdivision", dirname) || occursin("_subdiv", dirname)
+            occursin("subdivision", dirname) || occursin("_subdiv", dirname),
         )
     end
 
@@ -103,13 +103,16 @@ function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing
             degree,
             parse(Float64, m.captures[3]),
             nothing,  # seed
-            occursin("subdivision", dirname) || occursin("_subdiv", dirname)
+            occursin("subdivision", dirname) || occursin("_subdiv", dirname),
         )
     end
 
     # Degree range with dom prefix (scientific notation) and seed
     # Example: lv4d_GN12_deg4-12_dom1.0e-2_seed1_20260122_170020
-    m = match(r"lv4d(?:_subdivision)?_GN(\d+)_deg(\d+)-(\d+)_dom([\d.eE+-]+)_seed(\d+)_", dirname)
+    m = match(
+        r"lv4d(?:_subdivision)?_GN(\d+)_deg(\d+)-(\d+)_dom([\d.eE+-]+)_seed(\d+)_",
+        dirname,
+    )
     if m !== nothing
         return ExperimentParams(
             parse(Int, m.captures[1]),      # GN
@@ -117,7 +120,7 @@ function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing
             parse(Int, m.captures[3]),      # degree_max
             parse(Float64, m.captures[4]),  # domain (scientific notation)
             parse(Int, m.captures[5]),      # seed
-            occursin("subdivision", dirname) || occursin("_subdiv", dirname)
+            occursin("subdivision", dirname) || occursin("_subdiv", dirname),
         )
     end
 
@@ -131,12 +134,15 @@ function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing
             parse(Int, m.captures[3]),
             parse(Float64, m.captures[4]),
             nothing,  # seed
-            occursin("subdivision", dirname) || occursin("_subdiv", dirname)
+            occursin("subdivision", dirname) || occursin("_subdiv", dirname),
         )
     end
 
     # Old format: lv4d[_subdivision]_GN{gn}_deg{min}-{max}_domain{domain}_seed{seed}_{timestamp}
-    m = match(r"lv4d(?:_subdivision)?_GN(\d+)_deg(\d+)-(\d+)_domain([\d.]+)_seed(\d+)_", dirname)
+    m = match(
+        r"lv4d(?:_subdivision)?_GN(\d+)_deg(\d+)-(\d+)_domain([\d.]+)_seed(\d+)_",
+        dirname,
+    )
     if m !== nothing
         return ExperimentParams(
             parse(Int, m.captures[1]),      # GN
@@ -144,7 +150,7 @@ function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing
             parse(Int, m.captures[3]),      # degree_max
             parse(Float64, m.captures[4]),  # domain
             parse(Int, m.captures[5]),      # seed
-            occursin("subdivision", dirname) || occursin("_subdiv", dirname)
+            occursin("subdivision", dirname) || occursin("_subdiv", dirname),
         )
     end
 
@@ -157,7 +163,7 @@ function parse_experiment_name(dirname::String)::Union{ExperimentParams, Nothing
             parse(Int, m.captures[3]),
             parse(Float64, m.captures[4]),
             nothing,  # seed
-            occursin("subdivision", dirname) || occursin("_subdiv", dirname)
+            occursin("subdivision", dirname) || occursin("_subdiv", dirname),
         )
     end
 
@@ -192,7 +198,8 @@ Note: This is the LV4D-specific implementation. The unified pipeline dispatches
 to `is_single_experiment(::LV4DType, path)` which calls this function.
 """
 function is_single_experiment(path::String)::Bool
-    return startswith(basename(path), "lv4d_") && isfile(joinpath(path, "results_summary.json"))
+    return startswith(basename(path), "lv4d_") &&
+           isfile(joinpath(path, "results_summary.json"))
 end
 
 # Implement unified dispatch for LV4DType
@@ -212,7 +219,9 @@ function find_results_root()::String
         end
     end
 
-    error("Could not find LV4D results directory. Set the GLOBTIM_RESULTS_ROOT environment variable or pass the path as an argument.")
+    error(
+        "Could not find LV4D results directory. Set the GLOBTIM_RESULTS_ROOT environment variable or pass the path as an argument.",
+    )
 end
 
 """
@@ -233,7 +242,9 @@ function find_all_results_roots()::Vector{String}
     end
 
     if isempty(roots)
-        error("Could not find any LV4D results directories. Set the GLOBTIM_RESULTS_ROOT environment variable or pass the path as an argument.")
+        error(
+            "Could not find any LV4D results directories. Set the GLOBTIM_RESULTS_ROOT environment variable or pass the path as an argument.",
+        )
     end
 
     return roots
@@ -248,8 +259,10 @@ If `results_root` is not specified, searches all known results directories
 (including globtim_results/ and globtim/globtim_results/) and merges results.
 Duplicate experiment names (e.g., from symlinks) are deduplicated.
 """
-function find_experiments(results_root::Union{String, Nothing}=nothing;
-                         pattern::Union{String, Regex, Nothing}=nothing)::Vector{String}
+function find_experiments(
+    results_root::Union{String,Nothing} = nothing;
+    pattern::Union{String,Regex,Nothing} = nothing,
+)::Vector{String}
     # Get all roots if none specified
     roots = results_root === nothing ? find_all_results_roots() : [results_root]
 
@@ -258,7 +271,7 @@ function find_experiments(results_root::Union{String, Nothing}=nothing;
 
     for root in roots
         isdir(root) || continue
-        for entry in readdir(root, join=true)
+        for entry in readdir(root, join = true)
             isdir(entry) || continue
             startswith(basename(entry), "lv4d_") || continue
             name = basename(entry)
@@ -273,7 +286,7 @@ function find_experiments(results_root::Union{String, Nothing}=nothing;
         all_dirs = filter(d -> occursin(regex, basename(d)), all_dirs)
     end
 
-    return sort(all_dirs, by=mtime, rev=true)  # Most recent first
+    return sort(all_dirs, by = mtime, rev = true)  # Most recent first
 end
 
 """
@@ -283,7 +296,10 @@ List recent experiment directories sorted by modification time.
 
 If `results_root` is not specified, searches all known results directories.
 """
-function list_recent_experiments(results_root::Union{String, Nothing}=nothing; limit::Int=15)::Vector{String}
+function list_recent_experiments(
+    results_root::Union{String,Nothing} = nothing;
+    limit::Int = 15,
+)::Vector{String}
     experiments = find_experiments(results_root)
     return experiments[1:min(limit, length(experiments))]
 end
@@ -318,7 +334,7 @@ end
 
 Format number in scientific notation with specified significant digits.
 """
-function format_scientific(x::Real; digits::Int=2)::String
+function format_scientific(x::Real; digits::Int = 2)::String
     if isnan(x) || !isfinite(x)
         return "      -"
     end
@@ -330,7 +346,7 @@ end
 
 Format number as percentage with specified decimal places.
 """
-function format_percentage(x::Real; digits::Int=1)::String
+function format_percentage(x::Real; digits::Int = 1)::String
     if isnan(x) || !isfinite(x)
         return "    -"
     end
@@ -346,7 +362,7 @@ end
 
 Create adaptive log-scale bins for histogram display.
 """
-function make_log_bins(values; n_bins::Int=8)::Vector{Float64}
+function make_log_bins(values; n_bins::Int = 8)::Vector{Float64}
     valid = filter(x -> x > 0 && isfinite(x), values)
     if isempty(valid)
         return [1e-6, 1e-4, 1e-2, 1e0, 1e2, 1e4, 1e6, Inf]
@@ -361,7 +377,7 @@ function make_log_bins(values; n_bins::Int=8)::Vector{Float64}
     end
 
     step = max(1.0, (log_max - log_min) / n_bins)
-    bins = [10.0^i for i in log_min:step:(log_max + step)]
+    bins = [10.0^i for i in log_min:step:(log_max+step)]
     push!(bins, Inf)
     return bins
 end
@@ -384,8 +400,12 @@ end
 
 Print a text-based log-scale histogram to terminal.
 """
-function print_log_histogram(values::AbstractVector{<:Real}, title::String;
-                            n_bins::Int=8, width::Int=50)
+function print_log_histogram(
+    values::AbstractVector{<:Real},
+    title::String;
+    n_bins::Int = 8,
+    width::Int = 50,
+)
     valid = filter(x -> !isnan(x) && x > 0, values)
     n_valid = length(valid)
 
@@ -394,7 +414,7 @@ function print_log_histogram(values::AbstractVector{<:Real}, title::String;
         return
     end
 
-    bins = make_log_bins(valid; n_bins=n_bins)
+    bins = make_log_bins(valid; n_bins = n_bins)
 
     println(title)
     for i in 1:(length(bins)-1)
@@ -425,8 +445,14 @@ function print_percentiles(values::AbstractVector{<:Real}, name::String)
     p75 = quantile(sorted, 0.75)
     p_max = maximum(sorted)
 
-    @printf("  min: %.2e  p25: %.2e  median: %.2e  p75: %.2e  max: %.2e\n",
-            p_min, p25, p50, p75, p_max)
+    @printf(
+        "  min: %.2e  p25: %.2e  median: %.2e  p75: %.2e  max: %.2e\n",
+        p_min,
+        p25,
+        p50,
+        p75,
+        p_max
+    )
 end
 
 # ============================================================================

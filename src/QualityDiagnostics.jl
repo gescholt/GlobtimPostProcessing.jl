@@ -24,14 +24,16 @@ Dictionary with threshold categories:
 - `convergence`: Convergence quality thresholds
 - `objective_distribution`: Objective value distribution thresholds
 """
-function load_quality_thresholds(config_path::String=joinpath(@__DIR__, "..", "quality_thresholds.toml"))
+function load_quality_thresholds(
+    config_path::String = joinpath(@__DIR__, "..", "quality_thresholds.toml"),
+)
     if !isfile(config_path)
         error("Quality thresholds file not found: $config_path")
     end
 
     # Parse TOML manually (avoid TOML dependency if not needed)
     # For simplicity, return a Dict with expected structure
-    thresholds = Dict{String, Any}()
+    thresholds = Dict{String,Any}()
 
     lines = readlines(config_path)
     current_section = nothing
@@ -46,15 +48,15 @@ function load_quality_thresholds(config_path::String=joinpath(@__DIR__, "..", "q
 
         # Section header
         if startswith(line, '[') && endswith(line, ']')
-            section_name = strip(line[2:end-1])
+            section_name = strip(line[2:(end-1)])
             current_section = section_name
-            thresholds[current_section] = Dict{String, Any}()
+            thresholds[current_section] = Dict{String,Any}()
             continue
         end
 
         # Key-value pair
         if occursin('=', line) && !isnothing(current_section)
-            key, value = split(line, '=', limit=2)
+            key, value = split(line, '=', limit = 2)
             key = strip(key)
             value = strip(value)
 
@@ -73,7 +75,8 @@ function load_quality_thresholds(config_path::String=joinpath(@__DIR__, "..", "q
                     parse(Int, value)
                 end
             catch e
-                @debug "Config value parse failed, keeping as string" value exception=(e, catch_backtrace())
+                @debug "Config value parse failed, keeping as string" value exception =
+                    (e, catch_backtrace())
                 value
             end
 
@@ -142,7 +145,7 @@ Result of convergence stagnation detection.
 """
 struct StagnationResult
     is_stagnant::Bool
-    stagnation_start_degree::Union{Int, Nothing}
+    stagnation_start_degree::Union{Int,Nothing}
     stagnant_count::Int
     improvement_factors::Vector{Float64}
 end
@@ -163,7 +166,7 @@ Stagnation is detected when:
 # Returns
 `StagnationResult` with detection details
 """
-function detect_stagnation(l2_by_degree::Dict{Int, Float64}, thresholds::Dict)
+function detect_stagnation(l2_by_degree::Dict{Int,Float64}, thresholds::Dict)
     convergence_params = thresholds["convergence"]
     min_improvement_factor = convergence_params["min_improvement_factor"]
     stagnation_tolerance = convergence_params["stagnation_tolerance"]
@@ -214,7 +217,12 @@ function detect_stagnation(l2_by_degree::Dict{Int, Float64}, thresholds::Dict)
 
     is_stagnant = stagnant_count >= stagnation_tolerance
 
-    return StagnationResult(is_stagnant, stagnation_start, stagnant_count, improvement_factors)
+    return StagnationResult(
+        is_stagnant,
+        stagnation_start,
+        stagnant_count,
+        improvement_factors,
+    )
 end
 
 """
@@ -267,9 +275,7 @@ function check_objective_distribution_quality(objectives::Vector{Float64}, thres
 
     # Not enough data
     if n < min_points
-        return ObjectiveDistributionResult(
-            false, 0, 0.0, :insufficient_data, 0.0, 0.0, 0.0
-        )
+        return ObjectiveDistributionResult(false, 0, 0.0, :insufficient_data, 0.0, 0.0, 0.0)
     end
 
     # Calculate quartiles and IQR
@@ -290,7 +296,13 @@ function check_objective_distribution_quality(objectives::Vector{Float64}, thres
     quality = outlier_fraction <= max_outlier_fraction ? :good : :poor
 
     return ObjectiveDistributionResult(
-        has_outliers, num_outliers, outlier_fraction, quality, q1, q3, iqr
+        has_outliers,
+        num_outliers,
+        outlier_fraction,
+        quality,
+        q1,
+        q3,
+        iqr,
     )
 end
 

@@ -63,7 +63,7 @@ Base.@kwdef struct NewtonCP <: RefinementMethod
     gradient_method::Symbol = :finitediff
     tol::Float64 = 1e-8
     accept_tol::Float64 = Inf
-    f_accept_tol::Union{Nothing, Float64} = nothing
+    f_accept_tol::Union{Nothing,Float64} = nothing
     max_iterations::Int = 100
     hessian_tol::Float64 = 1e-6
     hessian_relative_tol::Float64 = 0.0
@@ -89,7 +89,7 @@ Base.@kwdef struct NewtonMinimize <: RefinementMethod
     gradient_method::Symbol = :finitediff
     tol::Float64 = 1e-8
     accept_tol::Float64 = Inf
-    f_accept_tol::Union{Nothing, Float64} = nothing
+    f_accept_tol::Union{Nothing,Float64} = nothing
     max_iterations::Int = 100
     hessian_tol::Float64 = 1e-6
     hessian_relative_tol::Float64 = 0.0
@@ -120,7 +120,7 @@ Derivative-free simplex method. Robust for ODE objectives and noisy problems.
 Base.@kwdef struct OptimNelderMead <: RefinementMethod
     f_abstol::Float64 = 1e-6
     x_abstol::Float64 = 1e-6
-    max_time::Union{Float64, Nothing} = 30.0
+    max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     gradient_method::Symbol = :finitediff   # post-hoc classification only
     hessian_tol::Float64 = 1e-6
@@ -137,7 +137,7 @@ iteration (when only f is passed to Fminbox).
 Base.@kwdef struct OptimLBFGS <: RefinementMethod
     f_abstol::Float64 = 1e-6
     x_abstol::Float64 = 1e-6
-    max_time::Union{Float64, Nothing} = 30.0
+    max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     step_size::Float64 = 1.0
     gradient_method::Symbol = :finitediff   # post-hoc classification only
@@ -155,7 +155,7 @@ Full BFGS quasi-Newton method.
 Base.@kwdef struct OptimBFGS <: RefinementMethod
     f_abstol::Float64 = 1e-6
     x_abstol::Float64 = 1e-6
-    max_time::Union{Float64, Nothing} = 30.0
+    max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     gradient_method::Symbol = :finitediff   # post-hoc classification only
     hessian_tol::Float64 = 1e-6
@@ -172,7 +172,7 @@ Conjugate gradient method.
 Base.@kwdef struct OptimConjugateGradient <: RefinementMethod
     f_abstol::Float64 = 1e-6
     x_abstol::Float64 = 1e-6
-    max_time::Union{Float64, Nothing} = 30.0
+    max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     gradient_method::Symbol = :finitediff   # post-hoc classification only
     hessian_tol::Float64 = 1e-6
@@ -189,7 +189,7 @@ Steepest descent method.
 Base.@kwdef struct OptimGradientDescent <: RefinementMethod
     f_abstol::Float64 = 1e-6
     x_abstol::Float64 = 1e-6
-    max_time::Union{Float64, Nothing} = 30.0
+    max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     gradient_method::Symbol = :finitediff   # post-hoc classification only
     hessian_tol::Float64 = 1e-6
@@ -202,8 +202,15 @@ method_name(::OptimGradientDescent) = :gradientdescent
 # Factory
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const _VALID_METHOD_NAMES = [:newton_cp, :newton_minimize, :neldermead, :lbfgs,
-                              :bfgs, :conjugategradient, :gradientdescent]
+const _VALID_METHOD_NAMES = [
+    :newton_cp,
+    :newton_minimize,
+    :neldermead,
+    :lbfgs,
+    :bfgs,
+    :conjugategradient,
+    :gradientdescent,
+]
 
 """
     refinement_method(name; kwargs...) -> RefinementMethod
@@ -221,14 +228,14 @@ m = refinement_method(:lbfgs; step_size=0.5)
 m = refinement_method("neldermead"; max_iterations=500)
 ```
 """
-function refinement_method(name::Union{Symbol, AbstractString}; kwargs...)
+function refinement_method(name::Union{Symbol,AbstractString}; kwargs...)
     sym = name isa Symbol ? name : Symbol(lowercase(String(name)))
-    sym === :newton_cp          ? NewtonCP(; kwargs...) :
-    sym === :newton_minimize    ? NewtonMinimize(; kwargs...) :
-    sym === :neldermead         ? OptimNelderMead(; kwargs...) :
-    sym === :lbfgs              ? OptimLBFGS(; kwargs...) :
-    sym === :bfgs               ? OptimBFGS(; kwargs...) :
-    sym === :conjugategradient  ? OptimConjugateGradient(; kwargs...) :
-    sym === :gradientdescent    ? OptimGradientDescent(; kwargs...) :
+    sym === :newton_cp ? NewtonCP(; kwargs...) :
+    sym === :newton_minimize ? NewtonMinimize(; kwargs...) :
+    sym === :neldermead ? OptimNelderMead(; kwargs...) :
+    sym === :lbfgs ? OptimLBFGS(; kwargs...) :
+    sym === :bfgs ? OptimBFGS(; kwargs...) :
+    sym === :conjugategradient ? OptimConjugateGradient(; kwargs...) :
+    sym === :gradientdescent ? OptimGradientDescent(; kwargs...) :
     error("Unknown refinement method: $name. Valid: $(join(_VALID_METHOD_NAMES, ", "))")
 end

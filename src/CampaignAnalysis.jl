@@ -34,14 +34,16 @@ Aggregates:
 """
 function aggregate_campaign_statistics(
     campaign::CampaignResults;
-    progress_callback::Union{Function, Nothing}=nothing
+    progress_callback::Union{Function,Nothing} = nothing,
 )
-    agg_stats = Dict{String, Any}()
+    agg_stats = Dict{String,Any}()
 
     # Store individual experiment statistics
-    exp_stats = Dict{String, Any}()
+    exp_stats = Dict{String,Any}()
 
-    println("📊 Aggregating statistics across $(length(campaign.experiments)) experiments...")
+    println(
+        "📊 Aggregating statistics across $(length(campaign.experiments)) experiments...",
+    )
 
     total_experiments = length(campaign.experiments)
 
@@ -71,7 +73,8 @@ function aggregate_campaign_statistics(
     agg_stats["experiments"] = exp_stats
 
     # Aggregate metrics across experiments
-    agg_stats["aggregated_metrics"] = aggregate_metrics_across_experiments(campaign, exp_stats)
+    agg_stats["aggregated_metrics"] =
+        aggregate_metrics_across_experiments(campaign, exp_stats)
 
     # Create campaign-wide summary
     agg_stats["campaign_summary"] = create_campaign_summary(campaign, exp_stats)
@@ -99,7 +102,7 @@ For metrics computed from CSV files (critical_point_count, numerical_stability),
 function computes per-degree statistics directly from the CSV files.
 """
 function aggregate_metrics_across_experiments(campaign::CampaignResults, exp_stats::Dict)
-    metrics = Dict{String, Any}()
+    metrics = Dict{String,Any}()
 
     # First, aggregate CSV-based metrics by degree
     csv_metrics = aggregate_csv_metrics_by_degree(campaign)
@@ -140,8 +143,8 @@ function aggregate_metrics_across_experiments(campaign::CampaignResults, exp_sta
 
         if !isempty(metric_values)
             # Use degree = 0 to indicate "aggregated across all degrees"
-            metrics[metric_label] = Dict{Int, Any}(
-                0 => Dict{String, Any}(
+            metrics[metric_label] = Dict{Int,Any}(
+                0 => Dict{String,Any}(
                     "mean" => mean(metric_values),
                     "min" => minimum(metric_values),
                     "max" => maximum(metric_values),
@@ -150,8 +153,8 @@ function aggregate_metrics_across_experiments(campaign::CampaignResults, exp_sta
                     "worst_experiment" => exp_ids[argmax(metric_values)],
                     "num_experiments" => length(metric_values),
                     "values" => metric_values,
-                    "experiment_ids" => exp_ids
-                )
+                    "experiment_ids" => exp_ids,
+                ),
             )
         end
     end
@@ -169,20 +172,22 @@ Returns metrics organized by degree:
 - numerical_stability[degree] = {mean, min, max, std, ...}
 """
 function aggregate_csv_metrics_by_degree(campaign::CampaignResults)
-    metrics = Dict{String, Any}()
+    metrics = Dict{String,Any}()
 
     # Track values by degree across experiments
-    cp_count_by_degree = Dict{Int, Vector{Float64}}()
-    cp_count_exp_ids = Dict{Int, Vector{String}}()
+    cp_count_by_degree = Dict{Int,Vector{Float64}}()
+    cp_count_exp_ids = Dict{Int,Vector{String}}()
 
-    cond_number_by_degree = Dict{Int, Vector{Float64}}()
-    cond_number_exp_ids = Dict{Int, Vector{String}}()
+    cond_number_by_degree = Dict{Int,Vector{Float64}}()
+    cond_number_exp_ids = Dict{Int,Vector{String}}()
 
     for exp in campaign.experiments
         exp_path = exp.source_path
 
-        csv_files = filter(f -> startswith(basename(f), "critical_points_raw_deg_"),
-                          readdir(exp_path, join=true, sort=false))
+        csv_files = filter(
+            f -> startswith(basename(f), "critical_points_raw_deg_"),
+            readdir(exp_path, join = true, sort = false),
+        )
 
         for csv_file in csv_files
             # Extract degree from filename
@@ -217,13 +222,13 @@ function aggregate_csv_metrics_by_degree(campaign::CampaignResults)
 
     # Create aggregated statistics for critical_point_count
     if !isempty(cp_count_by_degree)
-        metrics["critical_point_count"] = Dict{Int, Any}()
+        metrics["critical_point_count"] = Dict{Int,Any}()
 
         for deg in sort(collect(keys(cp_count_by_degree)))
             values = cp_count_by_degree[deg]
             exp_ids = cp_count_exp_ids[deg]
 
-            metrics["critical_point_count"][deg] = Dict{String, Any}(
+            metrics["critical_point_count"][deg] = Dict{String,Any}(
                 "mean" => mean(values),
                 "min" => minimum(values),
                 "max" => maximum(values),
@@ -232,20 +237,20 @@ function aggregate_csv_metrics_by_degree(campaign::CampaignResults)
                 "worst_experiment" => exp_ids[argmax(values)],
                 "num_experiments" => length(values),
                 "values" => values,
-                "experiment_ids" => exp_ids
+                "experiment_ids" => exp_ids,
             )
         end
     end
 
     # Add numerical_stability if we computed it
     if !isempty(cond_number_by_degree)
-        metrics["numerical_stability"] = Dict{Int, Any}()
+        metrics["numerical_stability"] = Dict{Int,Any}()
 
         for deg in sort(collect(keys(cond_number_by_degree)))
             values = cond_number_by_degree[deg]
             exp_ids = cond_number_exp_ids[deg]
 
-            metrics["numerical_stability"][deg] = Dict{String, Any}(
+            metrics["numerical_stability"][deg] = Dict{String,Any}(
                 "mean" => mean(values),
                 "min" => minimum(values),
                 "max" => maximum(values),
@@ -254,7 +259,7 @@ function aggregate_csv_metrics_by_degree(campaign::CampaignResults)
                 "worst_experiment" => exp_ids[argmax(values)],
                 "num_experiments" => length(values),
                 "values" => values,
-                "experiment_ids" => exp_ids
+                "experiment_ids" => exp_ids,
             )
         end
     end
@@ -294,7 +299,8 @@ function extract_key_metric_value(metric_label::String, metric_data::Dict)
         return get(metric_data, "success_rate", nothing)
     elseif metric_label == "optimization_quality"
         return get(metric_data, "best_objective", nothing)
-    elseif metric_label in ["polynomial_timing", "solving_timing", "refinement_timing", "total_timing"]
+    elseif metric_label in
+           ["polynomial_timing", "solving_timing", "refinement_timing", "total_timing"]
         return get(metric_data, "mean_time", nothing)
     elseif metric_label == "timing"
         return get(metric_data, "total_time", nothing)
@@ -309,7 +315,7 @@ end
 Create overall campaign summary statistics.
 """
 function create_campaign_summary(campaign::CampaignResults, exp_stats::Dict)
-    summary = Dict{String, Any}()
+    summary = Dict{String,Any}()
 
     summary["campaign_id"] = campaign.campaign_id
     summary["num_experiments"] = length(campaign.experiments)
@@ -365,7 +371,7 @@ end
 Analyze which parameters vary across experiments in the campaign.
 """
 function analyze_parameter_variations(campaign::CampaignResults)
-    variations = Dict{String, Any}()
+    variations = Dict{String,Any}()
 
     if isempty(campaign.experiments)
         return variations
@@ -381,8 +387,8 @@ function analyze_parameter_variations(campaign::CampaignResults)
     end
 
     # Identify varying and constant parameters
-    varying_params = Dict{String, Vector{Any}}()
-    constant_params = Dict{String, Any}()
+    varying_params = Dict{String,Vector{Any}}()
+    constant_params = Dict{String,Any}()
 
     excluded_params = Set(["experiment_id", "timestamp"])
 
@@ -444,8 +450,12 @@ function analyze_campaign(campaign::CampaignResults)
     summary = agg_stats["campaign_summary"]
     println("\n📋 $(is_single_experiment ? "Experiment" : "Campaign") Summary:")
     println("  Total experiments: $(summary["num_experiments"])")
-    println("  Successful: $(summary["successful_experiments"]) ($(round(summary["success_rate"]*100, digits=1))%)")
-    println("  Total computation time: $(round(summary["total_computation_hours"], digits=2)) hours")
+    println(
+        "  Successful: $(summary["successful_experiments"]) ($(round(summary["success_rate"]*100, digits=1))%)",
+    )
+    println(
+        "  Total computation time: $(round(summary["total_computation_hours"], digits=2)) hours",
+    )
     println("  Total critical points: $(summary["total_critical_points"])")
     println("  Degrees covered: $(summary["degrees_covered"])")
 
@@ -469,15 +479,12 @@ function analyze_campaign(campaign::CampaignResults)
 
         if use_pretty_tables
             println("\n📊 Aggregated Metrics Across Experiments:")
-            println("=" ^ 80)
+            println("="^80)
             format_metrics_pretty_table(metrics, metric_labels)
         else
             # Use new grouped formatting
-            formatted_table = format_metrics_table(
-                agg_stats,
-                style=:grouped,
-                max_width=100
-            )
+            formatted_table =
+                format_metrics_table(agg_stats, style = :grouped, max_width = 100)
             print(formatted_table)
         end
     else
@@ -513,7 +520,7 @@ function format_metrics_pretty_table(metrics::Dict, _metric_labels::Dict)
         "solving_timing" => "Solving Time (s)",
         "refinement_timing" => "Refinement Time (s)",
         "total_timing" => "Total Computation Time (s)",
-        "timing" => "Total Time (s)"
+        "timing" => "Total Time (s)",
     )
 
     # Create a table with all metrics
@@ -525,7 +532,7 @@ function format_metrics_pretty_table(metrics::Dict, _metric_labels::Dict)
     num_exps = Int[]
     best_exps = String[]
 
-    for (metric_name, metric_data) in sort(collect(metrics), by=x->x[1])
+    for (metric_name, metric_data) in sort(collect(metrics), by = x -> x[1])
         # Use human-readable label
         readable_name = get(metric_labels, metric_name, metric_name)
         push!(metric_names, readable_name)
@@ -539,7 +546,8 @@ function format_metrics_pretty_table(metrics::Dict, _metric_labels::Dict)
 
         # Extract short readable label from best experiment
         best_exp = get(metric_data, "best_experiment", "N/A")
-        best_exp_short = best_exp == "N/A" ? "N/A" : extract_experiment_label(best_exp, max_length=30)
+        best_exp_short =
+            best_exp == "N/A" ? "N/A" : extract_experiment_label(best_exp, max_length = 30)
         push!(best_exps, best_exp_short)
     end
 
@@ -547,11 +555,13 @@ function format_metrics_pretty_table(metrics::Dict, _metric_labels::Dict)
     header = ["Metric", "Mean", "Min", "Max", "Std Dev", "N", "Best Experiment"]
     data = hcat(metric_names, means, mins, maxs, stds, num_exps, best_exps)
 
-    styled_table(data;
-                header=header,
-                alignment=[:l, :r, :r, :r, :r, :c, :l],
-                header_crayon=crayon"bold cyan",
-                border_crayon=crayon"cyan")
+    styled_table(
+        data;
+        header = header,
+        alignment = [:l, :r, :r, :r, :r, :c, :l],
+        header_crayon = crayon"bold cyan",
+        border_crayon = crayon"cyan",
+    )
 end
 
 """
@@ -566,12 +576,20 @@ Generate comprehensive campaign analysis report.
 # Returns
 - `String`: Formatted report content
 """
-function generate_campaign_report(campaign::CampaignResults; format::String="markdown", include_errors::Bool=false)
+function generate_campaign_report(
+    campaign::CampaignResults;
+    format::String = "markdown",
+    include_errors::Bool = false,
+)
     # Compute aggregated statistics
     agg_stats = aggregate_campaign_statistics(campaign)
 
     if format == "markdown"
-        return generate_campaign_markdown_report(campaign, agg_stats, include_errors=include_errors)
+        return generate_campaign_markdown_report(
+            campaign,
+            agg_stats,
+            include_errors = include_errors,
+        )
     elseif format == "latex"
         return "% LaTeX campaign reports not yet implemented"
     else
@@ -584,7 +602,11 @@ end
 
 Generate Markdown campaign report.
 """
-function generate_campaign_markdown_report(campaign::CampaignResults, agg_stats::Dict; include_errors::Bool=false)
+function generate_campaign_markdown_report(
+    campaign::CampaignResults,
+    agg_stats::Dict;
+    include_errors::Bool = false,
+)
     io = IOBuffer()
 
     # Header
@@ -592,7 +614,10 @@ function generate_campaign_markdown_report(campaign::CampaignResults, agg_stats:
     println(io, "")
     println(io, "**Campaign ID**: `$(campaign.campaign_id)`")
     println(io, "**Generated**: $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"))")
-    println(io, "**Collection Date**: $(Dates.format(campaign.collection_timestamp, "yyyy-mm-dd HH:MM:SS"))")
+    println(
+        io,
+        "**Collection Date**: $(Dates.format(campaign.collection_timestamp, "yyyy-mm-dd HH:MM:SS"))",
+    )
     println(io, "")
 
     # Campaign Summary
@@ -602,8 +627,14 @@ function generate_campaign_markdown_report(campaign::CampaignResults, agg_stats:
     println(io, "| Metric | Value |")
     println(io, "|--------|-------|")
     println(io, "| Total Experiments | $(summary["num_experiments"]) |")
-    println(io, "| Successful | $(summary["successful_experiments"]) ($(round(summary["success_rate"]*100, digits=1))%) |")
-    println(io, "| Total Computation Time | $(round(summary["total_computation_hours"], digits=2)) hours |")
+    println(
+        io,
+        "| Successful | $(summary["successful_experiments"]) ($(round(summary["success_rate"]*100, digits=1))%) |",
+    )
+    println(
+        io,
+        "| Total Computation Time | $(round(summary["total_computation_hours"], digits=2)) hours |",
+    )
     println(io, "| Total Critical Points | $(summary["total_critical_points"]) |")
     println(io, "| Degrees Covered | $(join(summary["degrees_covered"], ", ")) |")
     println(io, "")
@@ -707,12 +738,14 @@ function generate_campaign_markdown_report(campaign::CampaignResults, agg_stats:
             stats = agg_stats["experiments"][exp_id]
 
             l2_err = "N/A"
-            if haskey(stats, "approximation_quality") && get(stats["approximation_quality"], "available", false)
+            if haskey(stats, "approximation_quality") &&
+               get(stats["approximation_quality"], "available", false)
                 l2_err = format_scientific(stats["approximation_quality"]["mean_error"])
             end
 
             param_rec = "N/A"
-            if haskey(stats, "parameter_recovery") && get(stats["parameter_recovery"], "available", false)
+            if haskey(stats, "parameter_recovery") &&
+               get(stats["parameter_recovery"], "available", false)
                 param_rec = format_scientific(stats["parameter_recovery"]["mean_error"])
             end
 
@@ -735,7 +768,10 @@ function generate_campaign_markdown_report(campaign::CampaignResults, agg_stats:
         println(io, "| Metric | Value |")
         println(io, "|--------|-------|")
         println(io, "| Total Errors | $(error_analysis["total_errors"]) |")
-        println(io, "| Error Rate | $(round(error_analysis["error_rate"]*100, digits=1))% |")
+        println(
+            io,
+            "| Error Rate | $(round(error_analysis["error_rate"]*100, digits=1))% |",
+        )
         println(io, "")
 
         # Category breakdown
@@ -744,8 +780,12 @@ function generate_campaign_markdown_report(campaign::CampaignResults, agg_stats:
             println(io, "")
             println(io, "| Category | Count | Percentage |")
             println(io, "|----------|-------|------------|")
-            for (category, count) in sort(collect(error_analysis["category_distribution"]), by=x->x[2], rev=true)
-                pct = round(count / error_analysis["total_errors"] * 100, digits=1)
+            for (category, count) in sort(
+                collect(error_analysis["category_distribution"]),
+                by = x -> x[2],
+                rev = true,
+            )
+                pct = round(count / error_analysis["total_errors"] * 100, digits = 1)
                 println(io, "| $category | $count | $pct% |")
             end
             println(io, "")
@@ -780,7 +820,7 @@ Tries to extract key parameters like domain size, GN, degree range.
 - "/path/to/lv4d_exp1_range0.4_20251005" → "exp1_range0.4"
 - "very_long_experiment_name_with_lots_of_details" → "very_long_experi..."
 """
-function extract_experiment_label(exp_path::String; max_length::Int=25)
+function extract_experiment_label(exp_path::String; max_length::Int = 25)
     # Get basename (remove directory path)
     name = basename(exp_path)
 
@@ -821,7 +861,7 @@ function extract_experiment_label(exp_path::String; max_length::Int=25)
 
     # Truncate if still too long
     if length(label) > max_length
-        label = label[1:max_length-3] * "..."
+        label = label[1:(max_length-3)] * "..."
     end
 
     return label
@@ -880,17 +920,16 @@ function print_parameter_recovery_table(campaign::CampaignResults)
             continue
         end
 
-        cp_by_degree = Dict{Int, DataFrame}()
+        cp_by_degree = Dict{Int,DataFrame}()
         for deg in unique(all_cp.degree)
             cp_by_degree[deg] = filter(row -> row.degree == deg, all_cp)
         end
 
         if !isempty(cp_by_degree)
-            push!(exp_data, (
-                exp_id = exp.experiment_id,
-                p_true = p_true,
-                cp_by_degree = cp_by_degree
-            ))
+            push!(
+                exp_data,
+                (exp_id = exp.experiment_id, p_true = p_true, cp_by_degree = cp_by_degree),
+            )
         end
     end
 
@@ -931,7 +970,12 @@ function print_parameter_recovery_table(campaign::CampaignResults)
                 df = exp.cp_by_degree[deg]
                 if nrow(df) > 0
                     n_params = length(exp.p_true)
-                    distances = [param_distance([row[Symbol("p$i")] for i in 1:n_params], exp.p_true) for row in eachrow(df)]
+                    distances = [
+                        param_distance(
+                            [row[Symbol("p$i")] for i in 1:n_params],
+                            exp.p_true,
+                        ) for row in eachrow(df)
+                    ]
                     min_dist = minimum(distances)
                     @printf(" | %15.6e", min_dist)
                 else
@@ -965,7 +1009,10 @@ function print_parameter_recovery_table(campaign::CampaignResults)
 
             # Find best point for this degree
             n_params = length(exp.p_true)
-            distances = [param_distance([row[Symbol("p$i")] for i in 1:n_params], exp.p_true) for row in eachrow(df)]
+            distances = [
+                param_distance([row[Symbol("p$i")] for i in 1:n_params], exp.p_true) for
+                row in eachrow(df)
+            ]
             best_idx = argmin(distances)
             best_row = df[best_idx, :]
             best_dist = distances[best_idx]
@@ -974,15 +1021,22 @@ function print_parameter_recovery_table(campaign::CampaignResults)
 
             println("\nDegree $deg:")
             println("  Best distance: $(round(best_dist, sigdigits=6))")
-            obj_val = hasproperty(best_row, :objective) ? best_row.objective :
-                      hasproperty(best_row, :z)         ? best_row.z         : NaN
+            obj_val =
+                hasproperty(best_row, :objective) ? best_row.objective :
+                hasproperty(best_row, :z) ? best_row.z : NaN
             println("  Objective value: $(round(obj_val, sigdigits=6))")
-            println("  Parameters found: [$(join([round(p, sigdigits=6) for p in p_found], ", "))]")
-            println("  True parameters:  [$(join([round(p, sigdigits=6) for p in exp.p_true], ", "))]")
+            println(
+                "  Parameters found: [$(join([round(p, sigdigits=6) for p in p_found], ", "))]",
+            )
+            println(
+                "  True parameters:  [$(join([round(p, sigdigits=6) for p in exp.p_true], ", "))]",
+            )
 
             # Component-wise errors
             errors = abs.(p_found .- exp.p_true)
-            println("  Component errors: [$(join([round(e, sigdigits=4) for e in errors], ", "))]")
+            println(
+                "  Component errors: [$(join([round(e, sigdigits=4) for e in errors], ", "))]",
+            )
         end
     end
 end

@@ -20,14 +20,16 @@ appropriate statistic computation functions for each label.
 - `Dict{String, Any}`: Map from label → computed statistics
 """
 function compute_statistics(result::ExperimentResult)
-    all_stats = Dict{String, Any}()
+    all_stats = Dict{String,Any}()
 
     if isempty(result.enabled_tracking)
         @warn "No enabled tracking labels found for experiment $(result.experiment_id)"
         return all_stats
     end
 
-    println("📊 Computing statistics for $(length(result.enabled_tracking)) tracking labels...")
+    println(
+        "📊 Computing statistics for $(length(result.enabled_tracking)) tracking labels...",
+    )
 
     for label in result.enabled_tracking
         try
@@ -42,12 +44,15 @@ function compute_statistics(result::ExperimentResult)
 
     # Create aggregated statistics for plotting
     # Aggregate critical_point_count and refined_critical_points into "critical_points"
-    if haskey(all_stats, "critical_point_count") || haskey(all_stats, "refined_critical_points")
-        all_stats["critical_points"] = create_critical_points_aggregated_stats(all_stats, result)
+    if haskey(all_stats, "critical_point_count") ||
+       haskey(all_stats, "refined_critical_points")
+        all_stats["critical_points"] =
+            create_critical_points_aggregated_stats(all_stats, result)
     end
 
     # Aggregate timing labels into "timing"
-    timing_labels = ["polynomial_timing", "solving_timing", "refinement_timing", "total_timing"]
+    timing_labels =
+        ["polynomial_timing", "solving_timing", "refinement_timing", "total_timing"]
     if any(haskey(all_stats, label) for label in timing_labels)
         all_stats["timing"] = create_timing_aggregated_stats(all_stats, result)
     end
@@ -103,7 +108,10 @@ function compute_statistics_for_label(label::String, result::ExperimentResult)
         return compute_parameter_recovery_statistics(result)
     elseif label == "numerical_stability"
         return compute_numerical_stability_statistics(result)
-    elseif label == "polynomial_timing" || label == "solving_timing" || label == "refinement_timing" || label == "total_timing"
+    elseif label == "polynomial_timing" ||
+           label == "solving_timing" ||
+           label == "refinement_timing" ||
+           label == "total_timing"
         return compute_timing_statistics(result, label)
     elseif label == "refinement_quality"
         return compute_refinement_quality_statistics(result)
@@ -120,7 +128,7 @@ end
 Create aggregated critical points statistics for plotting from individual label stats.
 """
 function create_critical_points_aggregated_stats(all_stats::Dict, result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "critical_points", "available" => false)
+    stats = Dict{String,Any}("label" => "critical_points", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -132,7 +140,9 @@ function create_critical_points_aggregated_stats(all_stats::Dict, result::Experi
     degrees = Int[]
 
     if !(results_summary isa AbstractVector)
-        error("results_summary must be an array of degree result objects, got $(typeof(results_summary))")
+        error(
+            "results_summary must be an array of degree result objects, got $(typeof(results_summary))",
+        )
     end
 
     for degree_data in results_summary
@@ -164,7 +174,7 @@ end
 Create aggregated timing statistics for plotting from individual timing labels.
 """
 function create_timing_aggregated_stats(all_stats::Dict, result::ExperimentResult)
-    stats = Dict{String, Any}("label" => "timing", "available" => false)
+    stats = Dict{String,Any}("label" => "timing", "available" => false)
 
     results_summary = get(result.metadata, "results_summary", Dict())
     if isempty(results_summary)
@@ -172,7 +182,7 @@ function create_timing_aggregated_stats(all_stats::Dict, result::ExperimentResul
     end
 
     # Create per_degree_data dict expected by plotting
-    per_degree_data = Dict{Int, Dict{String, Any}}()
+    per_degree_data = Dict{Int,Dict{String,Any}}()
 
     # Handle both old dict format (degree_N => data) and new array format
     if results_summary isa AbstractVector
@@ -180,11 +190,14 @@ function create_timing_aggregated_stats(all_stats::Dict, result::ExperimentResul
         for degree_data in results_summary
             if haskey(degree_data, "degree")
                 deg = degree_data["degree"]
-                per_degree_data[deg] = Dict{String, Any}(
-                    "polynomial_construction_time" => get(degree_data, "polynomial_construction_time", 0.0),
-                    "critical_point_solving_time" => get(degree_data, "critical_point_solving_time", 0.0),
+                per_degree_data[deg] = Dict{String,Any}(
+                    "polynomial_construction_time" =>
+                        get(degree_data, "polynomial_construction_time", 0.0),
+                    "critical_point_solving_time" =>
+                        get(degree_data, "critical_point_solving_time", 0.0),
                     "refinement_time" => get(degree_data, "refinement_time", 0.0),
-                    "total_computation_time" => get(degree_data, "total_computation_time", 0.0)
+                    "total_computation_time" =>
+                        get(degree_data, "total_computation_time", 0.0),
                 )
             end
         end
@@ -192,11 +205,14 @@ function create_timing_aggregated_stats(all_stats::Dict, result::ExperimentResul
         # Old format: dict with "degree_N" keys
         for (degree_key, degree_data) in results_summary
             deg = parse(Int, replace(degree_key, "degree_" => ""))
-            per_degree_data[deg] = Dict{String, Any}(
-                "polynomial_construction_time" => get(degree_data, "polynomial_construction_time", 0.0),
-                "critical_point_solving_time" => get(degree_data, "critical_point_solving_time", 0.0),
+            per_degree_data[deg] = Dict{String,Any}(
+                "polynomial_construction_time" =>
+                    get(degree_data, "polynomial_construction_time", 0.0),
+                "critical_point_solving_time" =>
+                    get(degree_data, "critical_point_solving_time", 0.0),
                 "refinement_time" => get(degree_data, "refinement_time", 0.0),
-                "total_computation_time" => get(degree_data, "total_computation_time", 0.0)
+                "total_computation_time" =>
+                    get(degree_data, "total_computation_time", 0.0),
             )
         end
     end

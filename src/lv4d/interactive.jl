@@ -30,8 +30,11 @@ exp_dir = select_experiment()
 analyze_quality(exp_dir)
 ```
 """
-function select_experiment(results_root::String=find_results_root(); limit::Int=15)::String
-    experiments = list_recent_experiments(results_root; limit=limit)
+function select_experiment(
+    results_root::String = find_results_root();
+    limit::Int = 15,
+)::String
+    experiments = list_recent_experiments(results_root; limit = limit)
 
     if isempty(experiments)
         error("No experiments found in: $results_root")
@@ -60,4 +63,3 @@ function select_experiment(results_root::String=find_results_root(); limit::Int=
 
     return experiments[choice]
 end
-

@@ -20,7 +20,7 @@ Analyze gradient validation thresholds across domain sweep.
 # Output
 Prints summary table and finds threshold domain for ≥50% validation.
 """
-function analyze_gradient_thresholds(results_root::String; tolerance::Float64=0.1)
+function analyze_gradient_thresholds(results_root::String; tolerance::Float64 = 0.1)
     println("="^70)
     println("LV4D Gradient Validation Analysis")
     println("="^70)
@@ -51,19 +51,19 @@ end
 
 Convenience method that finds results root automatically.
 """
-function analyze_gradient_thresholds(; tolerance::Float64=0.1)
+function analyze_gradient_thresholds(; tolerance::Float64 = 0.1)
     results_root = find_results_root()
-    analyze_gradient_thresholds(results_root; tolerance=tolerance)
+    analyze_gradient_thresholds(results_root; tolerance = tolerance)
 end
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
 
-function _collect_gradient_data(results_root::String)::Dict{Float64, Vector{Float64}}
-    data = Dict{Float64, Vector{Float64}}()  # domain => [gradient_norms...]
+function _collect_gradient_data(results_root::String)::Dict{Float64,Vector{Float64}}
+    data = Dict{Float64,Vector{Float64}}()  # domain => [gradient_norms...]
 
-    for dir in readdir(results_root, join=true)
+    for dir in readdir(results_root, join = true)
         basename_dir = basename(dir)
         startswith(basename_dir, "lv4d_") || continue
 
@@ -96,23 +96,36 @@ function _collect_gradient_data(results_root::String)::Dict{Float64, Vector{Floa
     return data
 end
 
-function _print_gradient_summary(data::Dict{Float64, Vector{Float64}}, tolerance::Float64)
+function _print_gradient_summary(data::Dict{Float64,Vector{Float64}}, tolerance::Float64)
     domains = sort(collect(keys(data)))
 
     println()
     println("What this measures:")
-    println("  For each polynomial critical point x (where ∇w_d(x)=0), we evaluate ||∇f(x)||")
+    println(
+        "  For each polynomial critical point x (where ∇w_d(x)=0), we evaluate ||∇f(x)||",
+    )
     println("  If ||∇f(x)|| < tolerance, the polynomial CP approximates a true CP of f")
-    println("  This validates that polynomial CPs are near actual critical points of the objective")
+    println(
+        "  This validates that polynomial CPs are near actual critical points of the objective",
+    )
     println()
     println("Column definitions:")
     println("  Domain    = Domain half-width (search region)")
-    println("  N         = Total number of polynomial critical points across all experiments")
+    println(
+        "  N         = Total number of polynomial critical points across all experiments",
+    )
     println("  Valid%    = % with ||∇f(x)|| < $(tolerance) (true CPs of objective f)")
     println("  ||∇f||    = Gradient norm of objective f at polynomial critical points")
     println()
-    @printf("%-8s  %5s  %8s  %12s  %12s  %12s\n",
-            "Domain", "#CPs", "Valid%", "Min||∇f||", "Med||∇f||", "Max||∇f||")
+    @printf(
+        "%-8s  %5s  %8s  %12s  %12s  %12s\n",
+        "Domain",
+        "#CPs",
+        "Valid%",
+        "Min||∇f||",
+        "Med||∇f||",
+        "Max||∇f||"
+    )
     println("-"^70)
 
     for d in domains
@@ -124,13 +137,20 @@ function _print_gradient_summary(data::Dict{Float64, Vector{Float64}}, tolerance
         med_norm = median(norms)
         max_norm = maximum(norms)
 
-        @printf("%-8.4f  %5d  %7.0f%%  %12.2e  %12.2e  %12.2e\n",
-                d, n, valid_rate, min_norm, med_norm, max_norm)
+        @printf(
+            "%-8.4f  %5d  %7.0f%%  %12.2e  %12.2e  %12.2e\n",
+            d,
+            n,
+            valid_rate,
+            min_norm,
+            med_norm,
+            max_norm
+        )
     end
     println("="^70)
 end
 
-function _find_validation_threshold(data::Dict{Float64, Vector{Float64}}, tolerance::Float64)
+function _find_validation_threshold(data::Dict{Float64,Vector{Float64}}, tolerance::Float64)
     domains = sort(collect(keys(data)))
 
     println()
@@ -160,8 +180,11 @@ function _find_validation_threshold(data::Dict{Float64, Vector{Float64}}, tolera
     end
 
     if best_domain !== nothing && best_rate >= 50.0
-        @printf("Threshold domain for ≥50%% validation: %.4f (rate: %.1f%%)\n",
-                best_domain, best_rate)
+        @printf(
+            "Threshold domain for ≥50%% validation: %.4f (rate: %.1f%%)\n",
+            best_domain,
+            best_rate
+        )
     elseif best_domain !== nothing
         @printf("No domain achieves ≥50%% validation at tolerance %.1e\n", tolerance)
         @printf("Best: domain=%.4f with %.1f%% validation\n", best_domain, best_rate)

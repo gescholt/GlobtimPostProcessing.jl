@@ -26,22 +26,13 @@ const QUALITY_METRICS = [
     "parameter_recovery",
     "numerical_stability",
     "refinement_quality",
-    "optimization_quality"
+    "optimization_quality",
 ]
 
-const TIMING_METRICS = [
-    "polynomial_timing",
-    "solving_timing",
-    "refinement_timing",
-    "total_timing",
-    "timing"
-]
+const TIMING_METRICS =
+    ["polynomial_timing", "solving_timing", "refinement_timing", "total_timing", "timing"]
 
-const COUNT_METRICS = [
-    "critical_points",
-    "critical_point_count",
-    "refined_critical_points"
-]
+const COUNT_METRICS = ["critical_points", "critical_point_count", "refined_critical_points"]
 
 # Compact readable labels for metrics
 const METRIC_LABELS = Dict(
@@ -57,7 +48,7 @@ const METRIC_LABELS = Dict(
     "timing" => "Total Time (s)",
     "critical_points" => "Critical Pts",
     "critical_point_count" => "CP Count",
-    "refined_critical_points" => "Refined CPs"
+    "refined_critical_points" => "Refined CPs",
 )
 
 # ============================================================================
@@ -90,9 +81,11 @@ summary = format_metrics_table(agg_stats, style=:compact)
 println(summary)
 ```
 """
-function format_metrics_table(agg_stats::Dict;
-                              style::Symbol=:grouped,
-                              max_width::Int=100)
+function format_metrics_table(
+    agg_stats::Dict;
+    style::Symbol = :grouped,
+    max_width::Int = 100,
+)
     if style == :grouped
         return format_grouped_metrics(agg_stats, max_width)
     elseif style == :compact
@@ -127,10 +120,13 @@ function format_compact_summary(agg_stats::Dict)
         all_mins = [d["min"] for d in values(aq_by_deg)]
         all_maxs = [d["max"] for d in values(aq_by_deg)]
         all_means = [d["mean"] for d in values(aq_by_deg)]
-        @printf(io, "  L2 Error:       %10s (best) → %10s (worst)  [mean: %10s]\n",
-                format_value(minimum(all_mins)),
-                format_value(maximum(all_maxs)),
-                format_value(mean(all_means)))
+        @printf(
+            io,
+            "  L2 Error:       %10s (best) → %10s (worst)  [mean: %10s]\n",
+            format_value(minimum(all_mins)),
+            format_value(maximum(all_maxs)),
+            format_value(mean(all_means))
+        )
     end
 
     if haskey(metrics, "parameter_recovery")
@@ -138,16 +134,22 @@ function format_compact_summary(agg_stats::Dict)
         all_mins = [d["min"] for d in values(pr_by_deg)]
         all_maxs = [d["max"] for d in values(pr_by_deg)]
         all_means = [d["mean"] for d in values(pr_by_deg)]
-        @printf(io, "  Param Recovery: %10s (best) → %10s (worst)  [mean: %10s]\n",
-                format_value(minimum(all_mins)),
-                format_value(maximum(all_maxs)),
-                format_value(mean(all_means)))
+        @printf(
+            io,
+            "  Param Recovery: %10s (best) → %10s (worst)  [mean: %10s]\n",
+            format_value(minimum(all_mins)),
+            format_value(maximum(all_maxs)),
+            format_value(mean(all_means))
+        )
     end
 
-    @printf(io, "  Success Rate:   %.0f%% (%d/%d experiments converged)\n",
-            summary["success_rate"] * 100,
-            summary["successful_experiments"],
-            summary["num_experiments"])
+    @printf(
+        io,
+        "  Success Rate:   %.0f%% (%d/%d experiments converged)\n",
+        summary["success_rate"] * 100,
+        summary["successful_experiments"],
+        summary["num_experiments"]
+    )
 
     total_hours = summary["total_computation_hours"]
     if total_hours < 1.0
@@ -157,7 +159,10 @@ function format_compact_summary(agg_stats::Dict)
     end
 
     println(io)
-    println(io, "For detailed metrics, use: format_metrics_table(agg_stats, style=:grouped)")
+    println(
+        io,
+        "For detailed metrics, use: format_metrics_table(agg_stats, style=:grouped)",
+    )
 
     return String(take!(io))
 end
@@ -229,13 +234,22 @@ function format_metric_group(io::IO, metrics::Dict, metric_list::Vector, max_wid
     num_width = 12
 
     # Header
-    @printf(io, "%-*s %*s %*s %*s %*s %*s\n",
-            name_width, "Metric",
-            num_width, "Mean",
-            num_width, "Min",
-            num_width, "Max",
-            num_width, "Std Dev",
-            3, "N")
+    @printf(
+        io,
+        "%-*s %*s %*s %*s %*s %*s\n",
+        name_width,
+        "Metric",
+        num_width,
+        "Mean",
+        num_width,
+        "Min",
+        num_width,
+        "Max",
+        num_width,
+        "Std Dev",
+        3,
+        "N"
+    )
     println(io, "─"^max_width)
 
     # Data rows - now organized by degree
@@ -257,13 +271,22 @@ function format_metric_group(io::IO, metrics::Dict, metric_list::Vector, max_wid
                     display_label = idx == 1 ? label * " (deg $deg)" : "  deg $deg"
                 end
 
-                @printf(io, "%-*s %*s %*s %*s %*s %*d\n",
-                        name_width, truncate_string(display_label, name_width),
-                        num_width, format_value(m["mean"]),
-                        num_width, format_value(m["min"]),
-                        num_width, format_value(m["max"]),
-                        num_width, format_value(m["std"]),
-                        3, m["num_experiments"])
+                @printf(
+                    io,
+                    "%-*s %*s %*s %*s %*s %*d\n",
+                    name_width,
+                    truncate_string(display_label, name_width),
+                    num_width,
+                    format_value(m["mean"]),
+                    num_width,
+                    format_value(m["min"]),
+                    num_width,
+                    format_value(m["max"]),
+                    num_width,
+                    format_value(m["std"]),
+                    3,
+                    m["num_experiments"]
+                )
             end
         end
     end
@@ -282,7 +305,7 @@ function format_best_performers(io::IO, agg_stats::Dict, max_width::Int)
     exp_width = min(30, div(max_width, 3))
     val_width = 12
 
-    for (metric_name, metric_by_degree) in sort(collect(metrics), by=x->x[1])
+    for (metric_name, metric_by_degree) in sort(collect(metrics), by = x -> x[1])
         label = get(METRIC_LABELS, metric_name, metric_name)
 
         # Get all degrees for this metric
@@ -305,12 +328,19 @@ function format_best_performers(io::IO, agg_stats::Dict, max_width::Int)
             end
 
             if best_exp_id != ""
-                best_exp_display = extract_experiment_params(best_exp_id, exp_stats, exp_width)
-                @printf(io, "%-*s: %-*s → %*s (deg %d)\n",
-                        name_width, truncate_string(label, name_width),
-                        exp_width, truncate_string(best_exp_display, exp_width),
-                        val_width, format_value(best_val),
-                        best_deg)
+                best_exp_display =
+                    extract_experiment_params(best_exp_id, exp_stats, exp_width)
+                @printf(
+                    io,
+                    "%-*s: %-*s → %*s (deg %d)\n",
+                    name_width,
+                    truncate_string(label, name_width),
+                    exp_width,
+                    truncate_string(best_exp_display, exp_width),
+                    val_width,
+                    format_value(best_val),
+                    best_deg
+                )
             end
         else
             # Single degree or degree=0 (overall metric)
@@ -319,13 +349,20 @@ function format_best_performers(io::IO, agg_stats::Dict, max_width::Int)
 
             if haskey(metric_data, "best_experiment")
                 best_exp_id = metric_data["best_experiment"]
-                best_exp_display = extract_experiment_params(best_exp_id, exp_stats, exp_width)
+                best_exp_display =
+                    extract_experiment_params(best_exp_id, exp_stats, exp_width)
                 best_val = format_value(metric_data["min"])
 
-                @printf(io, "%-*s: %-*s → %*s\n",
-                        name_width, truncate_string(label, name_width),
-                        exp_width, truncate_string(best_exp_display, exp_width),
-                        val_width, best_val)
+                @printf(
+                    io,
+                    "%-*s: %-*s → %*s\n",
+                    name_width,
+                    truncate_string(label, name_width),
+                    exp_width,
+                    truncate_string(best_exp_display, exp_width),
+                    val_width,
+                    best_val
+                )
             end
         end
     end
@@ -455,7 +492,7 @@ function truncate_string(s::String, max_len::Int)
     if length(s) <= max_len
         return s
     else
-        return s[1:max_len-3] * "..."
+        return s[1:(max_len-3)] * "..."
     end
 end
 

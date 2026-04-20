@@ -9,11 +9,9 @@
 # For the comprehensive analysis-oriented subdivision result type, see
 # SubdivisionResult in SubdivisionTreeAnalysis.jl.
 
-using JSON
+using JSON #==============================================================================#
 
-#==============================================================================#
 #                    DATA TYPES                                                #
-#==============================================================================#
 
 """
     LandscapeRefinementDetails
@@ -77,8 +75,8 @@ struct LandscapeMethodResult
     cp_points::Vector{Vector{Float64}}
     cp_values::Vector{Float64}
     cp_types::Vector{String}
-    best_objective::Union{Float64, Nothing}
-    refinement::Union{LandscapeRefinementDetails, Nothing}
+    best_objective::Union{Float64,Nothing}
+    refinement::Union{LandscapeRefinementDetails,Nothing}
     is_subdivision::Bool
 end
 
@@ -105,11 +103,9 @@ struct LandscapeSubdivisionData
     degree::Int
     max_degree::Int
     label::String
-end
+end #==============================================================================#
 
-#==============================================================================#
 #                    JSON PARSERS                                               #
-#==============================================================================#
 
 """
     parse_landscape_refinement(d::AbstractDict) -> LandscapeRefinementDetails
@@ -122,8 +118,15 @@ The dictionary must contain keys: `"raw_points"`, `"refined_points"`, `"converge
 `nothing` values in `gradient_norms` and `objective_values` are converted to `NaN`.
 """
 function parse_landscape_refinement(d::AbstractDict)
-    for key in ("raw_points", "refined_points", "converged", "cp_types",
-                "gradient_norms", "objective_values", "iterations")
+    for key in (
+        "raw_points",
+        "refined_points",
+        "converged",
+        "cp_types",
+        "gradient_norms",
+        "objective_values",
+        "iterations",
+    )
         haskey(d, key) || error("Missing required key '$key' in refinement_details")
     end
 
@@ -206,27 +209,37 @@ function load_landscape_degree_sweep(path::String)
         end
 
         # Verified CP details
-        cp_points = haskey(d, "cp_points") ?
-            Vector{Float64}[Float64.(p) for p in d["cp_points"]] : Vector{Float64}[]
+        cp_points =
+            haskey(d, "cp_points") ? Vector{Float64}[Float64.(p) for p in d["cp_points"]] :
+            Vector{Float64}[]
         cp_values = haskey(d, "cp_values") ? Float64.(d["cp_values"]) : Float64[]
         cp_types = haskey(d, "cp_types") ? String.(d["cp_types"]) : String[]
 
         # Refinement details
-        refinement = haskey(d, "refinement_details") ?
+        refinement =
+            haskey(d, "refinement_details") ?
             parse_landscape_refinement(d["refinement_details"]) : nothing
 
         best_obj = get(d, "best_objective", nothing)
         best_obj = best_obj isa Number ? Float64(best_obj) : nothing
 
-        push!(methods, LandscapeMethodResult(
-            "deg $deg", deg,
-            Int(get(d, "n_min", 0)),
-            Int(get(d, "n_saddle", 0)),
-            Int(get(d, "n_max", 0)),
-            Int(get(d, "n_verified", 0)),
-            cp_points, cp_values, cp_types,
-            best_obj, refinement, false,
-        ))
+        push!(
+            methods,
+            LandscapeMethodResult(
+                "deg $deg",
+                deg,
+                Int(get(d, "n_min", 0)),
+                Int(get(d, "n_saddle", 0)),
+                Int(get(d, "n_max", 0)),
+                Int(get(d, "n_verified", 0)),
+                cp_points,
+                cp_values,
+                cp_types,
+                best_obj,
+                refinement,
+                false,
+            ),
+        )
     end
 
     return (; problem, bounds, p_true, methods, crashed_degrees)
@@ -271,42 +284,56 @@ function load_landscape_subdivision(path::String)
     has_refined = refined !== nothing && get(refined, "n_after_dedup", 0) > 0
 
     # Verified CPs from refined section
-    cp_points = has_refined && haskey(refined, "points") ?
+    cp_points =
+        has_refined && haskey(refined, "points") ?
         Vector{Float64}[Float64.(p) for p in refined["points"]] : Vector{Float64}[]
-    cp_values = has_refined && haskey(refined, "objective_values") ?
+    cp_values =
+        has_refined && haskey(refined, "objective_values") ?
         Float64.(refined["objective_values"]) : Float64[]
-    cp_types = has_refined && haskey(refined, "cp_types") ?
-        String.(refined["cp_types"]) : String[]
+    cp_types =
+        has_refined && haskey(refined, "cp_types") ? String.(refined["cp_types"]) : String[]
 
     # Refinement details
-    refinement = haskey(data, "refinement_details") ?
+    refinement =
+        haskey(data, "refinement_details") ?
         parse_landscape_refinement(data["refinement_details"]) : nothing
 
-    best_obj = has_refined ? get(refined, "best_min_objective",
-                                 get(refined, "best_objective", nothing)) : nothing
+    best_obj =
+        has_refined ?
+        get(refined, "best_min_objective", get(refined, "best_objective", nothing)) :
+        nothing
     best_obj = best_obj isa Number ? Float64(best_obj) : nothing
 
     method = LandscapeMethodResult(
-        label, deg,
+        label,
+        deg,
         has_refined ? Int(get(refined, "n_min", 0)) : 0,
         has_refined ? Int(get(refined, "n_saddle", 0)) : 0,
         has_refined ? Int(get(refined, "n_max", 0)) : 0,
         has_refined ? Int(get(refined, "n_after_dedup", 0)) : 0,
-        cp_points, cp_values, cp_types,
-        best_obj, refinement, true,
+        cp_points,
+        cp_values,
+        cp_types,
+        best_obj,
+        refinement,
+        true,
     )
 
     # Subdivision spatial data
-    leaf_bounds = haskey(tree, "leaf_bounds") ?
+    leaf_bounds =
+        haskey(tree, "leaf_bounds") ?
         [Vector{Float64}[Float64.(b) for b in lb] for lb in tree["leaf_bounds"]] :
         Vector{Vector{Float64}}[]
-    leaf_l2_errors = haskey(tree, "leaf_l2_errors") ?
-        Float64.(tree["leaf_l2_errors"]) : Float64[]
+    leaf_l2_errors =
+        haskey(tree, "leaf_l2_errors") ? Float64.(tree["leaf_l2_errors"]) : Float64[]
 
     subdiv_data = LandscapeSubdivisionData(
-        leaf_bounds, leaf_l2_errors,
+        leaf_bounds,
+        leaf_l2_errors,
         Int(get(tree, "n_total_leaves", 0)),
-        deg, max_deg, label,
+        deg,
+        max_deg,
+        label,
     )
 
     return (; method, subdiv_data)

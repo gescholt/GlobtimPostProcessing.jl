@@ -25,8 +25,11 @@ Prints analysis of distinct local minima including:
 - Clustered local minima with statistics
 - Comparison of closest vs lowest-value minima
 """
-function analyze_local_minima(csv_path::String, p_true::Vector{Float64};
-                              cluster_threshold::Float64=0.05)
+function analyze_local_minima(
+    csv_path::String,
+    p_true::Vector{Float64};
+    cluster_threshold::Float64 = 0.05,
+)
     df = CSV.read(csv_path, DataFrame)
 
     # Detect dimension from column names (refined_x1, refined_x2, ...)
@@ -47,19 +50,26 @@ function analyze_local_minima(csv_path::String, p_true::Vector{Float64};
     println("LOCAL MINIMA ANALYSIS")
     println("="^80)
     println()
-    println("p_true = ", round.(p_true, digits=4))
+    println("p_true = ", round.(p_true, digits = 4))
     println()
 
     # Print all refined points
     _print_all_refined_points(refined_points, refined_values, orthants, p_true, order)
 
     # Cluster points to find distinct minima
-    clusters, cluster_centers = _cluster_points(refined_points, refined_values, order,
-                                                cluster_threshold)
+    clusters, cluster_centers =
+        _cluster_points(refined_points, refined_values, order, cluster_threshold)
 
     # Print cluster analysis
-    _print_cluster_analysis(clusters, cluster_centers, refined_points, refined_values,
-                            orthants, p_true, cluster_threshold)
+    _print_cluster_analysis(
+        clusters,
+        cluster_centers,
+        refined_points,
+        refined_values,
+        orthants,
+        p_true,
+        cluster_threshold,
+    )
 
     # Print summary
     _print_minima_summary(clusters, cluster_centers, refined_points, refined_values, p_true)
@@ -117,8 +127,13 @@ function _print_all_refined_points(refined_points, refined_values, orthants, p_t
         pt = refined_points[i]
         dist = norm(pt .- p_true)
         coords = "[" * join([@sprintf("%.4f", x) for x in pt], ", ") * "]"
-        @printf("%-8d %-12.4f %-10.4f %-50s\n",
-                orthants[i], refined_values[i], dist, coords)
+        @printf(
+            "%-8d %-12.4f %-10.4f %-50s\n",
+            orthants[i],
+            refined_values[i],
+            dist,
+            coords
+        )
     end
     println("-"^80)
     println()
@@ -152,8 +167,15 @@ function _cluster_points(refined_points, refined_values, order, cluster_threshol
     return clusters, cluster_centers
 end
 
-function _print_cluster_analysis(clusters, cluster_centers, refined_points, refined_values,
-                                 orthants, p_true, cluster_threshold)
+function _print_cluster_analysis(
+    clusters,
+    cluster_centers,
+    refined_points,
+    refined_values,
+    orthants,
+    p_true,
+    cluster_threshold,
+)
     println("="^80)
     println("DISTINCT LOCAL MINIMA (cluster threshold = $cluster_threshold)")
     println("="^80)
@@ -171,11 +193,13 @@ function _print_cluster_analysis(clusters, cluster_centers, refined_points, refi
         dist_to_true = norm(center .- p_true)
 
         println("CLUSTER $rank:")
-        println("  Center: ", round.(center, digits=4))
+        println("  Center: ", round.(center, digits = 4))
         @printf("  Distance to p_true: %.4f (%.1f%%)\n", dist_to_true, dist_to_true * 100)
         @printf("  Best f(p): %.4f\n", best_val)
-        println("  Members: $(length(members)) points from indices ",
-                [orthants[j] for j in members])
+        println(
+            "  Members: $(length(members)) points from indices ",
+            [orthants[j] for j in members],
+        )
 
         if rank == 1 && dist_to_true < 0.1
             println("  *** LIKELY GLOBAL MINIMUM (near p_true) ***")
@@ -186,7 +210,13 @@ function _print_cluster_analysis(clusters, cluster_centers, refined_points, refi
     end
 end
 
-function _print_minima_summary(clusters, cluster_centers, refined_points, refined_values, p_true)
+function _print_minima_summary(
+    clusters,
+    cluster_centers,
+    refined_points,
+    refined_values,
+    p_true,
+)
     println("="^80)
     println("SUMMARY")
     println("="^80)
@@ -202,7 +232,7 @@ function _print_minima_summary(clusters, cluster_centers, refined_points, refine
     closest_best_val = minimum(refined_values[clusters[closest_idx]])
 
     println("CLOSEST MINIMUM TO p_true:")
-    println("  Center: ", round.(closest_center, digits=4))
+    println("  Center: ", round.(closest_center, digits = 4))
     @printf("  Distance: %.4f\n", closest_dist)
     @printf("  Best f(p): %.4f\n", closest_best_val)
     println()
@@ -215,7 +245,7 @@ function _print_minima_summary(clusters, cluster_centers, refined_points, refine
     best_val = cluster_best_vals[best_cluster_idx]
 
     println("LOWEST f VALUE MINIMUM:")
-    println("  Center: ", round.(best_center, digits=4))
+    println("  Center: ", round.(best_center, digits = 4))
     @printf("  Distance to p_true: %.4f\n", best_dist)
     @printf("  Best f(p): %.4f\n", best_val)
     println()

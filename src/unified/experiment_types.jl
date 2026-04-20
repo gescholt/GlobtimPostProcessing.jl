@@ -140,7 +140,7 @@ end
 
 Detect experiment type from experiment_config.json.
 """
-function _detect_from_config(dir::String)::Union{ExperimentType, Nothing}
+function _detect_from_config(dir::String)::Union{ExperimentType,Nothing}
     config_path = joinpath(dir, "experiment_config.json")
     !isfile(config_path) && return nothing
 
@@ -151,7 +151,8 @@ function _detect_from_config(dir::String)::Union{ExperimentType, Nothing}
         system_type = get(config, "system_type", nothing)
         if system_type !== nothing
             system_lower = lowercase(string(system_type))
-            if occursin("lotka", system_lower) || occursin("volterra", system_lower) ||
+            if occursin("lotka", system_lower) ||
+               occursin("volterra", system_lower) ||
                occursin("lv4d", system_lower)
                 return LV4D
             elseif occursin("deuflhard", system_lower)
@@ -186,7 +187,7 @@ function _detect_from_config(dir::String)::Union{ExperimentType, Nothing}
 
         return nothing
     catch e
-        @debug "Failed to parse config for type detection" exception=e
+        @debug "Failed to parse config for type detection" exception = e
         return nothing
     end
 end
@@ -239,6 +240,6 @@ const SUPPORTED_TYPES = [
 """
 Get list of experiment type names for menu display.
 """
-function list_experiment_types()::Vector{Tuple{ExperimentType, String}}
+function list_experiment_types()::Vector{Tuple{ExperimentType,String}}
     return [(t, desc) for (t, desc) in SUPPORTED_TYPES]
 end

@@ -51,7 +51,7 @@ df = lv4d(results_root="globtim_results/lotka_volterra_4d")
 first(df, 5)
 ```
 """
-function lv4d(; results_root::Union{String, Nothing}=nothing)
+function lv4d(; results_root::Union{String,Nothing} = nothing)
     println()
     println("$(TUI_BOLD)$(TUI_CYAN)LV4D INTERACTIVE ANALYSIS$(TUI_RESET)")
     println("$(TUI_DIM)─────────────────────────$(TUI_RESET)")
@@ -76,12 +76,12 @@ const ANALYSIS_TYPES = [
     :convergence => "Log-log convergence rate",
     :compare => "Method comparison (log vs standard)",
     :subdivision => "Single vs subdivision comparison",
-    :coverage => "Coverage analysis & gap detection"
+    :coverage => "Coverage analysis & gap detection",
 ]
 
-function _tui_select_analysis_type()::Union{Symbol, Nothing}
+function _tui_select_analysis_type()::Union{Symbol,Nothing}
     options = ["$(String(k)) - $v" for (k, v) in ANALYSIS_TYPES]
-    menu = RadioMenu(options, pagesize=4)
+    menu = RadioMenu(options, pagesize = 4)
     choice = request("Select analysis type:", menu)
 
     choice == -1 && return nothing
@@ -95,7 +95,7 @@ end
 """
 Detect available GN values from experiment directories.
 """
-function _tui_detect_gn_values(results_root::Union{String, Nothing})::Vector{Int}
+function _tui_detect_gn_values(results_root::Union{String,Nothing})::Vector{Int}
     experiments = find_experiments(results_root)
     gn_values = Set{Int}()
 
@@ -111,7 +111,10 @@ end
 """
 Detect available degree values from experiment directories.
 """
-function _tui_detect_degree_values(results_root::Union{String, Nothing}; gn::Union{Int, Nothing}=nothing)::Vector{Int}
+function _tui_detect_degree_values(
+    results_root::Union{String,Nothing};
+    gn::Union{Int,Nothing} = nothing,
+)::Vector{Int}
     experiments = find_experiments(results_root)
     degrees = Set{Int}()
 
@@ -134,7 +137,10 @@ end
 """
 Detect available domain values from experiment directories.
 """
-function _tui_detect_domain_values(results_root::Union{String, Nothing}; gn::Union{Int, Nothing}=nothing)::Vector{Float64}
+function _tui_detect_domain_values(
+    results_root::Union{String,Nothing};
+    gn::Union{Int,Nothing} = nothing,
+)::Vector{Float64}
     experiments = find_experiments(results_root)
     domains = Set{Float64}()
 
@@ -156,7 +162,7 @@ end
 # Menu Selection Helpers
 # ============================================================================
 
-function _tui_select_gn(results_root::Union{String, Nothing})::Union{Int, Nothing}
+function _tui_select_gn(results_root::Union{String,Nothing})::Union{Int,Nothing}
     gn_values = _tui_detect_gn_values(results_root)
 
     if isempty(gn_values)
@@ -170,15 +176,18 @@ function _tui_select_gn(results_root::Union{String, Nothing})::Union{Int, Nothin
     end
 
     options = string.(gn_values)
-    menu = RadioMenu(options, pagesize=min(8, length(options)))
+    menu = RadioMenu(options, pagesize = min(8, length(options)))
     choice = request("Select GN value:", menu)
 
     choice == -1 && return nothing
     return gn_values[choice]
 end
 
-function _tui_select_degree_range(results_root::Union{String, Nothing}; gn::Union{Int, Nothing}=nothing)::Union{Tuple{Int, Int}, Nothing}
-    degrees = _tui_detect_degree_values(results_root; gn=gn)
+function _tui_select_degree_range(
+    results_root::Union{String,Nothing};
+    gn::Union{Int,Nothing} = nothing,
+)::Union{Tuple{Int,Int},Nothing}
+    degrees = _tui_detect_degree_values(results_root; gn = gn)
 
     if isempty(degrees)
         println("$(TUI_YELLOW)No experiments found with valid degree values.$(TUI_RESET)")
@@ -195,7 +204,7 @@ function _tui_select_degree_range(results_root::Union{String, Nothing}; gn::Unio
 
     # Common options
     options = String[]
-    ranges = Tuple{Int, Int}[]
+    ranges = Tuple{Int,Int}[]
 
     # Full range option
     push!(options, "$(min_deg)-$(max_deg) (all available)")
@@ -215,15 +224,18 @@ function _tui_select_degree_range(results_root::Union{String, Nothing}; gn::Unio
         push!(ranges, (d, d))
     end
 
-    menu = RadioMenu(options, pagesize=min(10, length(options)))
+    menu = RadioMenu(options, pagesize = min(10, length(options)))
     choice = request("Select degree range:", menu)
 
     choice == -1 && return nothing
     return ranges[choice]
 end
 
-function _tui_select_domain_filter(results_root::Union{String, Nothing}; gn::Union{Int, Nothing}=nothing)::Union{Float64, Nothing}
-    domains = _tui_detect_domain_values(results_root; gn=gn)
+function _tui_select_domain_filter(
+    results_root::Union{String,Nothing};
+    gn::Union{Int,Nothing} = nothing,
+)::Union{Float64,Nothing}
+    domains = _tui_detect_domain_values(results_root; gn = gn)
 
     if isempty(domains)
         println("$(TUI_YELLOW)No experiments found with valid domain values.$(TUI_RESET)")
@@ -273,15 +285,15 @@ function _tui_select_domain_filter(results_root::Union{String, Nothing}; gn::Uni
         return values[1]
     end
 
-    menu = RadioMenu(options, pagesize=min(6, length(options)))
+    menu = RadioMenu(options, pagesize = min(6, length(options)))
     choice = request("Select domain filter:", menu)
 
     choice == -1 && return nothing
     return values[choice]
 end
 
-function _tui_select_experiment(results_root::Union{String, Nothing})::Union{String, Nothing}
-    experiments = list_recent_experiments(results_root; limit=50)
+function _tui_select_experiment(results_root::Union{String,Nothing})::Union{String,Nothing}
+    experiments = list_recent_experiments(results_root; limit = 50)
 
     if isempty(experiments)
         loc = results_root === nothing ? "any results directory" : results_root
@@ -297,15 +309,17 @@ function _tui_select_experiment(results_root::Union{String, Nothing})::Union{Str
         "$name ($age_str ago)"
     end
 
-    menu = RadioMenu(options, pagesize=min(12, length(options)))
+    menu = RadioMenu(options, pagesize = min(12, length(options)))
     choice = request("Select experiment:", menu)
 
     choice == -1 && return nothing
     return experiments[choice]
 end
 
-function _tui_select_comparison_experiment(results_root::Union{String, Nothing})::Union{String, Nothing}
-    comparison_dirs = find_comparison_experiments(results_root; limit=50)
+function _tui_select_comparison_experiment(
+    results_root::Union{String,Nothing},
+)::Union{String,Nothing}
+    comparison_dirs = find_comparison_experiments(results_root; limit = 50)
 
     if isempty(comparison_dirs)
         loc = results_root === nothing ? "any results directory" : results_root
@@ -320,7 +334,7 @@ function _tui_select_comparison_experiment(results_root::Union{String, Nothing})
         "$name ($age_str ago)"
     end
 
-    menu = RadioMenu(options, pagesize=min(10, length(options)))
+    menu = RadioMenu(options, pagesize = min(10, length(options)))
     choice = request("Select comparison experiment:", menu)
 
     choice == -1 && return nothing
@@ -331,7 +345,7 @@ end
 # Analysis Execution
 # ============================================================================
 
-function _tui_run_analysis(analysis::Symbol, results_root::Union{String, Nothing})
+function _tui_run_analysis(analysis::Symbol, results_root::Union{String,Nothing})
     println()
 
     if analysis == :sweep
@@ -353,25 +367,27 @@ function _tui_run_analysis(analysis::Symbol, results_root::Union{String, Nothing
     end
 end
 
-function _tui_run_sweep(results_root::Union{String, Nothing})
+function _tui_run_sweep(results_root::Union{String,Nothing})
     # Select GN
     gn = _tui_select_gn(results_root)
     gn === nothing && return nothing
 
     # Select degree range
-    deg_range = _tui_select_degree_range(results_root; gn=gn)
+    deg_range = _tui_select_degree_range(results_root; gn = gn)
     deg_range === nothing && return nothing
     degree_min, degree_max = deg_range
 
     # Select domain filter
-    domain_max = _tui_select_domain_filter(results_root; gn=gn)
+    domain_max = _tui_select_domain_filter(results_root; gn = gn)
     domain_max === nothing && return nothing
 
     # Show selection summary
     println()
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     deg_str = degree_min == degree_max ? "$degree_min" : "$degree_min-$degree_max"
-    println("$(TUI_GREEN)✓$(TUI_RESET) GN=$(TUI_BOLD)$gn$(TUI_RESET), degree=$(TUI_BOLD)$deg_str$(TUI_RESET), domain≤$(TUI_BOLD)$domain_max$(TUI_RESET)")
+    println(
+        "$(TUI_GREEN)✓$(TUI_RESET) GN=$(TUI_BOLD)$gn$(TUI_RESET), degree=$(TUI_BOLD)$deg_str$(TUI_RESET), domain≤$(TUI_BOLD)$domain_max$(TUI_RESET)",
+    )
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     println()
     println("$(TUI_CYAN)▶ Running sweep analysis...$(TUI_RESET)")
@@ -382,20 +398,22 @@ function _tui_run_sweep(results_root::Union{String, Nothing})
         gn = fixed(gn),
         degree = sweep(degree_min, degree_max),
         domain = SweepRange(0.0, domain_max),
-        seed = nothing
+        seed = nothing,
     )
 
     return analyze_sweep(results_root, filter)
 end
 
-function _tui_run_quality(results_root::Union{String, Nothing})
+function _tui_run_quality(results_root::Union{String,Nothing})
     exp_dir = _tui_select_experiment(results_root)
     exp_dir === nothing && return nothing
 
     # Show selection summary
     println()
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
-    println("$(TUI_GREEN)✓$(TUI_RESET) Experiment: $(TUI_BOLD)$(basename(exp_dir))$(TUI_RESET)")
+    println(
+        "$(TUI_GREEN)✓$(TUI_RESET) Experiment: $(TUI_BOLD)$(basename(exp_dir))$(TUI_RESET)",
+    )
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     println()
     println("$(TUI_CYAN)▶ Running quality analysis...$(TUI_RESET)")
@@ -404,13 +422,13 @@ function _tui_run_quality(results_root::Union{String, Nothing})
     return nothing
 end
 
-function _tui_run_convergence(results_root::Union{String, Nothing})
+function _tui_run_convergence(results_root::Union{String,Nothing})
     # Select GN
     gn = _tui_select_gn(results_root)
     gn === nothing && return nothing
 
     # Select degree range
-    deg_range = _tui_select_degree_range(results_root; gn=gn)
+    deg_range = _tui_select_degree_range(results_root; gn = gn)
     deg_range === nothing && return nothing
     degree_min, degree_max = deg_range
 
@@ -422,23 +440,32 @@ function _tui_run_convergence(results_root::Union{String, Nothing})
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     deg_str = degree_min == degree_max ? "$degree_min" : "$degree_min-$degree_max"
     csv_str = export_csv ? ", export CSV" : ""
-    println("$(TUI_GREEN)✓$(TUI_RESET) GN=$(TUI_BOLD)$gn$(TUI_RESET), degree=$(TUI_BOLD)$deg_str$(TUI_RESET)$csv_str")
+    println(
+        "$(TUI_GREEN)✓$(TUI_RESET) GN=$(TUI_BOLD)$gn$(TUI_RESET), degree=$(TUI_BOLD)$deg_str$(TUI_RESET)$csv_str",
+    )
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     println()
     println("$(TUI_CYAN)▶ Running convergence analysis...$(TUI_RESET)")
 
-    return analyze_convergence(results_root; gn=gn, degree_min=degree_min,
-                              degree_max=degree_max, export_csv=export_csv)
+    return analyze_convergence(
+        results_root;
+        gn = gn,
+        degree_min = degree_min,
+        degree_max = degree_max,
+        export_csv = export_csv,
+    )
 end
 
-function _tui_run_comparison(results_root::Union{String, Nothing})
+function _tui_run_comparison(results_root::Union{String,Nothing})
     comp_dir = _tui_select_comparison_experiment(results_root)
     comp_dir === nothing && return nothing
 
     # Show selection summary
     println()
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
-    println("$(TUI_GREEN)✓$(TUI_RESET) Comparison: $(TUI_BOLD)$(basename(comp_dir))$(TUI_RESET)")
+    println(
+        "$(TUI_GREEN)✓$(TUI_RESET) Comparison: $(TUI_BOLD)$(basename(comp_dir))$(TUI_RESET)",
+    )
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     println()
     println("$(TUI_CYAN)▶ Running comparison analysis...$(TUI_RESET)")
@@ -448,21 +475,22 @@ function _tui_run_comparison(results_root::Union{String, Nothing})
     return nothing
 end
 
-function _tui_run_subdivision(results_root::Union{String, Nothing})
+function _tui_run_subdivision(results_root::Union{String,Nothing})
     # Optional: Select GN filter
     use_gn_filter = _tui_ask_use_filter("Filter by GN?")
     gn = use_gn_filter ? _tui_select_gn(results_root) : nothing
 
     # Optional: Select domain filter
     use_domain_filter = _tui_ask_use_filter("Filter by domain?")
-    domain = use_domain_filter ? _tui_select_domain_value(results_root; gn=gn) : nothing
+    domain = use_domain_filter ? _tui_select_domain_value(results_root; gn = gn) : nothing
 
     # Show selection summary
     println()
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     filter_parts = String[]
     gn !== nothing && push!(filter_parts, "GN=$(TUI_BOLD)$gn$(TUI_RESET)")
-    domain !== nothing && push!(filter_parts, "domain=$(TUI_BOLD)$(@sprintf("%.4f", domain))$(TUI_RESET)")
+    domain !== nothing &&
+        push!(filter_parts, "domain=$(TUI_BOLD)$(@sprintf("%.4f", domain))$(TUI_RESET)")
     if isempty(filter_parts)
         println("$(TUI_GREEN)✓$(TUI_RESET) Comparing all matched experiments")
     else
@@ -472,7 +500,7 @@ function _tui_run_subdivision(results_root::Union{String, Nothing})
     println()
     println("$(TUI_CYAN)▶ Running subdivision comparison...$(TUI_RESET)")
 
-    df = compare_single_vs_subdivision(results_root; GN=gn, domain=domain)
+    df = compare_single_vs_subdivision(results_root; GN = gn, domain = domain)
     return df
 end
 
@@ -481,7 +509,7 @@ Ask if user wants to use a filter option.
 """
 function _tui_ask_use_filter(prompt::String)::Bool
     options = ["No", "Yes"]
-    menu = RadioMenu(options, pagesize=2)
+    menu = RadioMenu(options, pagesize = 2)
     choice = request(prompt, menu)
     return choice == 2
 end
@@ -489,8 +517,11 @@ end
 """
 Select a single domain value from available experiments.
 """
-function _tui_select_domain_value(results_root::Union{String, Nothing}; gn::Union{Int, Nothing}=nothing)::Union{Float64, Nothing}
-    domains = _tui_detect_domain_values(results_root; gn=gn)
+function _tui_select_domain_value(
+    results_root::Union{String,Nothing};
+    gn::Union{Int,Nothing} = nothing,
+)::Union{Float64,Nothing}
+    domains = _tui_detect_domain_values(results_root; gn = gn)
 
     if isempty(domains)
         println("$(TUI_YELLOW)No experiments found with valid domain values.$(TUI_RESET)")
@@ -503,7 +534,7 @@ function _tui_select_domain_value(results_root::Union{String, Nothing}; gn::Unio
     end
 
     options = [@sprintf("%.4f", d) for d in domains]
-    menu = RadioMenu(options, pagesize=min(10, length(options)))
+    menu = RadioMenu(options, pagesize = min(10, length(options)))
     choice = request("Select domain value:", menu)
 
     choice == -1 && return nothing
@@ -512,21 +543,21 @@ end
 
 function _tui_select_export_csv()::Bool
     options = ["No", "Yes - Export CSV for plotting"]
-    menu = RadioMenu(options, pagesize=2)
+    menu = RadioMenu(options, pagesize = 2)
     choice = request("Export CSV for plotting?", menu)
 
     choice == -1 && return false
     return choice == 2
 end
 
-function _tui_run_pending(results_root::Union{String, Nothing})
+function _tui_run_pending(results_root::Union{String,Nothing})
     println("$(TUI_CYAN)▶ Loading pipeline registry...$(TUI_RESET)")
 
     # Import Pipeline module
     Pipeline = Main.GlobtimPostProcessing.Pipeline
 
     # Load registry
-    registry = Pipeline.load_pipeline_registry(results_root=results_root)
+    registry = Pipeline.load_pipeline_registry(results_root = results_root)
 
     # Scan for new experiments
     new_count = Pipeline.scan_for_experiments!(registry)
@@ -561,7 +592,7 @@ function _tui_run_pending(results_root::Union{String, Nothing})
 
     # Ask what to do
     options = ["Analyze all pending", "Analyze first 5", "Show pipeline status", "Cancel"]
-    menu = RadioMenu(options, pagesize=4)
+    menu = RadioMenu(options, pagesize = 4)
     choice = request("Select action:", menu)
 
     choice == -1 && return nothing
@@ -569,12 +600,12 @@ function _tui_run_pending(results_root::Union{String, Nothing})
     if choice == 1
         # Analyze all
         println()
-        Pipeline.analyze_pending!(registry; verbose=true)
+        Pipeline.analyze_pending!(registry; verbose = true)
         Pipeline.save_pipeline_registry(registry)
     elseif choice == 2
         # Analyze first 5
         println()
-        Pipeline.analyze_pending!(registry; verbose=true, limit=5)
+        Pipeline.analyze_pending!(registry; verbose = true, limit = 5)
         Pipeline.save_pipeline_registry(registry)
     elseif choice == 3
         # Show status
@@ -590,7 +621,7 @@ end
 # Coverage Analysis
 # ============================================================================
 
-function _tui_run_coverage(results_root::Union{String, Nothing})
+function _tui_run_coverage(results_root::Union{String,Nothing})
     # Step 1: Multi-select GN values
     gn_values = _tui_multi_select_gn(results_root)
     isempty(gn_values) && return nothing
@@ -613,8 +644,12 @@ function _tui_run_coverage(results_root::Union{String, Nothing})
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     deg_str = degree_min == degree_max ? "$degree_min" : "$degree_min-$degree_max"
     seed_str = length(seeds) == 1 ? "$(seeds[1])" : "$(first(seeds)):$(last(seeds))"
-    println("$(TUI_GREEN)✓$(TUI_RESET) GN=$(TUI_BOLD)$gn_values$(TUI_RESET), domains=$(TUI_BOLD)$domain_values$(TUI_RESET)")
-    println("  degrees=$(TUI_BOLD)$deg_str$(TUI_RESET), seeds=$(TUI_BOLD)$seed_str$(TUI_RESET)")
+    println(
+        "$(TUI_GREEN)✓$(TUI_RESET) GN=$(TUI_BOLD)$gn_values$(TUI_RESET), domains=$(TUI_BOLD)$domain_values$(TUI_RESET)",
+    )
+    println(
+        "  degrees=$(TUI_BOLD)$deg_str$(TUI_RESET), seeds=$(TUI_BOLD)$seed_str$(TUI_RESET)",
+    )
     println("$(TUI_DIM)────────────────────────────────────$(TUI_RESET)")
     println()
     println("$(TUI_CYAN)▶ Running coverage analysis...$(TUI_RESET)")
@@ -623,11 +658,12 @@ function _tui_run_coverage(results_root::Union{String, Nothing})
     expected_degrees = degree_min:2:degree_max
 
     # Run coverage analysis
-    report = analyze_coverage(results_root;
+    report = analyze_coverage(
+        results_root;
         expected_gn = gn_values,
         expected_domains = domain_values,
         expected_degrees = expected_degrees,
-        expected_seeds = seeds
+        expected_seeds = seeds,
     )
 
     # Print report
@@ -641,9 +677,11 @@ function _tui_run_coverage(results_root::Union{String, Nothing})
         if generate
             output_dir = _tui_select_output_directory()
             if output_dir !== nothing
-                configs = generate_gap_filling_configs(report; output_dir=output_dir)
+                configs = generate_gap_filling_configs(report; output_dir = output_dir)
                 println()
-                println("$(TUI_GREEN)Generated $(length(configs)) config files in $(TUI_BOLD)$output_dir$(TUI_RESET)")
+                println(
+                    "$(TUI_GREEN)Generated $(length(configs)) config files in $(TUI_BOLD)$output_dir$(TUI_RESET)",
+                )
             end
         end
     end
@@ -656,7 +694,7 @@ end
 
 Multi-select GN values from detected values using MultiSelectMenu.
 """
-function _tui_multi_select_gn(results_root::Union{String, Nothing})::Vector{Int}
+function _tui_multi_select_gn(results_root::Union{String,Nothing})::Vector{Int}
     gn_values = _tui_detect_gn_values(results_root)
 
     if isempty(gn_values)
@@ -670,7 +708,7 @@ function _tui_multi_select_gn(results_root::Union{String, Nothing})::Vector{Int}
     end
 
     options = string.(gn_values)
-    menu = MultiSelectMenu(options; pagesize=min(8, length(options)))
+    menu = MultiSelectMenu(options; pagesize = min(8, length(options)))
     selected = request("Select GN values (space to toggle, enter to confirm):", menu)
 
     if isempty(selected)
@@ -686,7 +724,7 @@ end
 
 Multi-select domain values from detected values using MultiSelectMenu.
 """
-function _tui_multi_select_domains(results_root::Union{String, Nothing})::Vector{Float64}
+function _tui_multi_select_domains(results_root::Union{String,Nothing})::Vector{Float64}
     domains = _tui_detect_domain_values(results_root)
 
     if isempty(domains)
@@ -701,7 +739,7 @@ function _tui_multi_select_domains(results_root::Union{String, Nothing})::Vector
 
     # Format domain values for display
     options = [@sprintf("%.4f", d) for d in domains]
-    menu = MultiSelectMenu(options; pagesize=min(10, length(options)))
+    menu = MultiSelectMenu(options; pagesize = min(10, length(options)))
     selected = request("Select domain values (space to toggle, enter to confirm):", menu)
 
     if isempty(selected)
@@ -718,13 +756,8 @@ end
 Select seed range for coverage analysis.
 """
 function _tui_select_seed_range()::Vector{Int}
-    options = [
-        "1:5 (5 seeds)",
-        "1:3 (3 seeds)",
-        "1 only (single seed)",
-        "Custom range"
-    ]
-    menu = RadioMenu(options, pagesize=4)
+    options = ["1:5 (5 seeds)", "1:3 (3 seeds)", "1 only (single seed)", "Custom range"]
+    menu = RadioMenu(options, pagesize = 4)
     choice = request("Select seed range:", menu)
 
     choice == -1 && return Int[]
@@ -752,7 +785,7 @@ function _tui_select_seed_range()::Vector{Int}
                 return [1]
             end
         catch e
-            @debug "Could not parse seed input" exception=(e, catch_backtrace())
+            @debug "Could not parse seed input" exception = (e, catch_backtrace())
             println("$(TUI_YELLOW)Could not parse input. Using seed=1.$(TUI_RESET)")
             return [1]
         end
@@ -766,7 +799,7 @@ Ask if user wants to generate gap-filling configs.
 """
 function _tui_ask_generate_gaps()::Bool
     options = ["Yes - Generate gap-filling configs", "No"]
-    menu = RadioMenu(options, pagesize=2)
+    menu = RadioMenu(options, pagesize = 2)
     choice = request("Generate gap-filling configs?", menu)
 
     return choice == 1
@@ -777,15 +810,12 @@ end
 
 Select or enter output directory for gap-filling configs.
 """
-function _tui_select_output_directory()::Union{String, Nothing}
+function _tui_select_output_directory()::Union{String,Nothing}
     default_dir = "experiments/fill_gaps/"
 
-    options = [
-        "experiments/fill_gaps/ (default)",
-        "experiments/generated/",
-        "Custom directory"
-    ]
-    menu = RadioMenu(options, pagesize=3)
+    options =
+        ["experiments/fill_gaps/ (default)", "experiments/generated/", "Custom directory"]
+    menu = RadioMenu(options, pagesize = 3)
     choice = request("Select output directory:", menu)
 
     choice == -1 && return nothing

@@ -74,7 +74,7 @@ norms = compute_gradient_norms(points, ode_objective; gradient_method=:finitedif
 function compute_gradient_norms(
     points::Vector{Vector{Float64}},
     objective;
-    gradient_method::Symbol = :forwarddiff
+    gradient_method::Symbol = :forwarddiff,
 )::Vector{Float64}
     norms = Vector{Float64}(undef, length(points))
 
@@ -85,7 +85,9 @@ function compute_gradient_norms(
             elseif gradient_method == :finitediff
                 FiniteDiff.finite_difference_gradient(objective, pt)
             else
-                error("Unknown gradient_method: $gradient_method. Use :forwarddiff or :finitediff")
+                error(
+                    "Unknown gradient_method: $gradient_method. Use :forwarddiff or :finitediff",
+                )
             end
             norms[i] = LinearAlgebra.norm(grad)
         catch e
@@ -122,7 +124,7 @@ norm = compute_gradient_norm(point, ode_func; gradient_method=:finitediff)
 function compute_gradient_norm(
     point::Vector{Float64},
     objective;
-    gradient_method::Symbol = :forwarddiff
+    gradient_method::Symbol = :forwarddiff,
 )::Float64
     try
         grad = if gradient_method == :forwarddiff
@@ -184,10 +186,10 @@ function validate_critical_points(
     points::Vector{Vector{Float64}},
     objective;
     tolerance::Float64 = 1e-6,
-    gradient_method::Symbol = :forwarddiff
+    gradient_method::Symbol = :forwarddiff,
 )::GradientValidationResult
     # Compute gradient norms
-    norms = compute_gradient_norms(points, objective; gradient_method=gradient_method)
+    norms = compute_gradient_norms(points, objective; gradient_method = gradient_method)
 
     # Classify points
     valid = norms .< tolerance
@@ -217,7 +219,7 @@ function validate_critical_points(
         mean_norm,
         median_norm,
         max_norm,
-        min_norm
+        min_norm,
     )
 end
 
@@ -278,7 +280,7 @@ function add_gradient_validation!(
     objective;
     tolerance::Float64 = 1e-6,
     use_refined::Bool = true,
-    gradient_method::Symbol = :forwarddiff
+    gradient_method::Symbol = :forwarddiff,
 )::GradientValidationResult
     # Determine column prefix based on whether using refined or raw points
     prefix = use_refined ? "refined_dim" : "raw_dim"
@@ -310,7 +312,8 @@ function add_gradient_validation!(
         if any(isnan, pt)
             norms[i] = Inf  # Can't compute gradient for NaN coordinates
         else
-            norms[i] = compute_gradient_norm(pt, objective; gradient_method=gradient_method)
+            norms[i] =
+                compute_gradient_norm(pt, objective; gradient_method = gradient_method)
         end
     end
 
@@ -346,6 +349,6 @@ function add_gradient_validation!(
         mean_norm,
         median_norm,
         max_norm,
-        min_norm
+        min_norm,
     )
 end

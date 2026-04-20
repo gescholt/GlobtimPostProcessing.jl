@@ -58,10 +58,10 @@ success, report_path, stats = batch_analyze_campaign(
 function batch_analyze_campaign(
     campaign_path::String,
     output_file::String;
-    silent::Bool=false,
-    return_stats::Bool=false,
-    format::String="markdown",
-    include_errors::Bool=false
+    silent::Bool = false,
+    return_stats::Bool = false,
+    format::String = "markdown",
+    include_errors::Bool = false,
 )
     try
         # Validate campaign path
@@ -94,10 +94,11 @@ function batch_analyze_campaign(
             json_output = Dict(
                 "campaign_id" => campaign.campaign_id,
                 "statistics" => agg_stats,
-                "report_markdown" => generate_campaign_report(campaign, include_errors=include_errors),
+                "report_markdown" =>
+                    generate_campaign_report(campaign, include_errors = include_errors),
                 "generation_time" => string(now()),
                 "collection_timestamp" => string(campaign.collection_timestamp),
-                "num_experiments" => length(campaign.experiments)
+                "num_experiments" => length(campaign.experiments),
             )
 
             # Add error analysis if requested
@@ -112,7 +113,8 @@ function batch_analyze_campaign(
         else
             # Markdown format (default)
             !silent && @info "Generating markdown report..."
-            report_content = generate_campaign_report(campaign, include_errors=include_errors)
+            report_content =
+                generate_campaign_report(campaign, include_errors = include_errors)
 
             !silent && @info "Saving report to: $output_file"
             save_report(report_content, output_file)
@@ -162,28 +164,26 @@ campaign = load_campaign_with_progress("campaign_dir")
 campaign = load_campaign_with_progress("campaign_dir", show_progress=false)
 ```
 """
-function load_campaign_with_progress(
-    campaign_path::String;
-    show_progress::Bool=true
-)
+function load_campaign_with_progress(campaign_path::String; show_progress::Bool = true)
     if !show_progress
         # Fall back to standard loading without progress
         return load_campaign_results(campaign_path)
     end
 
     # Get list of experiment directories
-    exp_dirs = filter(isdir,
-                     [joinpath(campaign_path, d) for d in readdir(campaign_path)])
+    exp_dirs = filter(isdir, [joinpath(campaign_path, d) for d in readdir(campaign_path)])
 
     if isempty(exp_dirs)
         error("No experiment directories found in: $campaign_path")
     end
 
     # Create progress bar
-    progress = Progress(length(exp_dirs),
-                       desc="Loading campaign: ",
-                       barlen=40,
-                       showspeed=true)
+    progress = Progress(
+        length(exp_dirs),
+        desc = "Loading campaign: ",
+        barlen = 40,
+        showspeed = true,
+    )
 
     # Load experiments with progress tracking
     for _ in exp_dirs
@@ -220,7 +220,7 @@ stats = aggregate_campaign_statistics_with_progress(campaign)
 """
 function aggregate_campaign_statistics_with_progress(
     campaign::CampaignResults;
-    show_progress::Bool=true
+    show_progress::Bool = true,
 )
     if !show_progress
         # Fall back to standard aggregation
@@ -228,17 +228,19 @@ function aggregate_campaign_statistics_with_progress(
     end
 
     num_experiments = length(campaign.experiments)
-    progress = Progress(num_experiments,
-                       desc="Computing statistics: ",
-                       barlen=40,
-                       showspeed=true)
+    progress = Progress(
+        num_experiments,
+        desc = "Computing statistics: ",
+        barlen = 40,
+        showspeed = true,
+    )
 
     # Define progress callback that updates the progress bar in real-time
     progress_callback = (current, total, label) -> next!(progress)
 
     # Call aggregate_campaign_statistics with real-time progress callback
     # Progress bar updates as each experiment is processed
-    stats = aggregate_campaign_statistics(campaign, progress_callback=progress_callback)
+    stats = aggregate_campaign_statistics(campaign, progress_callback = progress_callback)
 
     return stats
 end
@@ -278,10 +280,10 @@ success, report, stats = batch_analyze_campaign_with_progress(
 function batch_analyze_campaign_with_progress(
     campaign_path::String,
     output_file::String;
-    show_progress::Bool=true,
-    silent::Bool=false,
-    verbose::Bool=false,
-    include_errors::Bool=false
+    show_progress::Bool = true,
+    silent::Bool = false,
+    verbose::Bool = false,
+    include_errors::Bool = false,
 )
     try
         # Validate inputs
@@ -300,17 +302,20 @@ function batch_analyze_campaign_with_progress(
 
         # Stage 1: Load campaign with progress
         verbose && println("Stage 1/4: Loading campaign...")
-        campaign = load_campaign_with_progress(campaign_path, show_progress=show_progress)
+        campaign = load_campaign_with_progress(campaign_path, show_progress = show_progress)
         verbose && println("✓ Loaded $(length(campaign.experiments)) experiments")
 
         # Stage 2: Compute statistics with progress
         verbose && println("Stage 2/4: Computing statistics...")
-        stats = aggregate_campaign_statistics_with_progress(campaign, show_progress=show_progress)
+        stats = aggregate_campaign_statistics_with_progress(
+            campaign,
+            show_progress = show_progress,
+        )
         verbose && println("✓ Statistics computed")
 
         # Stage 3: Generate report
         verbose && println("Stage 3/4: Generating report...")
-        report_content = generate_campaign_report(campaign, include_errors=include_errors)
+        report_content = generate_campaign_report(campaign, include_errors = include_errors)
         verbose && println("✓ Report generated ($(length(report_content)) chars)")
 
         # Stage 4: Save report

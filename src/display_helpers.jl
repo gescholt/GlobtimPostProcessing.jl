@@ -10,7 +10,7 @@ Used by demo scripts and print functions throughout GlobtimPostProcessing.
 
 Format a number in scientific notation with the given number of significant digits.
 """
-function fmt_sci(x::Real; sigdigits::Int=3)
+function fmt_sci(x::Real; sigdigits::Int = 3)
     return @sprintf("%.*e", sigdigits - 1, x)
 end
 
@@ -40,10 +40,10 @@ end
 
 Print a colored section header with a trailing rule line.
 """
-function print_section(title::String; width::Int=80, io::IO=stdout)
+function print_section(title::String; width::Int = 80, io::IO = stdout)
     line = "─"^max(1, width - length(title) - 4)
-    printstyled(io, "\n── $title "; color=:cyan, bold=true)
-    printstyled(io, line * "\n"; color=:cyan)
+    printstyled(io, "\n── $title "; color = :cyan, bold = true)
+    printstyled(io, line * "\n"; color = :cyan)
 end
 
 """
@@ -56,22 +56,26 @@ Wrapper around `pretty_table` that applies consistent default styling:
 
 All defaults can be overridden via keyword arguments.
 """
-function styled_table(io::IO, data;
+function styled_table(
+    io::IO,
+    data;
     header,
     alignment,
     highlighters::Tuple = (),
     tf = tf_unicode_rounded,
-    header_crayon = PrettyTables.Crayon(bold=true),
+    header_crayon = PrettyTables.Crayon(bold = true),
     crop::Symbol = :none,
     kwargs...,
 )
-    pretty_table(io, data;
-        header=header,
-        alignment=alignment,
-        highlighters=highlighters,
-        tf=tf,
-        header_crayon=header_crayon,
-        crop=crop,
+    pretty_table(
+        io,
+        data;
+        header = header,
+        alignment = alignment,
+        highlighters = highlighters,
+        tf = tf,
+        header_crayon = header_crayon,
+        crop = crop,
         kwargs...,
     )
 end

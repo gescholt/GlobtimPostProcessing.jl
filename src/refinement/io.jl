@@ -55,7 +55,7 @@ Throws error if no critical points files found in directory.
 """
 function load_raw_critical_points(
     experiment_dir::String;
-    degree::Union{Int,Nothing} = nothing
+    degree::Union{Int,Nothing} = nothing,
 )
     raw_pattern = r"critical_points_raw_deg_(\d+)\.csv"
 
@@ -69,7 +69,7 @@ function load_raw_critical_points(
 
     # Parse degrees from filenames
     available_degrees = Int[]
-    degree_to_file = Dict{Int, String}()
+    degree_to_file = Dict{Int,String}()
 
     for file in raw_files
         m = match(raw_pattern, file)
@@ -102,18 +102,15 @@ function load_raw_critical_points(
     dim_cols = filter(c -> occursin(r"^(dim|x|p)\d+$", String(c)), names(df))
 
     if isempty(dim_cols)
-        error("No dimension columns found in CSV. Expected columns matching pattern ^(dim|x|p)\\d+\$ but found: $(names(df))")
+        error(
+            "No dimension columns found in CSV. Expected columns matching pattern ^(dim|x|p)\\d+\$ but found: $(names(df))",
+        )
     end
 
     # Convert to Vector{Vector{Float64}}
     points = [Vector{Float64}(row[dim_cols]) for row in eachrow(df)]
 
-    return RawCriticalPointsData(
-        points,
-        selected_degree,
-        length(points),
-        csv_path
-    )
+    return RawCriticalPointsData(points, selected_degree, length(points), csv_path)
 end
 
 """
@@ -203,9 +200,9 @@ function save_refined_results(
     result::RefinedExperimentResult,
     degree::Int,
     refinement_results::Vector{RefinementResult};
-    gradient_validation::Union{GradientValidationResult, Nothing} = nothing,
-    raw_gradient_norms::Union{Vector{Float64}, Nothing} = nothing,
-    hessian_classifications::Union{Vector{Symbol}, Nothing} = nothing
+    gradient_validation::Union{GradientValidationResult,Nothing} = nothing,
+    raw_gradient_norms::Union{Vector{Float64},Nothing} = nothing,
+    hessian_classifications::Union{Vector{Symbol},Nothing} = nothing,
 )
     # 1. Save refined critical points CSV
     refined_csv_path = joinpath(experiment_dir, "critical_points_refined_deg_$degree.csv")
@@ -226,7 +223,8 @@ function save_refined_results(
         refined_df[!, :iterations] = result.iterations[result.convergence_status]
 
         # Add Hessian-based critical point classification
-        if hessian_classifications !== nothing && length(hessian_classifications) == nrow(refined_df)
+        if hessian_classifications !== nothing &&
+           length(hessian_classifications) == nrow(refined_df)
             refined_df[!, :critical_point_type] = String.(hessian_classifications)
         end
 
@@ -285,7 +283,8 @@ function save_refined_results(
     comparison_df[!, :f_converged] = [r.f_converged for r in refinement_results]
     comparison_df[!, :g_converged] = [r.g_converged for r in refinement_results]
     comparison_df[!, :iter_limit] = [r.iteration_limit_reached for r in refinement_results]
-    comparison_df[!, :convergence_reason] = [String(r.convergence_reason) for r in refinement_results]
+    comparison_df[!, :convergence_reason] =
+        [String(r.convergence_reason) for r in refinement_results]
 
     # Add raw gradient norms — ||∇f(x_raw)|| for each raw point
     if raw_gradient_norms !== nothing
@@ -327,7 +326,7 @@ function save_refined_results(
 
     # Tier 1 Diagnostics: Compute convergence breakdown
     convergence_reasons = [r.convergence_reason for r in refinement_results]
-    convergence_breakdown = Dict{String, Int}()
+    convergence_breakdown = Dict{String,Int}()
     for reason in unique(convergence_reasons)
         convergence_breakdown[String(reason)] = count(==(reason), convergence_reasons)
     end
@@ -342,7 +341,7 @@ function save_refined_results(
         "max_f_calls" => maximum(f_calls_all),
         "min_f_calls" => minimum(f_calls_all),
         "mean_g_calls" => Statistics.mean(g_calls_all),
-        "max_g_calls" => maximum(g_calls_all)
+        "max_g_calls" => maximum(g_calls_all),
     )
 
     # Tier 1 Diagnostics: Timing statistics
@@ -350,7 +349,7 @@ function save_refined_results(
         "mean_time_per_point" => Statistics.mean(time_elapsed_all),
         "max_time_per_point" => maximum(time_elapsed_all),
         "min_time_per_point" => minimum(time_elapsed_all),
-        "points_timed_out" => result.n_timeout
+        "points_timed_out" => result.n_timeout,
     )
 
     # Raw gradient norm statistics — how close are raw critical points to true critical points of f?
@@ -364,7 +363,7 @@ function save_refined_results(
                 "min_norm" => minimum(sorted),
                 "median_norm" => sorted[div(length(sorted) + 1, 2)],
                 "mean_norm" => Statistics.mean(sorted),
-                "max_norm" => maximum(sorted)
+                "max_norm" => maximum(sorted),
             )
         else
             Dict(
@@ -373,7 +372,7 @@ function save_refined_results(
                 "min_norm" => nothing,
                 "median_norm" => nothing,
                 "mean_norm" => nothing,
-                "max_norm" => nothing
+                "max_norm" => nothing,
             )
         end
     else
@@ -390,24 +389,26 @@ function save_refined_results(
             "median_norm" => gradient_validation.median_norm,
             "max_norm" => gradient_validation.max_norm,
             "min_norm" => gradient_validation.min_norm,
-            "validation_rate" => gradient_validation.n_valid / length(gradient_validation.norms)
+            "validation_rate" =>
+                gradient_validation.n_valid / length(gradient_validation.norms),
         )
     else
         nothing
     end
 
     # Hessian classification counts
-    hessian_stats = if hessian_classifications !== nothing && !isempty(hessian_classifications)
-        Dict(
-            "n_minimum" => count(==(Symbol("minimum")), hessian_classifications),
-            "n_saddle" => count(==(Symbol("saddle")), hessian_classifications),
-            "n_maximum" => count(==(Symbol("maximum")), hessian_classifications),
-            "n_degenerate" => count(==(Symbol("degenerate")), hessian_classifications),
-            "n_error" => count(==(Symbol("error")), hessian_classifications),
-        )
-    else
-        nothing
-    end
+    hessian_stats =
+        if hessian_classifications !== nothing && !isempty(hessian_classifications)
+            Dict(
+                "n_minimum" => count(==(Symbol("minimum")), hessian_classifications),
+                "n_saddle" => count(==(Symbol("saddle")), hessian_classifications),
+                "n_maximum" => count(==(Symbol("maximum")), hessian_classifications),
+                "n_degenerate" => count(==(Symbol("degenerate")), hessian_classifications),
+                "n_error" => count(==(Symbol("error")), hessian_classifications),
+            )
+        else
+            nothing
+        end
 
     summary = Dict(
         "degree" => degree,
@@ -435,9 +436,9 @@ function save_refined_results(
             "max_time_per_point" => result.refinement_config.max_time_per_point,
             "f_abstol" => result.refinement_config.f_abstol,
             "x_abstol" => result.refinement_config.x_abstol,
-            "max_iterations" => result.refinement_config.max_iterations
+            "max_iterations" => result.refinement_config.max_iterations,
         ),
-        "timestamp" => Dates.now()
+        "timestamp" => Dates.now(),
     )
 
     # Replace NaN/Inf with null for JSON compatibility
@@ -460,5 +461,4 @@ function save_refined_results(
         json_str = JSON.json(sanitized_summary)
         write(io, json_str)
     end
-
 end

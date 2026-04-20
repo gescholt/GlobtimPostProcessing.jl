@@ -38,7 +38,7 @@ const DEFAULT_CONFIG = TreeDisplayConfig()
 
 Create ASCII progress bar: "█████░░░░░" for 50% progress.
 """
-function progress_bar(current::Int, max::Int, width::Int=10)
+function progress_bar(current::Int, max::Int, width::Int = 10)
     progress = clamp(current / max, 0.0, 1.0)
     filled = round(Int, progress * width)
     return "█"^filled * "░"^(width - filled)
@@ -51,7 +51,7 @@ Format error sum, returning "?" if no finite errors.
 """
 function format_error(errors::Vector{Float64})
     finite = filter(isfinite, errors)
-    isempty(finite) ? "?" : string(round(sum(finite), sigdigits=3))
+    isempty(finite) ? "?" : string(round(sum(finite), sigdigits = 3))
 end
 
 """
@@ -68,7 +68,7 @@ const DIM_COLORS = [:red, :green, :blue, :yellow, :magenta, :cyan]
 get_dim_color(dim::Int) = DIM_COLORS[mod1(dim, length(DIM_COLORS))]
 
 # ASCII split position: [----|---------] shows where split occurs in [-1,1]
-function split_position_viz(split_pos::Float64, width::Int=10)
+function split_position_viz(split_pos::Float64, width::Int = 10)
     pos = round(Int, (split_pos + 1) / 2 * (width - 1))
     pos = clamp(pos, 0, width - 1)
     return "[" * "-"^pos * "|" * "-"^(width - 1 - pos) * "]"
@@ -92,11 +92,13 @@ end
 function print_legend(n_dims::Int)
     println("\nLegend:")
     for i in 1:min(n_dims, 6)
-        printstyled("  x$i", color=get_dim_color(i))
+        printstyled("  x$i", color = get_dim_color(i))
         println(" = Dimension $i")
     end
-    printstyled("  ✓", color=:green); println(" = converged")
-    printstyled("  ○", color=:yellow); println(" = active")
+    printstyled("  ✓", color = :green)
+    println(" = converged")
+    printstyled("  ○", color = :yellow)
+    println(" = active")
 end
 
 """
@@ -104,8 +106,12 @@ end
 
 Print ASCII histogram for given values and bin edges.
 """
-function print_histogram(values::Vector{Float64}, bins::Vector{Float64};
-                         bar_width::Int=20, io::IO=stdout)
+function print_histogram(
+    values::Vector{Float64},
+    bins::Vector{Float64};
+    bar_width::Int = 20,
+    io::IO = stdout,
+)
     n = length(values)
     for i in 1:(length(bins)-1)
         lo, hi = bins[i], bins[i+1]

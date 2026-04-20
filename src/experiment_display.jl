@@ -37,20 +37,24 @@ setup = ["Function" "Deuflhard 4D"; "Dimension" "4"; "Grid" "12^4 = 20736"]
 print_experiment_header("Deuflhard 4D Demo", setup)
 ```
 """
-function print_experiment_header(title::String, setup_pairs::Matrix{String}; io::IO=stdout)
+function print_experiment_header(
+    title::String,
+    setup_pairs::Matrix{String};
+    io::IO = stdout,
+)
     W = 80
-    printstyled(io, "="^W * "\n"; color=:blue, bold=true)
-    printstyled(io, " " * title * "\n"; color=:white, bold=true)
-    printstyled(io, "="^W * "\n"; color=:blue, bold=true)
+    printstyled(io, "="^W * "\n"; color = :blue, bold = true)
+    printstyled(io, " " * title * "\n"; color = :white, bold = true)
+    printstyled(io, "="^W * "\n"; color = :blue, bold = true)
 
-    pretty_table(io, setup_pairs;
-        show_header=false,
-        tf=tf_borderless,
-        alignment=[:r, :l],
-        highlighters=(
-            Highlighter((_, i, j) -> j == 1, bold=true, foreground=:cyan),
-        ),
-        vlines=[1],
+    pretty_table(
+        io,
+        setup_pairs;
+        show_header = false,
+        tf = tf_borderless,
+        alignment = [:r, :l],
+        highlighters = (Highlighter((_, i, j) -> j == 1, bold = true, foreground = :cyan),),
+        vlines = [1],
     )
 end
 
@@ -72,11 +76,16 @@ When `show_timing_breakdown=true`, includes the Poly time and HC Solve columns
 - `show_timing_breakdown::Bool`: Whether to show Poly/HC columns (default: false)
 - `io::IO`: Output stream (default: stdout)
 """
-function print_poly_summary_table(degree_results; show_timing_breakdown::Bool=false, io::IO=stdout)
-    print_section("Polynomial Approximation (Globtim)"; io=io)
+function print_poly_summary_table(
+    degree_results;
+    show_timing_breakdown::Bool = false,
+    io::IO = stdout,
+)
+    print_section("Polynomial Approximation (Globtim)"; io = io)
 
     # Check if degree_results have relative_l2_error field
-    has_rel_l2 = !isempty(degree_results) && hasproperty(first(degree_results), :relative_l2_error)
+    has_rel_l2 =
+        !isempty(degree_results) && hasproperty(first(degree_results), :relative_l2_error)
 
     n = length(degree_results)
     base_cols = has_rel_l2 ? 7 : 6
@@ -85,28 +94,34 @@ function print_poly_summary_table(degree_results; show_timing_breakdown::Bool=fa
 
     for (row, dr) in enumerate(degree_results)
         col = 1
-        data[row, col] = dr.degree; col += 1
-        data[row, col] = dr.n_critical_points; col += 1
-        data[row, col] = fmt_sci(dr.l2_approx_error); col += 1
+        data[row, col] = dr.degree
+        col += 1
+        data[row, col] = dr.n_critical_points
+        col += 1
+        data[row, col] = fmt_sci(dr.l2_approx_error)
+        col += 1
         if has_rel_l2
             rel = dr.relative_l2_error
-            data[row, col] = isnan(rel) ? "N/A" : fmt_sci(rel); col += 1
+            data[row, col] = isnan(rel) ? "N/A" : fmt_sci(rel)
+            col += 1
         end
-        data[row, col] = dr.best_objective !== nothing ? fmt_sci(dr.best_objective) : "N/A"; col += 1
-        data[row, col] = dr.status; col += 1
+        data[row, col] = dr.best_objective !== nothing ? fmt_sci(dr.best_objective) : "N/A"
+        col += 1
+        data[row, col] = dr.status
+        col += 1
         if show_timing_breakdown
-            data[row, col] = fmt_time(dr.polynomial_construction_time); col += 1
-            data[row, col] = fmt_time(dr.critical_point_solving_time); col += 1
+            data[row, col] = fmt_time(dr.polynomial_construction_time)
+            col += 1
+            data[row, col] = fmt_time(dr.critical_point_solving_time)
+            col += 1
         end
         data[row, col] = fmt_time(dr.total_computation_time)
     end
 
-    base_header = has_rel_l2 ?
-        ["Degree", "# CPs", "L2 err", "Rel L2", "Best f(x)", "Status"] :
+    base_header =
+        has_rel_l2 ? ["Degree", "# CPs", "L2 err", "Rel L2", "Best f(x)", "Status"] :
         ["Degree", "# CPs", "L2 err", "Best f(x)", "Status"]
-    base_align = has_rel_l2 ?
-        [:r, :r, :r, :r, :r, :c] :
-        [:r, :r, :r, :r, :c]
+    base_align = has_rel_l2 ? [:r, :r, :r, :r, :r, :c] : [:r, :r, :r, :r, :c]
     status_col = has_rel_l2 ? 6 : 5
     header = if show_timing_breakdown
         vcat(base_header, ["Poly time", "HC Solve", "Total"])
@@ -119,14 +134,22 @@ function print_poly_summary_table(degree_results; show_timing_breakdown::Bool=fa
         vcat(base_align, [:r])
     end
 
-    styled_table(io, data;
-        header=header,
-        alignment=alignment,
-        highlighters=(
-            Highlighter((d, i, j) -> j == status_col && d[i, status_col] == "success",
-                foreground=:green, bold=true),
-            Highlighter((d, i, j) -> j == status_col && d[i, status_col] != "success",
-                foreground=:red, bold=true),
+    styled_table(
+        io,
+        data;
+        header = header,
+        alignment = alignment,
+        highlighters = (
+            Highlighter(
+                (d, i, j) -> j == status_col && d[i, status_col] == "success",
+                foreground = :green,
+                bold = true,
+            ),
+            Highlighter(
+                (d, i, j) -> j == status_col && d[i, status_col] != "success",
+                foreground = :red,
+                bold = true,
+            ),
         ),
     )
 end
@@ -149,8 +172,8 @@ and degrees with zero critical points.
 function compute_degree_capture_results(
     degree_results,
     known_cps::KnownCriticalPoints,
-)::Vector{Tuple{Int, CaptureResult}}
-    results = Tuple{Int, CaptureResult}[]
+)::Vector{Tuple{Int,CaptureResult}}
+    results = Tuple{Int,CaptureResult}[]
     for dr in degree_results
         if dr.status != "success" || dr.n_critical_points == 0
             continue
@@ -168,7 +191,7 @@ end
 
 Type alias for the per-degree analysis tuple: `(degree, GradientValidationResult, RefinedExperimentResult)`.
 """
-const DegreeAnalysisResult = Tuple{Int, GradientValidationResult, RefinedExperimentResult}
+const DegreeAnalysisResult = Tuple{Int,GradientValidationResult,RefinedExperimentResult}
 
 """
     run_degree_analyses(degree_results, objective, output_dir, refinement_config; ...) -> Vector{DegreeAnalysisResult}
@@ -203,7 +226,6 @@ function run_degree_analyses(
     gradient_objective = objective,
     io::IO = stdout,
 )::Vector{DegreeAnalysisResult}
-
     results = DegreeAnalysisResult[]
 
     for dr in degree_results
@@ -211,12 +233,19 @@ function run_degree_analyses(
             continue
         end
 
-        gv = validate_critical_points(dr.critical_points, gradient_objective;
-                                       gradient_method=gradient_method)
+        gv = validate_critical_points(
+            dr.critical_points,
+            gradient_objective;
+            gradient_method = gradient_method,
+        )
 
         println(io, "  Refining degree $(dr.degree) ($(dr.n_critical_points) points)...")
-        refined = refine_experiment_results(output_dir, objective, refinement_config;
-                                             degree=dr.degree)
+        refined = refine_experiment_results(
+            output_dir,
+            objective,
+            refinement_config;
+            degree = dr.degree,
+        )
 
         push!(results, (dr.degree, gv, refined))
     end
@@ -250,23 +279,46 @@ function print_degree_analysis_table(
         data[row, 2] = length(gv.norms)
         data[row, 3] = fmt_sci(gv.min_norm)
         data[row, 4] = fmt_sci(gv.median_norm)
-        data[row, 5] = "$(ref.n_converged)/$(ref.n_raw) ($(fmt_pct(ref.n_converged, ref.n_raw)))"
+        data[
+            row,
+            5,
+        ] = "$(ref.n_converged)/$(ref.n_raw) ($(fmt_pct(ref.n_converged, ref.n_raw)))"
         data[row, 6] = fmt_sci(ref.best_raw_value)
         data[row, 7] = ref.n_converged > 0 ? fmt_sci(ref.best_refined_value) : "N/A"
         data[row, 8] = fmt_time(ref.total_time)
     end
 
     best_grad_row = argmin([gv.min_norm for (_, gv, _) in degree_analyses])
-    best_ref_row = argmin([ref.n_converged > 0 ? ref.best_refined_value : Inf
-                           for (_, _, ref) in degree_analyses])
+    best_ref_row = argmin([
+        ref.n_converged > 0 ? ref.best_refined_value : Inf for
+        (_, _, ref) in degree_analyses
+    ])
 
-    styled_table(io, data;
-        header=["Deg", "# CPs", "min ||∇f||", "med ||∇f||", "Converged",
-                "Best raw", "Best ref", "Time"],
-        alignment=[:r, :r, :r, :r, :r, :r, :r, :r],
-        highlighters=(
-            Highlighter((_, i, j) -> i == best_grad_row && j == 3, foreground=:green, bold=true),
-            Highlighter((_, i, j) -> i == best_ref_row && j == 7, foreground=:green, bold=true),
+    styled_table(
+        io,
+        data;
+        header = [
+            "Deg",
+            "# CPs",
+            "min ||∇f||",
+            "med ||∇f||",
+            "Converged",
+            "Best raw",
+            "Best ref",
+            "Time",
+        ],
+        alignment = [:r, :r, :r, :r, :r, :r, :r, :r],
+        highlighters = (
+            Highlighter(
+                (_, i, j) -> i == best_grad_row && j == 3,
+                foreground = :green,
+                bold = true,
+            ),
+            Highlighter(
+                (_, i, j) -> i == best_ref_row && j == 7,
+                foreground = :green,
+                bold = true,
+            ),
         ),
     )
 end
@@ -292,9 +344,8 @@ Selects the best objective per degree: prefers refined value, falls back to raw.
 function build_degree_convergence_info(
     degree_results,
     degree_analyses::Vector{DegreeAnalysisResult},
-    degree_capture_results::Vector{Tuple{Int, CaptureResult}},
+    degree_capture_results::Vector{Tuple{Int,CaptureResult}},
 )::Vector{DegreeConvergenceInfo}
-
     gv_map = Dict(deg => gv for (deg, gv, _) in degree_analyses)
     ref_map = Dict(deg => ref for (deg, _, ref) in degree_analyses)
     dr_map = Dict(dr.degree => dr for dr in degree_results)
@@ -314,14 +365,17 @@ function build_degree_convergence_info(
         end
 
         rel_l2 = hasproperty(dr, :relative_l2_error) ? dr.relative_l2_error : NaN
-        push!(infos, DegreeConvergenceInfo(
-            deg,
-            dr.l2_approx_error,
-            rel_l2,
-            dr.n_critical_points,
-            gv !== nothing ? gv.min_norm : nothing,
-            best_obj,
-        ))
+        push!(
+            infos,
+            DegreeConvergenceInfo(
+                deg,
+                dr.l2_approx_error,
+                rel_l2,
+                dr.n_critical_points,
+                gv !== nothing ? gv.min_norm : nothing,
+                best_obj,
+            ),
+        )
     end
 
     return infos
@@ -332,7 +386,8 @@ end
 
 Result from `find_best_estimate`: the best minimum found across all degrees.
 """
-const BestEstimate = @NamedTuple{value::Float64, point::Vector{Float64}, degree::Int, source::String}
+const BestEstimate =
+    @NamedTuple{value::Float64, point::Vector{Float64}, degree::Int, source::String}
 
 """
     find_best_estimate(degree_results, degree_analyses) -> Union{Nothing, BestEstimate}
@@ -352,8 +407,7 @@ Returns `nothing` if no estimate is available, or a NamedTuple with fields:
 function find_best_estimate(
     degree_results,
     degree_analyses::Vector{DegreeAnalysisResult},
-)::Union{Nothing, BestEstimate}
-
+)::Union{Nothing,BestEstimate}
     best_value = Inf
     best_point = nothing
     best_degree = 0
@@ -372,7 +426,9 @@ function find_best_estimate(
     # Second pass: fall back to raw results
     if best_point === nothing
         for dr in degree_results
-            if dr.best_estimate !== nothing && dr.best_objective !== nothing && dr.best_objective < best_value
+            if dr.best_estimate !== nothing &&
+               dr.best_objective !== nothing &&
+               dr.best_objective < best_value
                 best_value = dr.best_objective
                 best_point = dr.best_estimate
                 best_degree = dr.degree
@@ -382,7 +438,12 @@ function find_best_estimate(
     end
 
     best_point === nothing && return nothing
-    return (value=best_value, point=best_point, degree=best_degree, source=best_source)
+    return (
+        value = best_value,
+        point = best_point,
+        degree = best_degree,
+        source = best_source,
+    )
 end
 
 """
@@ -393,15 +454,15 @@ Useful for comparing raw vs refined in parameter recovery tables.
 
 Returns `nothing` if no raw estimate is available.
 """
-function find_best_raw_estimate(
-    degree_results,
-)::Union{Nothing, BestEstimate}
+function find_best_raw_estimate(degree_results)::Union{Nothing,BestEstimate}
     best_value = Inf
     best_point = nothing
     best_degree = 0
 
     for dr in degree_results
-        if dr.best_estimate !== nothing && dr.best_objective !== nothing && dr.best_objective < best_value
+        if dr.best_estimate !== nothing &&
+           dr.best_objective !== nothing &&
+           dr.best_objective < best_value
             best_value = dr.best_objective
             best_point = dr.best_estimate
             best_degree = dr.degree
@@ -409,7 +470,7 @@ function find_best_raw_estimate(
     end
 
     best_point === nothing && return nothing
-    return (value=best_value, point=best_point, degree=best_degree, source="raw")
+    return (value = best_value, point = best_point, degree = best_degree, source = "raw")
 end
 
 # ─── Step 3 display: parameter recovery ───────────────────────────────────────
@@ -435,10 +496,10 @@ are color-coded (green < 1e-6, yellow < 1e-3, red >= 1e-3).
 function print_parameter_recovery_table(
     true_params::Vector{Float64},
     best_estimate::Vector{Float64};
-    raw_estimate::Union{Vector{Float64}, Nothing} = nothing,
-    param_labels::Union{Vector{String}, Nothing} = nothing,
+    raw_estimate::Union{Vector{Float64},Nothing} = nothing,
+    param_labels::Union{Vector{String},Nothing} = nothing,
     source_label::String = "refined",
-    degree::Union{Int, Nothing} = nothing,
+    degree::Union{Int,Nothing} = nothing,
     io::IO = stdout,
 )
     DIM = length(true_params)
@@ -451,19 +512,24 @@ function print_parameter_recovery_table(
 
     # Section header
     deg_str = degree !== nothing ? ", deg $degree" : ""
-    print_section("Parameter Recovery (best across degrees$deg_str)"; io=io)
+    print_section("Parameter Recovery (best across degrees$deg_str)"; io = io)
 
     # Data matrix: rows = params + summary
     data = Matrix{Any}(undef, DIM + 1, n_cols)
     for i in 1:DIM
         col = 1
-        data[i, col] = labels[i]; col += 1
-        data[i, col] = @sprintf("%.4f", true_params[i]); col += 1
+        data[i, col] = labels[i]
+        col += 1
+        data[i, col] = @sprintf("%.4f", true_params[i])
+        col += 1
         if has_raw
-            data[i, col] = @sprintf("%.6f", raw_estimate[i]); col += 1
+            data[i, col] = @sprintf("%.6f", raw_estimate[i])
+            col += 1
         end
-        data[i, col] = @sprintf("%.6f", best_estimate[i]); col += 1
-        data[i, col] = fmt_sci(abs_errors[i]); col += 1
+        data[i, col] = @sprintf("%.6f", best_estimate[i])
+        col += 1
+        data[i, col] = fmt_sci(abs_errors[i])
+        col += 1
         data[i, col] = fmt_sci(rel_errors[i])
     end
 
@@ -471,12 +537,16 @@ function print_parameter_recovery_table(
     ref_l2 = LinearAlgebra.norm(best_estimate .- true_params)
     sr = DIM + 1
     col = 1
-    data[sr, col] = "||.||_2"; col += 1
-    data[sr, col] = ""; col += 1
+    data[sr, col] = "||.||_2"
+    col += 1
+    data[sr, col] = ""
+    col += 1
     if has_raw
-        data[sr, col] = fmt_sci(LinearAlgebra.norm(raw_estimate .- true_params)); col += 1
+        data[sr, col] = fmt_sci(LinearAlgebra.norm(raw_estimate .- true_params))
+        col += 1
     end
-    data[sr, col] = fmt_sci(ref_l2); col += 1
+    data[sr, col] = fmt_sci(ref_l2)
+    col += 1
     data[sr, col] = ""
     data[sr, n_cols] = ""
 
@@ -488,23 +558,45 @@ function print_parameter_recovery_table(
 
     abs_err_col = has_raw ? 5 : 4
 
-    styled_table(io, data;
-        header=header,
-        alignment=fill(:r, n_cols),
-        highlighters=(
-            Highlighter((_, i, j) -> j == 1 && i <= DIM, bold=true, foreground=:cyan),
-            Highlighter((_, i, j) -> i == DIM + 1, bold=true, foreground=:white),
-            Highlighter((d, i, j) -> j == abs_err_col && i <= DIM && isa(d[i, j], String) &&
-                tryparse(Float64, d[i, j]) !== nothing && parse(Float64, d[i, j]) < 1e-6,
-                bold=true, foreground=:green),
-            Highlighter((d, i, j) -> j == abs_err_col && i <= DIM && isa(d[i, j], String) &&
-                tryparse(Float64, d[i, j]) !== nothing && 1e-6 <= parse(Float64, d[i, j]) < 1e-3,
-                foreground=:yellow),
-            Highlighter((d, i, j) -> j == abs_err_col && i <= DIM && isa(d[i, j], String) &&
-                tryparse(Float64, d[i, j]) !== nothing && parse(Float64, d[i, j]) >= 1e-3,
-                bold=true, foreground=:red),
+    styled_table(
+        io,
+        data;
+        header = header,
+        alignment = fill(:r, n_cols),
+        highlighters = (
+            Highlighter((_, i, j) -> j == 1 && i <= DIM, bold = true, foreground = :cyan),
+            Highlighter((_, i, j) -> i == DIM + 1, bold = true, foreground = :white),
+            Highlighter(
+                (d, i, j) ->
+                    j == abs_err_col &&
+                        i <= DIM &&
+                        isa(d[i, j], String) &&
+                        tryparse(Float64, d[i, j]) !== nothing &&
+                        parse(Float64, d[i, j]) < 1e-6,
+                bold = true,
+                foreground = :green,
+            ),
+            Highlighter(
+                (d, i, j) ->
+                    j == abs_err_col &&
+                        i <= DIM &&
+                        isa(d[i, j], String) &&
+                        tryparse(Float64, d[i, j]) !== nothing &&
+                        1e-6 <= parse(Float64, d[i, j]) < 1e-3,
+                foreground = :yellow,
+            ),
+            Highlighter(
+                (d, i, j) ->
+                    j == abs_err_col &&
+                        i <= DIM &&
+                        isa(d[i, j], String) &&
+                        tryparse(Float64, d[i, j]) !== nothing &&
+                        parse(Float64, d[i, j]) >= 1e-3,
+                bold = true,
+                foreground = :red,
+            ),
         ),
-        body_hlines=[DIM],
+        body_hlines = [DIM],
     )
 end
 
@@ -531,26 +623,38 @@ If `capture_verdict` is provided, also prints the capture rate line.
 function print_recovery_verdict(
     best::BestEstimate,
     true_params::Vector{Float64};
-    capture_verdict::Union{CaptureVerdict, Nothing} = nothing,
+    capture_verdict::Union{CaptureVerdict,Nothing} = nothing,
     io::IO = stdout,
 )
-    recovery_pct = LinearAlgebra.norm(best.point .- true_params) / LinearAlgebra.norm(true_params) * 100
+    recovery_pct =
+        LinearAlgebra.norm(best.point .- true_params) / LinearAlgebra.norm(true_params) *
+        100
 
-    verdict_label = recovery_pct < 5.0 ? "SUCCESS" : recovery_pct < 20.0 ? "MODERATE" : "POOR"
+    verdict_label =
+        recovery_pct < 5.0 ? "SUCCESS" : recovery_pct < 20.0 ? "MODERATE" : "POOR"
     verdict_col = recovery_pct < 5.0 ? :green : recovery_pct < 20.0 ? :yellow : :red
 
-    printstyled(io, "="^80 * "\n"; color=verdict_col, bold=true)
-    printstyled(io, " RECOVERY [$verdict_label] — $(best.source), deg $(best.degree): " *
-        "error = $(@sprintf("%.4f", recovery_pct))% of ||p_true||\n"; color=verdict_col, bold=true)
+    printstyled(io, "="^80 * "\n"; color = verdict_col, bold = true)
+    printstyled(
+        io,
+        " RECOVERY [$verdict_label] — $(best.source), deg $(best.degree): " *
+        "error = $(@sprintf("%.4f", recovery_pct))% of ||p_true||\n";
+        color = verdict_col,
+        bold = true,
+    )
 
     if capture_verdict !== nothing
         cap_pct = @sprintf("%.1f", 100 * capture_verdict.capture_rate)
-        printstyled(io, "  Capture: $(capture_verdict.n_captured)/$(capture_verdict.n_known)" *
+        printstyled(
+            io,
+            "  Capture: $(capture_verdict.n_captured)/$(capture_verdict.n_known)" *
             " ($cap_pct%) at $(100 * capture_verdict.tolerance_fraction)% tolerance" *
-            " (deg $(capture_verdict.best_degree))\n"; color=:white)
+            " (deg $(capture_verdict.best_degree))\n";
+            color = :white,
+        )
     end
 
-    printstyled(io, "="^80 * "\n"; color=verdict_col, bold=true)
+    printstyled(io, "="^80 * "\n"; color = verdict_col, bold = true)
 end
 
 # ─── Step 3 display: best minimum (benchmark experiments) ────────────────────
@@ -574,20 +678,23 @@ The banner color is derived from the capture verdict quality:
 """
 function print_best_minimum(
     best::BestEstimate;
-    verdict::Union{CaptureVerdict, Nothing} = nothing,
+    verdict::Union{CaptureVerdict,Nothing} = nothing,
     io::IO = stdout,
 )
     verdict_col = if verdict !== nothing
-        verdict.capture_rate >= 0.80 ? :green :
-        verdict.capture_rate >= 0.50 ? :yellow : :red
+        verdict.capture_rate >= 0.80 ? :green : verdict.capture_rate >= 0.50 ? :yellow : :red
     else
         :white
     end
 
-    printstyled(io, "  Best minimum: f(x*) = $(fmt_sci(best.value))" *
+    printstyled(
+        io,
+        "  Best minimum: f(x*) = $(fmt_sci(best.value))" *
         " ($(best.source), deg $(best.degree))" *
-        ",  x* = $(round.(best.point, digits=4))\n"; color=:white)
-    printstyled(io, "="^80 * "\n"; color=verdict_col, bold=true)
+        ",  x* = $(round.(best.point, digits=4))\n";
+        color = :white,
+    )
+    printstyled(io, "="^80 * "\n"; color = verdict_col, bold = true)
 end
 
 # ─── Step 3 display: error banner ────────────────────────────────────────────
@@ -602,10 +709,10 @@ Used for no-results cases (e.g., no critical points found, no parameter estimate
 - `message::String`: Error message to display
 - `io::IO`: Output stream (default: stdout)
 """
-function print_error_banner(message::String; io::IO=stdout)
-    printstyled(io, "="^80 * "\n"; color=:red, bold=true)
-    printstyled(io, " $message\n"; color=:red, bold=true)
-    printstyled(io, "="^80 * "\n"; color=:red, bold=true)
+function print_error_banner(message::String; io::IO = stdout)
+    printstyled(io, "="^80 * "\n"; color = :red, bold = true)
+    printstyled(io, " $message\n"; color = :red, bold = true)
+    printstyled(io, "="^80 * "\n"; color = :red, bold = true)
 end
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -672,12 +779,25 @@ function analyze_sparsification(results, known_cps::KnownCriticalPoints)
 
             speedup = sdr.full_solve_time / max(variant.solve_time, 1e-10)
 
-            push!(comparisons, SparsifyCompare(
-                sdr.degree, variant.threshold, variant.threshold_label,
-                sdr.full_n_coeffs, length(sdr.full_critical_points), full_cap_5, sdr.full_solve_time,
-                variant.n_nonzero_coeffs, length(variant.critical_points), sparse_cap_5, variant.solve_time,
-                variant.sparsity_pct, variant.l2_ratio, speedup,
-            ))
+            push!(
+                comparisons,
+                SparsifyCompare(
+                    sdr.degree,
+                    variant.threshold,
+                    variant.threshold_label,
+                    sdr.full_n_coeffs,
+                    length(sdr.full_critical_points),
+                    full_cap_5,
+                    sdr.full_solve_time,
+                    variant.n_nonzero_coeffs,
+                    length(variant.critical_points),
+                    sparse_cap_5,
+                    variant.solve_time,
+                    variant.sparsity_pct,
+                    variant.l2_ratio,
+                    speedup,
+                ),
+            )
         end
     end
 
@@ -694,7 +814,7 @@ function print_sparsification_metrics_table(
     comparisons::Vector{SparsifyCompare};
     io::IO = stdout,
 )
-    print_section("Sparsification Metrics (degree x threshold)"; io=io)
+    print_section("Sparsification Metrics (degree x threshold)"; io = io)
 
     n_comp = length(comparisons)
     metrics_data = Matrix{Any}(undef, n_comp, 9)
@@ -714,19 +834,37 @@ function print_sparsification_metrics_table(
     # Degree-boundary hlines
     n_thresh = _count_thresholds(comparisons)
     n_degrees = length(unique(sc.degree for sc in comparisons))
-    hlines = n_thresh > 0 ? [i * n_thresh for i in 1:(n_degrees - 1)] : Int[]
+    hlines = n_thresh > 0 ? [i * n_thresh for i in 1:(n_degrees-1)] : Int[]
 
-    styled_table(io, metrics_data;
-        header=["Deg", "Threshold", "Full #c", "Sparse #c", "Zeroed %",
-                "Full time", "Sparse time", "Speedup", "Thresh"],
-        alignment=[:r, :l, :r, :r, :r, :r, :r, :r, :r],
-        highlighters=(
-            Highlighter((data, i, j) -> j == 5 && occursin(r"^[5-9]\d|^100", string(data[i, 5])),
-                foreground=:yellow, bold=true),
-            Highlighter((data, i, j) -> j == 8 && (m = match(r"^(\d+\.?\d*)", string(data[i, 8])); m !== nothing && parse(Float64, m[1]) >= 1.5),
-                foreground=:green, bold=true),
+    styled_table(
+        io,
+        metrics_data;
+        header = [
+            "Deg",
+            "Threshold",
+            "Full #c",
+            "Sparse #c",
+            "Zeroed %",
+            "Full time",
+            "Sparse time",
+            "Speedup",
+            "Thresh",
+        ],
+        alignment = [:r, :l, :r, :r, :r, :r, :r, :r, :r],
+        highlighters = (
+            Highlighter(
+                (data, i, j) -> j == 5 && occursin(r"^[5-9]\d|^100", string(data[i, 5])),
+                foreground = :yellow,
+                bold = true,
+            ),
+            Highlighter(
+                (data, i, j) -> j == 8 && (m = match(r"^(\d+\.?\d*)", string(data[i, 8]));
+                m !== nothing && parse(Float64, m[1]) >= 1.5),
+                foreground = :green,
+                bold = true,
+            ),
         ),
-        body_hlines=hlines,
+        body_hlines = hlines,
     )
 end
 
@@ -740,7 +878,7 @@ function print_sparsification_capture_table(
     comparisons::Vector{SparsifyCompare};
     io::IO = stdout,
 )
-    print_section("Capture Comparison: Full vs Sparsified (@ 5% tolerance)"; io=io)
+    print_section("Capture Comparison: Full vs Sparsified (@ 5% tolerance)"; io = io)
 
     n_comp = length(comparisons)
     capture_data = Matrix{Any}(undef, n_comp, 7)
@@ -758,17 +896,38 @@ function print_sparsification_capture_table(
 
     n_thresh = _count_thresholds(comparisons)
     n_degrees = length(unique(sc.degree for sc in comparisons))
-    hlines = n_thresh > 0 ? [i * n_thresh for i in 1:(n_degrees - 1)] : Int[]
+    hlines = n_thresh > 0 ? [i * n_thresh for i in 1:(n_degrees-1)] : Int[]
 
-    styled_table(io, capture_data;
-        header=["Deg", "Threshold", "Full #CPs", "Sparse #CPs", "Full Cap@5%", "Sparse Cap@5%", "Δ Cap"],
-        alignment=[:r, :l, :r, :r, :r, :r, :r],
-        highlighters=(
-            Highlighter((data, i, j) -> j == 7 && startswith(string(data[i, 7]), "+0.0"), foreground=:white),
-            Highlighter((data, i, j) -> j == 7 && startswith(string(data[i, 7]), "+"), foreground=:green, bold=true),
-            Highlighter((data, i, j) -> j == 7 && startswith(string(data[i, 7]), "-"), foreground=:red, bold=true),
+    styled_table(
+        io,
+        capture_data;
+        header = [
+            "Deg",
+            "Threshold",
+            "Full #CPs",
+            "Sparse #CPs",
+            "Full Cap@5%",
+            "Sparse Cap@5%",
+            "Δ Cap",
+        ],
+        alignment = [:r, :l, :r, :r, :r, :r, :r],
+        highlighters = (
+            Highlighter(
+                (data, i, j) -> j == 7 && startswith(string(data[i, 7]), "+0.0"),
+                foreground = :white,
+            ),
+            Highlighter(
+                (data, i, j) -> j == 7 && startswith(string(data[i, 7]), "+"),
+                foreground = :green,
+                bold = true,
+            ),
+            Highlighter(
+                (data, i, j) -> j == 7 && startswith(string(data[i, 7]), "-"),
+                foreground = :red,
+                bold = true,
+            ),
         ),
-        body_hlines=hlines,
+        body_hlines = hlines,
     )
 end
 
@@ -777,35 +936,56 @@ end
 
 Print sparsification summary: best tradeoff (capture drop ≤ 1pp) and max speedup.
 """
-function print_sparsification_summary(
-    comparisons::Vector{SparsifyCompare};
-    io::IO = stdout,
-)
-    print_section("Sparsification Summary"; io=io)
+function print_sparsification_summary(comparisons::Vector{SparsifyCompare}; io::IO = stdout)
+    print_section("Sparsification Summary"; io = io)
 
-    good_sparse = filter(sc -> (sc.sparse_capture_rate_5pct >= sc.full_capture_rate_5pct - 0.01), comparisons)
+    good_sparse = filter(
+        sc -> (sc.sparse_capture_rate_5pct >= sc.full_capture_rate_5pct - 0.01),
+        comparisons,
+    )
 
     if !isempty(good_sparse)
-        best_sparse = sort(good_sparse, by=sc -> sc.speedup, rev=true)[1]
-        printstyled(io, "  Best tradeoff (cap drop ≤ 1pp): "; color=:cyan, bold=true)
-        printstyled(io, "degree $(best_sparse.degree), threshold $(best_sparse.threshold_label)\n"; color=:green, bold=true)
-        printstyled(io, "    $(fmt_pct(best_sparse.full_n_coeffs - best_sparse.sparse_n_coeffs, best_sparse.full_n_coeffs)) " *
-                    "coefficients zeroed, " *
-                    "capture: $(@sprintf("%.1f%%", 100 * best_sparse.full_capture_rate_5pct)) -> " *
-                    "$(@sprintf("%.1f%%", 100 * best_sparse.sparse_capture_rate_5pct))\n"; color=:white)
-        printstyled(io, "    Solve time: $(fmt_time(best_sparse.full_solve_time)) -> $(fmt_time(best_sparse.sparse_solve_time)) " *
-                    "($(@sprintf("%.1f×", best_sparse.speedup)) speedup)\n"; color=:white)
+        best_sparse = sort(good_sparse, by = sc -> sc.speedup, rev = true)[1]
+        printstyled(io, "  Best tradeoff (cap drop ≤ 1pp): "; color = :cyan, bold = true)
+        printstyled(
+            io,
+            "degree $(best_sparse.degree), threshold $(best_sparse.threshold_label)\n";
+            color = :green,
+            bold = true,
+        )
+        printstyled(
+            io,
+            "    $(fmt_pct(best_sparse.full_n_coeffs - best_sparse.sparse_n_coeffs, best_sparse.full_n_coeffs)) " *
+            "coefficients zeroed, " *
+            "capture: $(@sprintf("%.1f%%", 100 * best_sparse.full_capture_rate_5pct)) -> " *
+            "$(@sprintf("%.1f%%", 100 * best_sparse.sparse_capture_rate_5pct))\n";
+            color = :white,
+        )
+        printstyled(
+            io,
+            "    Solve time: $(fmt_time(best_sparse.full_solve_time)) -> $(fmt_time(best_sparse.sparse_solve_time)) " *
+            "($(@sprintf("%.1f×", best_sparse.speedup)) speedup)\n";
+            color = :white,
+        )
     else
-        printstyled(io, "  No sparsification threshold preserves capture rate within 1pp.\n"; color=:yellow)
+        printstyled(
+            io,
+            "  No sparsification threshold preserves capture rate within 1pp.\n";
+            color = :yellow,
+        )
     end
 
     if !isempty(comparisons)
-        fastest = sort(comparisons, by=sc -> sc.speedup, rev=true)[1]
-        printstyled(io, "  Max speedup: "; color=:cyan, bold=true)
-        printstyled(io, "$(@sprintf("%.1f×", fastest.speedup)) at degree $(fastest.degree), " *
-                    "threshold $(fastest.threshold_label) " *
-                    "(cap: $(@sprintf("%.1f%%", 100 * fastest.full_capture_rate_5pct)) -> " *
-                    "$(@sprintf("%.1f%%", 100 * fastest.sparse_capture_rate_5pct)))\n"; color=:white)
+        fastest = sort(comparisons, by = sc -> sc.speedup, rev = true)[1]
+        printstyled(io, "  Max speedup: "; color = :cyan, bold = true)
+        printstyled(
+            io,
+            "$(@sprintf("%.1f×", fastest.speedup)) at degree $(fastest.degree), " *
+            "threshold $(fastest.threshold_label) " *
+            "(cap: $(@sprintf("%.1f%%", 100 * fastest.full_capture_rate_5pct)) -> " *
+            "$(@sprintf("%.1f%%", 100 * fastest.sparse_capture_rate_5pct)))\n";
+            color = :white,
+        )
     end
 end
 
@@ -824,21 +1004,34 @@ function build_sparsification_plot_entries(results, known_cps::KnownCriticalPoin
     for sdr in results
         # Full variant
         full_cr = compute_capture_analysis(known_cps, sdr.full_critical_points)
-        push!(entries, (
-            degree = sdr.degree, variant_label = "Full", threshold = 0.0,
-            capture_result = full_cr, n_nonzero_coeffs = sdr.full_n_nonzero_coeffs,
-            l2_ratio = 1.0, solve_time = sdr.full_solve_time,
-        ))
+        push!(
+            entries,
+            (
+                degree = sdr.degree,
+                variant_label = "Full",
+                threshold = 0.0,
+                capture_result = full_cr,
+                n_nonzero_coeffs = sdr.full_n_nonzero_coeffs,
+                l2_ratio = 1.0,
+                solve_time = sdr.full_solve_time,
+            ),
+        )
 
         # Sparsified variants
         for variant in sdr.variants
             sparse_cr = compute_capture_analysis(known_cps, variant.critical_points)
-            push!(entries, (
-                degree = sdr.degree, variant_label = variant.threshold_label,
-                threshold = variant.threshold,
-                capture_result = sparse_cr, n_nonzero_coeffs = variant.n_nonzero_coeffs,
-                l2_ratio = variant.l2_ratio, solve_time = variant.solve_time,
-            ))
+            push!(
+                entries,
+                (
+                    degree = sdr.degree,
+                    variant_label = variant.threshold_label,
+                    threshold = variant.threshold,
+                    capture_result = sparse_cr,
+                    n_nonzero_coeffs = variant.n_nonzero_coeffs,
+                    l2_ratio = variant.l2_ratio,
+                    solve_time = variant.solve_time,
+                ),
+            )
         end
     end
 
@@ -850,11 +1043,9 @@ function _count_thresholds(comparisons::Vector{SparsifyCompare})
     isempty(comparisons) && return 0
     first_deg = comparisons[1].degree
     return count(sc -> sc.degree == first_deg, comparisons)
-end
+end #==============================================================================#
 
-#==============================================================================#
 #             FORMAL POSTPROCESSING PIPELINE                                   #
-#==============================================================================#
 
 """
     PostprocessingResult
@@ -876,10 +1067,10 @@ per-degree capture analysis, and the overall verdict.
 struct PostprocessingResult
     experiment_dir::String
     degrees::Vector{Int}
-    refinements::Dict{Int, RefinedExperimentResult}
-    known_cps::Union{Nothing, KnownCriticalPoints}
-    degree_capture_results::Vector{Tuple{Int, CaptureResult}}
-    verdict::Union{Nothing, CaptureVerdict}
+    refinements::Dict{Int,RefinedExperimentResult}
+    known_cps::Union{Nothing,KnownCriticalPoints}
+    degree_capture_results::Vector{Tuple{Int,CaptureResult}}
+    verdict::Union{Nothing,CaptureVerdict}
     timestamp::DateTime
 end
 
@@ -965,8 +1156,8 @@ function postprocess_experiment(
     gradient_method::Symbol = :finitediff,
     reference_goal::Symbol = :critical_point,
     reference_accept_tol::Float64 = 1e-2,
-    reference_f_accept_tol::Union{Nothing, Float64} = nothing,
-    reference_top_k::Union{Int, Nothing} = nothing,
+    reference_f_accept_tol::Union{Nothing,Float64} = nothing,
+    reference_top_k::Union{Int,Nothing} = nothing,
     capture_tolerance_fractions::Vector{Float64} = [0.01, 0.025, 0.05, 0.1],
     verdict_tolerance_fraction::Float64 = 0.05,
     save_summary::Bool = true,
@@ -992,18 +1183,28 @@ function postprocess_experiment(
 
     # ── Step 2: Per-degree refinement ────────────────────────────────────────
     println(io, "── Step 1/4: Refining critical points per degree ──")
-    refinements = Dict{Int, RefinedExperimentResult}()
+    refinements = Dict{Int,RefinedExperimentResult}()
 
     for deg in degrees
         println(io, "  Degree $deg...")
         try
-            refined = refine_experiment_results(experiment_dir, objective, refinement_config;
-                                                  degree=deg)
+            refined = refine_experiment_results(
+                experiment_dir,
+                objective,
+                refinement_config;
+                degree = deg,
+            )
             refinements[deg] = refined
-            @printf(io, "    %d/%d converged, best f = %.4e (%.1fs)\n",
-                refined.n_converged, refined.n_raw, refined.best_refined_value, refined.total_time)
+            @printf(
+                io,
+                "    %d/%d converged, best f = %.4e (%.1fs)\n",
+                refined.n_converged,
+                refined.n_raw,
+                refined.best_refined_value,
+                refined.total_time
+            )
         catch e
-            @warn "Refinement failed for degree $deg" exception=(e, catch_backtrace())
+            @warn "Refinement failed for degree $deg" exception = (e, catch_backtrace())
             println(io, "    FAILED: $(sprint(showerror, e))")
         end
     end
@@ -1017,24 +1218,29 @@ function postprocess_experiment(
     # ── Step 3: Build reference CPs from highest degree ──────────────────────
     println(io, "── Step 2/4: Building reference critical points ──")
     highest_deg = maximum(refined_degrees)
-    raw_highest = load_raw_critical_points(experiment_dir; degree=highest_deg)
+    raw_highest = load_raw_critical_points(experiment_dir; degree = highest_deg)
     println(io, "  Using degree $highest_deg ($(raw_highest.n_points) raw CPs)")
 
     known_cps = nothing
     ref_method = if reference_goal == :minimum
         OptimNelderMead(; gradient_method)
     else
-        NewtonCP(; gradient_method, accept_tol = reference_accept_tol,
-                  f_accept_tol = reference_f_accept_tol)
+        NewtonCP(;
+            gradient_method,
+            accept_tol = reference_accept_tol,
+            f_accept_tol = reference_f_accept_tol,
+        )
     end
     ref_result = try
         build_known_cps_from_refinement(
-            objective, raw_highest.points, bounds;
+            objective,
+            raw_highest.points,
+            bounds;
             method = ref_method,
             top_k = reference_top_k,
         )
     catch e
-        @warn "Reference CP construction failed" exception=(e, catch_backtrace())
+        @warn "Reference CP construction failed" exception = (e, catch_backtrace())
         println(io, "  FAILED: $(sprint(showerror, e))")
         nothing
     end
@@ -1044,36 +1250,50 @@ function postprocess_experiment(
         n_min = count(t -> t == :min, known_cps.types)
         n_saddle = count(t -> t == :saddle, known_cps.types)
         n_max = count(t -> t == :max, known_cps.types)
-        println(io, "  Found $(length(known_cps.points)) reference CPs: $n_min min, $n_saddle saddle, $n_max max")
+        println(
+            io,
+            "  Found $(length(known_cps.points)) reference CPs: $n_min min, $n_saddle saddle, $n_max max",
+        )
     end
     println(io)
 
     # ── Step 4: Capture analysis per degree ──────────────────────────────────
-    degree_capture_results = Tuple{Int, CaptureResult}[]
+    degree_capture_results = Tuple{Int,CaptureResult}[]
     verdict = nothing
 
     if known_cps !== nothing && !isempty(known_cps.points)
         println(io, "── Step 3/4: Capture analysis per degree ──")
 
         for deg in refined_degrees
-            raw_data = load_raw_critical_points(experiment_dir; degree=deg)
-            cr = compute_capture_analysis(known_cps, raw_data.points;
-                                           tolerance_fractions=capture_tolerance_fractions)
+            raw_data = load_raw_critical_points(experiment_dir; degree = deg)
+            cr = compute_capture_analysis(
+                known_cps,
+                raw_data.points;
+                tolerance_fractions = capture_tolerance_fractions,
+            )
             push!(degree_capture_results, (deg, cr))
 
             # Find 5% capture rate for display
-            idx_5pct = findfirst(f -> f ≈ verdict_tolerance_fraction, cr.tolerance_fractions)
+            idx_5pct =
+                findfirst(f -> f ≈ verdict_tolerance_fraction, cr.tolerance_fractions)
             rate_5pct = idx_5pct !== nothing ? cr.capture_rates[idx_5pct] : NaN
-            @printf(io, "  Degree %d: capture rate = %.1f%% at %.0f%% tolerance\n",
-                deg, 100 * rate_5pct, 100 * verdict_tolerance_fraction)
+            @printf(
+                io,
+                "  Degree %d: capture rate = %.1f%% at %.0f%% tolerance\n",
+                deg,
+                100 * rate_5pct,
+                100 * verdict_tolerance_fraction
+            )
         end
 
         # ── Step 5: Verdict ──────────────────────────────────────────────────
         println(io)
         println(io, "── Step 4/4: Verdict ──")
-        verdict = compute_capture_verdict(degree_capture_results;
-                                           reference_tolerance_fraction=verdict_tolerance_fraction)
-        print_capture_verdict(verdict; io=io)
+        verdict = compute_capture_verdict(
+            degree_capture_results;
+            reference_tolerance_fraction = verdict_tolerance_fraction,
+        )
+        print_capture_verdict(verdict; io = io)
     else
         println(io, "── Steps 3-4 skipped: no reference CPs available ──")
     end
@@ -1085,8 +1305,13 @@ function postprocess_experiment(
 
     if save_summary
         _save_postprocessing_summary(
-            experiment_dir, degrees, refinements, known_cps,
-            degree_capture_results, verdict, timestamp,
+            experiment_dir,
+            degrees,
+            refinements,
+            known_cps,
+            degree_capture_results,
+            verdict,
+            timestamp,
         )
         println(io, "  Saved: $(joinpath(experiment_dir, "postprocessing_summary.json"))")
     end
@@ -1094,8 +1319,13 @@ function postprocess_experiment(
     println(io, "="^70)
 
     return PostprocessingResult(
-        experiment_dir, degrees, refinements,
-        known_cps, degree_capture_results, verdict, timestamp,
+        experiment_dir,
+        degrees,
+        refinements,
+        known_cps,
+        degree_capture_results,
+        verdict,
+        timestamp,
     )
 end
 
@@ -1108,18 +1338,18 @@ Save a consolidated `postprocessing_summary.json` to the experiment directory.
 function _save_postprocessing_summary(
     experiment_dir::String,
     degrees::Vector{Int},
-    refinements::Dict{Int, RefinedExperimentResult},
-    known_cps::Union{Nothing, KnownCriticalPoints},
-    degree_capture_results::Vector{Tuple{Int, CaptureResult}},
-    verdict::Union{Nothing, CaptureVerdict},
+    refinements::Dict{Int,RefinedExperimentResult},
+    known_cps::Union{Nothing,KnownCriticalPoints},
+    degree_capture_results::Vector{Tuple{Int,CaptureResult}},
+    verdict::Union{Nothing,CaptureVerdict},
     timestamp::DateTime,
 )
     # Per-degree refinement summary
-    degree_summaries = Dict{String, Any}()
+    degree_summaries = Dict{String,Any}()
     for deg in degrees
         if haskey(refinements, deg)
             ref = refinements[deg]
-            degree_summaries["degree_$deg"] = Dict{String, Any}(
+            degree_summaries["degree_$deg"] = Dict{String,Any}(
                 "n_raw" => ref.n_raw,
                 "n_converged" => ref.n_converged,
                 "n_failed" => ref.n_failed,
@@ -1130,18 +1360,18 @@ function _save_postprocessing_summary(
                 "total_time" => ref.total_time,
             )
         else
-            degree_summaries["degree_$deg"] = Dict{String, Any}("status" => "failed")
+            degree_summaries["degree_$deg"] = Dict{String,Any}("status" => "failed")
         end
     end
 
     # Per-degree capture rates
-    capture_summaries = Dict{String, Any}()
+    capture_summaries = Dict{String,Any}()
     for (deg, cr) in degree_capture_results
-        rates = Dict{String, Any}()
+        rates = Dict{String,Any}()
         for (frac, rate) in zip(cr.tolerance_fractions, cr.capture_rates)
             rates[@sprintf("%.1f%%", 100 * frac)] = rate
         end
-        capture_summaries["degree_$deg"] = Dict{String, Any}(
+        capture_summaries["degree_$deg"] = Dict{String,Any}(
             "n_known" => cr.n_known,
             "n_computed" => cr.n_computed,
             "capture_rates" => rates,
@@ -1151,7 +1381,7 @@ function _save_postprocessing_summary(
 
     # Reference CPs
     reference = if known_cps !== nothing
-        Dict{String, Any}(
+        Dict{String,Any}(
             "n_total" => length(known_cps.points),
             "n_min" => count(t -> t == :min, known_cps.types),
             "n_max" => count(t -> t == :max, known_cps.types),
@@ -1167,7 +1397,7 @@ function _save_postprocessing_summary(
 
     # Verdict
     verdict_data = if verdict !== nothing
-        Dict{String, Any}(
+        Dict{String,Any}(
             "label" => verdict.label,
             "best_degree" => verdict.best_degree,
             "capture_rate" => verdict.capture_rate,
@@ -1180,7 +1410,7 @@ function _save_postprocessing_summary(
         nothing
     end
 
-    summary = Dict{String, Any}(
+    summary = Dict{String,Any}(
         "pipeline_version" => "1.0.0",
         "timestamp" => string(timestamp),
         "experiment_dir" => experiment_dir,

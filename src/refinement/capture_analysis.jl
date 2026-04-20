@@ -68,24 +68,30 @@ function KnownCriticalPoints(
     points::Vector{Vector{Float64}},
     values::Vector{Float64},
     types::Vector{Symbol},
-    bounds::Vector{Tuple{Float64,Float64}}
+    bounds::Vector{Tuple{Float64,Float64}},
 )
     isempty(points) && error("KnownCriticalPoints: points must be non-empty")
 
     n = length(points)
-    length(values) == n || error("KnownCriticalPoints: values length ($(length(values))) must match points length ($n)")
-    length(types) == n || error("KnownCriticalPoints: types length ($(length(types))) must match points length ($n)")
+    length(values) == n || error(
+        "KnownCriticalPoints: values length ($(length(values))) must match points length ($n)",
+    )
+    length(types) == n || error(
+        "KnownCriticalPoints: types length ($(length(types))) must match points length ($n)",
+    )
 
     lb, ub = split_bounds(bounds)
     ndim = length(bounds)
     for (i, pt) in enumerate(points)
         length(pt) == ndim || error(
-            "KnownCriticalPoints: point $i has dimension $(length(pt)), expected $ndim (from bounds)"
+            "KnownCriticalPoints: point $i has dimension $(length(pt)), expected $ndim (from bounds)",
         )
     end
 
     for (i, t) in enumerate(types)
-        t in VALID_CP_TYPES || error("KnownCriticalPoints: invalid type $(repr(t)) at index $i. Must be one of $VALID_CP_TYPES")
+        t in VALID_CP_TYPES || error(
+            "KnownCriticalPoints: invalid type $(repr(t)) at index $i. Must be one of $VALID_CP_TYPES",
+        )
     end
 
     domain_diameter = LinearAlgebra.norm(ub - lb)
@@ -120,11 +126,11 @@ struct CaptureResult
     tolerance_values::Vector{Float64}
     captured_at::Vector{BitVector}
     capture_rates::Vector{Float64}
-    type_capture_rates::Dict{Symbol, Vector{Float64}}
+    type_capture_rates::Dict{Symbol,Vector{Float64}}
     n_known::Int
     n_computed::Int
     domain_diameter::Float64
-    type_counts::Dict{Symbol, Int}
+    type_counts::Dict{Symbol,Int}
 end
 
 """
@@ -190,7 +196,7 @@ println("Capture rate at 5%: ", result.capture_rates[3])
 function compute_capture_analysis(
     known::KnownCriticalPoints,
     computed_points::Vector{Vector{Float64}};
-    tolerance_fractions::Vector{Float64} = [0.01, 0.025, 0.05, 0.1]
+    tolerance_fractions::Vector{Float64} = [0.01, 0.025, 0.05, 0.1],
 )::CaptureResult
     n_known = length(known.points)
     n_computed = length(computed_points)
@@ -208,16 +214,23 @@ function compute_capture_analysis(
 
         # Per-type rates (all zero)
         type_counts = StatsBase.countmap(known.types)
-        type_capture_rates = Dict{Symbol, Vector{Float64}}()
+        type_capture_rates = Dict{Symbol,Vector{Float64}}()
         for (tp, _) in type_counts
             type_capture_rates[tp] = zeros(Float64, length(tol_fracs))
         end
 
         return CaptureResult(
-            distances, nearest_indices,
-            tol_fracs, tol_values, captured_at, capture_rates,
+            distances,
+            nearest_indices,
+            tol_fracs,
+            tol_values,
+            captured_at,
+            capture_rates,
             type_capture_rates,
-            n_known, n_computed, known.domain_diameter, type_counts
+            n_known,
+            n_computed,
+            known.domain_diameter,
+            type_counts,
         )
     end
 
@@ -250,7 +263,7 @@ function compute_capture_analysis(
 
     # Per-type capture rates
     type_counts = StatsBase.countmap(known.types)
-    type_capture_rates = Dict{Symbol, Vector{Float64}}()
+    type_capture_rates = Dict{Symbol,Vector{Float64}}()
     for (tp, count) in type_counts
         type_mask = known.types .== tp
         rates = Vector{Float64}(undef, n_tol)
@@ -262,10 +275,17 @@ function compute_capture_analysis(
     end
 
     return CaptureResult(
-        distances, nearest_indices,
-        tol_fracs, tol_values, captured_at, capture_rates,
+        distances,
+        nearest_indices,
+        tol_fracs,
+        tol_values,
+        captured_at,
+        capture_rates,
         type_capture_rates,
-        n_known, n_computed, known.domain_diameter, type_counts
+        n_known,
+        n_computed,
+        known.domain_diameter,
+        type_counts,
     )
 end
 
@@ -300,24 +320,41 @@ end
 function missed_critical_points(
     result::CaptureResult,
     known::KnownCriticalPoints;
-    tolerance_index::Int = length(result.tolerance_fractions)
-)::Vector{@NamedTuple{index::Int, point::Vector{Float64}, value::Float64, type::Symbol, nearest_distance::Float64}}
+    tolerance_index::Int = length(result.tolerance_fractions),
+)::Vector{
+    @NamedTuple{
+        index::Int,
+        point::Vector{Float64},
+        value::Float64,
+        type::Symbol,
+        nearest_distance::Float64,
+    }
+}
     1 <= tolerance_index <= length(result.tolerance_fractions) || error(
-        "tolerance_index $tolerance_index out of range [1, $(length(result.tolerance_fractions))]"
+        "tolerance_index $tolerance_index out of range [1, $(length(result.tolerance_fractions))]",
     )
 
     captured = result.captured_at[tolerance_index]
-    missed = @NamedTuple{index::Int, point::Vector{Float64}, value::Float64, type::Symbol, nearest_distance::Float64}[]
+    missed = @NamedTuple{
+        index::Int,
+        point::Vector{Float64},
+        value::Float64,
+        type::Symbol,
+        nearest_distance::Float64,
+    }[]
 
     for k in 1:result.n_known
         if !captured[k]
-            push!(missed, (
-                index = k,
-                point = known.points[k],
-                value = known.values[k],
-                type = known.types[k],
-                nearest_distance = result.distances[k]
-            ))
+            push!(
+                missed,
+                (
+                    index = k,
+                    point = known.points[k],
+                    value = known.values[k],
+                    type = known.types[k],
+                    nearest_distance = result.distances[k],
+                ),
+            )
         end
     end
 
@@ -342,7 +379,7 @@ Outputs three tables:
 function print_capture_summary(
     result::CaptureResult,
     known::KnownCriticalPoints;
-    io::IO = stdout
+    io::IO = stdout,
 )
     n_tol = length(result.tolerance_fractions)
 
@@ -357,7 +394,9 @@ function print_capture_summary(
     end
 
     println(io)
-    styled_table(io, overall_data;
+    styled_table(
+        io,
+        overall_data;
         header = ["Tol (frac)", "Tol (abs)", "Captured", "Rate"],
         title = "Capture Analysis ($(result.n_computed) computed vs $(result.n_known) known CPs, domain diam = $(@sprintf("%.4f", result.domain_diameter)))",
         alignment = [:r, :r, :c, :r],
@@ -376,12 +415,14 @@ function print_capture_summary(
             type_data[t, 1] = @sprintf("%.1f%%", result.tolerance_fractions[t] * 100)
             for (j, tp) in enumerate(unique_types)
                 rate = result.type_capture_rates[tp][t]
-                type_data[t, 1 + j] = @sprintf("%.1f%%", rate * 100)
+                type_data[t, 1+j] = @sprintf("%.1f%%", rate * 100)
             end
         end
 
         println(io)
-        styled_table(io, type_data;
+        styled_table(
+            io,
+            type_data;
             header = type_header,
             title = "Per-Type Capture Rates",
             alignment = :r,
@@ -407,21 +448,28 @@ function print_capture_summary(
             missed_data[i, 3] = @sprintf("%.6f", m.value)
             missed_data[i, 4] = @sprintf("%.6f", m.nearest_distance)
             for d in 1:n_dims
-                missed_data[i, 4 + d] = @sprintf("%.6f", m.point[d])
+                missed_data[i, 4+d] = @sprintf("%.6f", m.point[d])
             end
         end
 
         n_total_missed = length(missed)
-        title_suffix = n_total_missed > max_display ? ", showing first $max_display of $n_total_missed" : ""
+        title_suffix =
+            n_total_missed > max_display ?
+            ", showing first $max_display of $n_total_missed" : ""
         println(io)
-        styled_table(io, missed_data;
+        styled_table(
+            io,
+            missed_data;
             header = missed_header,
             title = "Missed Critical Points (at tol = $(@sprintf("%.4f", result.tolerance_values[n_tol]))$title_suffix)",
             alignment = :r,
         )
     else
         println(io)
-        println(io, "All $(result.n_known) known critical points captured at tolerance $(@sprintf("%.4f", result.tolerance_values[n_tol]))")
+        println(
+            io,
+            "All $(result.n_known) known critical points captured at tolerance $(@sprintf("%.4f", result.tolerance_values[n_tol]))",
+        )
     end
 end
 
@@ -441,8 +489,8 @@ print_degree_capture_convergence(results)
 ```
 """
 function print_degree_capture_convergence(
-    degree_results::Vector{Tuple{Int, CaptureResult}};
-    io::IO = stdout
+    degree_results::Vector{Tuple{Int,CaptureResult}};
+    io::IO = stdout,
 )
     isempty(degree_results) && error("degree_results must be non-empty")
 
@@ -451,7 +499,7 @@ function print_degree_capture_convergence(
     for (i, (deg, res)) in enumerate(degree_results)
         res.tolerance_fractions == tol_fracs || error(
             "Inconsistent tolerance_fractions: degree $(deg) (entry $i) has " *
-            "$(res.tolerance_fractions) but expected $tol_fracs (from first entry)"
+            "$(res.tolerance_fractions) but expected $tol_fracs (from first entry)",
         )
     end
 
@@ -468,12 +516,14 @@ function print_degree_capture_convergence(
         data[i, 1] = deg
         data[i, 2] = res.n_computed
         for (t, rate) in enumerate(res.capture_rates)
-            data[i, 2 + t] = @sprintf("%.1f%%", rate * 100)
+            data[i, 2+t] = @sprintf("%.1f%%", rate * 100)
         end
     end
 
     println(io)
-    styled_table(io, data;
+    styled_table(
+        io,
+        data;
         header = header,
         title = "Capture Rate vs Polynomial Degree",
         alignment = :r,
@@ -482,7 +532,7 @@ end
 
 # --- Mapping from CriticalPointClassification.jl String types to our Symbol types ---
 
-const _CLASSIFICATION_TO_SYMBOL = Dict{String, Symbol}(
+const _CLASSIFICATION_TO_SYMBOL = Dict{String,Symbol}(
     "minimum" => :min,
     "maximum" => :max,
     "saddle" => :saddle,
@@ -573,7 +623,7 @@ function build_known_cps_from_2d_product(
     objective_2d,
     points_2d::Vector{Vector{Float64}},
     bounds::Vector{Tuple{Float64,Float64}};
-    hessian_tol::Float64 = 1e-6
+    hessian_tol::Float64 = 1e-6,
 )::KnownCriticalPoints
     isempty(points_2d) && error("points_2d must be non-empty")
     length(bounds) == 4 || error("bounds must be 4D, got $(length(bounds))D")
@@ -651,7 +701,7 @@ function build_known_cps_from_refinement(
     bounds::Vector{Tuple{Float64,Float64}};
     method::RefinementMethod = OptimNelderMead(),
     dedup_fraction::Float64 = 0.01,
-    top_k::Union{Int, Nothing} = nothing,
+    top_k::Union{Int,Nothing} = nothing,
     trace::Bool = false,
 )
     isempty(raw_points) && error("raw_points must be non-empty")
@@ -680,13 +730,25 @@ function build_known_cps_from_refinement(
             end
             order = sortperm(obj_values)
             selected = order[1:top_k]
-            @printf("    Selected top %d by f(x): f ∈ [%.4e, %.4e]  (%.1fs)\n",
-                top_k, obj_values[selected[1]], obj_values[selected[end]], time() - t_prefilter)
-            @printf("    Discarded %d CPs with f > %.4e\n",
-                n_raw - top_k, obj_values[selected[end]])
+            @printf(
+                "    Selected top %d by f(x): f ∈ [%.4e, %.4e]  (%.1fs)\n",
+                top_k,
+                obj_values[selected[1]],
+                obj_values[selected[end]],
+                time() - t_prefilter
+            )
+            @printf(
+                "    Discarded %d CPs with f > %.4e\n",
+                n_raw - top_k,
+                obj_values[selected[end]]
+            )
             raw_points = raw_points[selected]
         else
-            @printf("    top_k=%d >= %d raw CPs — refining all\n", top_k, length(raw_points))
+            @printf(
+                "    top_k=%d >= %d raw CPs — refining all\n",
+                top_k,
+                length(raw_points)
+            )
         end
     end
 
@@ -696,8 +758,8 @@ function build_known_cps_from_refinement(
     refined_raw_points = copy(raw_points)
 
     # Step 1: Refine selected points using unified dispatch
-    refinement_results = refine_points(method, objective, raw_points;
-        bounds=bounds, trace=trace)
+    refinement_results =
+        refine_points(method, objective, raw_points; bounds = bounds, trace = trace)
 
     # Step 2: Accept CPs that converged or have meaningful classification
     accepted = filter(r -> r.converged || r.cp_type != :unknown, refinement_results)
@@ -708,9 +770,10 @@ function build_known_cps_from_refinement(
     if isempty(accepted)
         best_grad = minimum(r -> r.gradient_norm, refinement_results)
         best_f = minimum(r -> r.objective_value, refinement_results)
-        msg = "  No critical points found: $(length(raw_points)) polynomial CPs refined, " *
-              "0 converged, 0 accepted. " *
-              "Best |∇f|=$(@sprintf("%.2e", best_grad)), best f=$(@sprintf("%.2e", best_f))."
+        msg =
+            "  No critical points found: $(length(raw_points)) polynomial CPs refined, " *
+            "0 converged, 0 accepted. " *
+            "Best |∇f|=$(@sprintf("%.2e", best_grad)), best f=$(@sprintf("%.2e", best_f))."
         println(msg)
         return nothing
     end
@@ -748,14 +811,22 @@ function build_known_cps_from_refinement(
     n_max = count(==(:max), types)
     n_saddle = count(==(:saddle), types)
     if n_deduped > 0
-        println("  After dedup: $(length(unique_results)) unique CPs ($n_deduped duplicates removed) — $n_min min, $n_max max, $n_saddle saddle")
+        println(
+            "  After dedup: $(length(unique_results)) unique CPs ($n_deduped duplicates removed) — $n_min min, $n_max max, $n_saddle saddle",
+        )
     else
-        println("  $(length(unique_results)) unique CPs — $n_min min, $n_max max, $n_saddle saddle")
+        println(
+            "  $(length(unique_results)) unique CPs — $n_min min, $n_max max, $n_saddle saddle",
+        )
     end
 
     known_cps = KnownCriticalPoints(points, values, types, bounds)
-    return (known_cps = known_cps, refinement_results = unique_results,
-            all_refinement_results = refinement_results, refined_raw_points = refined_raw_points)
+    return (
+        known_cps = known_cps,
+        refinement_results = unique_results,
+        all_refinement_results = refinement_results,
+        refined_raw_points = refined_raw_points,
+    )
 end
 
 # ─── Degree Convergence Summary and Verdict ─────────────────────────────────
@@ -778,8 +849,8 @@ struct DegreeConvergenceInfo
     l2_error::Float64
     relative_l2_error::Float64  # l2_error / ||f||_L2 (dimensionless)
     n_critical_points::Int
-    min_gradient_norm::Union{Float64, Nothing}
-    best_objective::Union{Float64, Nothing}
+    min_gradient_norm::Union{Float64,Nothing}
+    best_objective::Union{Float64,Nothing}
 end
 
 """
@@ -805,7 +876,7 @@ print_degree_convergence_summary(degree_capture_results, info)
 ```
 """
 function print_degree_convergence_summary(
-    degree_capture_results::Vector{Tuple{Int, CaptureResult}},
+    degree_capture_results::Vector{Tuple{Int,CaptureResult}},
     degree_info::Vector{DegreeConvergenceInfo};
     io::IO = stdout,
 )
@@ -834,17 +905,25 @@ function print_degree_convergence_summary(
 
         conv_data[row, 1] = deg
         conv_data[row, 2] = di !== nothing ? @sprintf("%.*e", 2, di.l2_error) : "N/A"
-        conv_data[row, 3] = di !== nothing && !isnan(di.relative_l2_error) ?
+        conv_data[row, 3] =
+            di !== nothing && !isnan(di.relative_l2_error) ?
             @sprintf("%.*e", 2, di.relative_l2_error) : "N/A"
         conv_data[row, 4] = di !== nothing ? di.n_critical_points : 0
-        conv_data[row, 5] = di !== nothing && di.min_gradient_norm !== nothing ?
+        conv_data[row, 5] =
+            di !== nothing && di.min_gradient_norm !== nothing ?
             @sprintf("%.*e", 2, di.min_gradient_norm) : "N/A"
 
         # Capture rates at 1%, 5%, 10%
         if cr !== nothing
-            conv_data[row, 6] = idx_1pct !== nothing ? @sprintf("%.1f%%", 100 * cr.capture_rates[idx_1pct]) : "N/A"
-            conv_data[row, 7] = idx_5pct !== nothing ? @sprintf("%.1f%%", 100 * cr.capture_rates[idx_5pct]) : "N/A"
-            conv_data[row, 8] = idx_10pct !== nothing ? @sprintf("%.1f%%", 100 * cr.capture_rates[idx_10pct]) : "N/A"
+            conv_data[row, 6] =
+                idx_1pct !== nothing ?
+                @sprintf("%.1f%%", 100 * cr.capture_rates[idx_1pct]) : "N/A"
+            conv_data[row, 7] =
+                idx_5pct !== nothing ?
+                @sprintf("%.1f%%", 100 * cr.capture_rates[idx_5pct]) : "N/A"
+            conv_data[row, 8] =
+                idx_10pct !== nothing ?
+                @sprintf("%.1f%%", 100 * cr.capture_rates[idx_10pct]) : "N/A"
         else
             conv_data[row, 6] = "N/A"
             conv_data[row, 7] = "N/A"
@@ -871,18 +950,31 @@ function print_degree_convergence_summary(
     end
     best_conv_row = argmax(capture_5pct)
 
-    hl_deg = Highlighter((_, i, j) -> j == 1, bold=true, foreground=:cyan)
+    hl_deg = Highlighter((_, i, j) -> j == 1, bold = true, foreground = :cyan)
     hl_best_conv = Highlighter(
         (_, i, j) -> i == best_conv_row && (j >= 6 && j <= 8),
-        foreground=:green, bold=true)
+        foreground = :green,
+        bold = true,
+    )
 
     println(io)
-    styled_table(io, conv_data;
-        header=["Deg", "L2 err", "Rel L2", "# CPs", "min ||∇f||",
-                "Cap @1%", "Cap @5%", "Cap @10%", "Best f(x)"],
-        title="Degree Convergence Summary",
-        alignment=[:r, :r, :r, :r, :r, :r, :r, :r, :r],
-        highlighters=(hl_deg, hl_best_conv),
+    styled_table(
+        io,
+        conv_data;
+        header = [
+            "Deg",
+            "L2 err",
+            "Rel L2",
+            "# CPs",
+            "min ||∇f||",
+            "Cap @1%",
+            "Cap @5%",
+            "Cap @10%",
+            "Best f(x)",
+        ],
+        title = "Degree Convergence Summary",
+        alignment = [:r, :r, :r, :r, :r, :r, :r, :r, :r],
+        highlighters = (hl_deg, hl_best_conv),
     )
 end
 
@@ -912,7 +1004,9 @@ struct CaptureVerdict
     n_known::Int
     tolerance_fraction::Float64
     tolerance_absolute::Float64
-    type_breakdown::Vector{@NamedTuple{type::Symbol, captured::Int, total::Int, rate::Float64}}
+    type_breakdown::Vector{
+        @NamedTuple{type::Symbol, captured::Int, total::Int, rate::Float64}
+    }
     degree_trend::Vector{@NamedTuple{degree::Int, rate::Float64}}
     label::String
 end
@@ -942,7 +1036,7 @@ verdict.capture_rate # 1.0
 ```
 """
 function compute_capture_verdict(
-    degree_capture_results::Vector{Tuple{Int, CaptureResult}};
+    degree_capture_results::Vector{Tuple{Int,CaptureResult}};
     reference_tolerance_fraction::Float64 = 0.05,
 )::CaptureVerdict
     isempty(degree_capture_results) && error("degree_capture_results must be non-empty")
@@ -953,7 +1047,8 @@ function compute_capture_verdict(
     ref_tol_idx = findfirst(f -> f ≈ reference_tolerance_fraction, tol_fracs)
     ref_tol_idx !== nothing || error(
         "reference_tolerance_fraction=$reference_tolerance_fraction not found in " *
-        "tolerance_fractions=$(tol_fracs)")
+        "tolerance_fractions=$(tol_fracs)",
+    )
 
     # Find best degree by capture rate at reference tolerance
     best_deg_idx = 1
@@ -976,24 +1071,38 @@ function compute_capture_verdict(
         rates = best_cr.type_capture_rates[sym]
         type_count = best_cr.type_counts[sym]
         type_captured = round(Int, rates[ref_tol_idx] * type_count)
-        push!(type_breakdown, (type=sym, captured=type_captured, total=type_count,
-                               rate=rates[ref_tol_idx]))
+        push!(
+            type_breakdown,
+            (
+                type = sym,
+                captured = type_captured,
+                total = type_count,
+                rate = rates[ref_tol_idx],
+            ),
+        )
     end
 
     # Trend across degrees
     degree_trend = @NamedTuple{degree::Int, rate::Float64}[]
     for (deg, cr) in degree_capture_results
-        push!(degree_trend, (degree=deg, rate=cr.capture_rates[ref_tol_idx]))
+        push!(degree_trend, (degree = deg, rate = cr.capture_rates[ref_tol_idx]))
     end
 
     # Verdict label
-    label = best_capture_rate >= 0.80 ? "EXCELLENT" :
-            best_capture_rate >= 0.50 ? "GOOD" : "POOR"
+    label =
+        best_capture_rate >= 0.80 ? "EXCELLENT" :
+        best_capture_rate >= 0.50 ? "GOOD" : "POOR"
 
     return CaptureVerdict(
-        best_deg, best_capture_rate, n_captured, best_cr.n_known,
-        reference_tolerance_fraction, tol_abs,
-        type_breakdown, degree_trend, label,
+        best_deg,
+        best_capture_rate,
+        n_captured,
+        best_cr.n_known,
+        reference_tolerance_fraction,
+        tol_abs,
+        type_breakdown,
+        degree_trend,
+        label,
     )
 end
 
@@ -1025,25 +1134,30 @@ verdict = compute_capture_verdict(degree_capture_results)
 print_capture_verdict(verdict)
 ```
 """
-function print_capture_verdict(
-    verdict::CaptureVerdict;
-    io::IO = stdout,
-)
+function print_capture_verdict(verdict::CaptureVerdict; io::IO = stdout)
     W = 80
-    verdict_col = verdict.capture_rate >= 0.80 ? :green :
-                  verdict.capture_rate >= 0.50 ? :yellow : :red
+    verdict_col =
+        verdict.capture_rate >= 0.80 ? :green :
+        verdict.capture_rate >= 0.50 ? :yellow : :red
 
-    printstyled(io, "="^W * "\n"; color=verdict_col, bold=true)
-    printstyled(io, " CAPTURE RESULT [$(verdict.label)]  —  Degree $(verdict.best_degree)\n";
-        color=verdict_col, bold=true)
-    printstyled(io, "="^W * "\n"; color=verdict_col, bold=true)
+    printstyled(io, "="^W * "\n"; color = verdict_col, bold = true)
+    printstyled(
+        io,
+        " CAPTURE RESULT [$(verdict.label)]  —  Degree $(verdict.best_degree)\n";
+        color = verdict_col,
+        bold = true,
+    )
+    printstyled(io, "="^W * "\n"; color = verdict_col, bold = true)
 
     tol_pct = @sprintf("%.1f%%", 100 * verdict.tolerance_fraction)
-    printstyled(io,
+    printstyled(
+        io,
         "  Captured: $(verdict.n_captured) / $(verdict.n_known) " *
         "($(@sprintf("%.1f%%", 100 * verdict.capture_rate)))  " *
         "at $tol_pct tolerance (abs = $(round(verdict.tolerance_absolute, digits=4)))\n";
-        color=verdict_col, bold=true)
+        color = verdict_col,
+        bold = true,
+    )
 
     # Per-type breakdown
     type_parts = String[]
@@ -1052,11 +1166,12 @@ function print_capture_verdict(
         pct = tb.total > 0 ? @sprintf("%.1f%%", 100 * tb.rate) : "N/A"
         push!(type_parts, "$type_label: $(tb.captured)/$(tb.total) ($pct)")
     end
-    printstyled(io, "  " * join(type_parts, "  |  ") * "\n"; color=verdict_col)
+    printstyled(io, "  " * join(type_parts, "  |  ") * "\n"; color = verdict_col)
 
     # Trend
-    trend_parts = [@sprintf("deg %d: %.1f%%", t.degree, 100 * t.rate) for t in verdict.degree_trend]
-    printstyled(io, "  Trend: " * join(trend_parts, " → ") * "\n"; color=:white)
+    trend_parts =
+        [@sprintf("deg %d: %.1f%%", t.degree, 100 * t.rate) for t in verdict.degree_trend]
+    printstyled(io, "  Trend: " * join(trend_parts, " → ") * "\n"; color = :white)
 
-    printstyled(io, "="^W * "\n"; color=verdict_col, bold=true)
+    printstyled(io, "="^W * "\n"; color = verdict_col, bold = true)
 end

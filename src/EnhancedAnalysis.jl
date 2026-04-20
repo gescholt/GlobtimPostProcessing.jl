@@ -47,13 +47,13 @@ struct ConditionNumberAnalysis
 end
 
 struct ValidationResults
-    eigenvalue_signs_correct::Union{Bool, Missing}
-    positive_eigenvalue_count::Union{Int, Missing}
-    negative_eigenvalue_count::Union{Int, Missing}
-    mixed_eigenvalue_signs::Union{Bool, Missing}
-    determinant_positive::Union{Bool, Missing}
-    determinant_sign_consistent::Union{Bool, Missing}
-    additional_checks::Dict{String, Any}
+    eigenvalue_signs_correct::Union{Bool,Missing}
+    positive_eigenvalue_count::Union{Int,Missing}
+    negative_eigenvalue_count::Union{Int,Missing}
+    mixed_eigenvalue_signs::Union{Bool,Missing}
+    determinant_positive::Union{Bool,Missing}
+    determinant_sign_consistent::Union{Bool,Missing}
+    additional_checks::Dict{String,Any}
 end
 
 # Main statistical table types
@@ -75,7 +75,7 @@ struct ComprehensiveStatsTable <: StatisticalTable
     hessian_stats::RobustStatistics
     condition_analysis::ConditionNumberAnalysis
     validation_results::ValidationResults
-    eigenvalue_stats::Union{RobustStatistics, Missing}
+    eigenvalue_stats::Union{RobustStatistics,Missing}
     display_format::Symbol
 end
 
@@ -113,7 +113,7 @@ function compute_robust_statistics(values::Vector{Float64})
     if iqr > 0
         lower_fence = q1 - 1.5 * iqr
         upper_fence = q3 + 1.5 * iqr
-        outliers = values[(values .< lower_fence) .| (values .> upper_fence)]
+        outliers = values[(values.<lower_fence).|(values.>upper_fence)]
         outlier_count = length(outliers)
         outlier_percentage = round(100 * outlier_count / n, digits = 1)
     else
@@ -133,7 +133,7 @@ function compute_robust_statistics(values::Vector{Float64})
         iqr,
         outlier_count,
         outlier_percentage,
-        max_val - min_val
+        max_val - min_val,
     )
 end
 
@@ -198,7 +198,7 @@ function compute_condition_number_analysis(condition_numbers::Vector{Float64})
         critical,
         well_conditioned_percentage,
         overall_quality,
-        recommendations
+        recommendations,
     )
 end
 
@@ -211,7 +211,7 @@ Perform mathematical validation of critical point classifications.
 - `ValidationResults`: Comprehensive validation results
 """
 function perform_mathematical_validation(type_data::DataFrame, point_type::Symbol)
-    additional_checks = Dict{String, Any}()
+    additional_checks = Dict{String,Any}()
 
     # Initialize validation results
     eigenvalue_signs_correct = missing
@@ -291,7 +291,7 @@ function perform_mathematical_validation(type_data::DataFrame, point_type::Symbo
         mixed_eigenvalue_signs,
         determinant_positive,
         determinant_sign_consistent,
-        additional_checks
+        additional_checks,
     )
 end
 
@@ -318,7 +318,7 @@ function compute_type_specific_statistics(df::DataFrame, point_type::Symbol)
             missing,
             missing,
             missing,
-            Dict{String, Any}()
+            Dict{String,Any}(),
         )
 
         return ComprehensiveStatsTable(
@@ -327,7 +327,7 @@ function compute_type_specific_statistics(df::DataFrame, point_type::Symbol)
             empty_condition,
             empty_validation,
             missing,
-            :console
+            :console,
         )
     end
 
@@ -348,7 +348,7 @@ function compute_type_specific_statistics(df::DataFrame, point_type::Symbol)
             missing,
             missing,
             missing,
-            Dict{String, Any}()
+            Dict{String,Any}(),
         )
 
         return ComprehensiveStatsTable(
@@ -357,7 +357,7 @@ function compute_type_specific_statistics(df::DataFrame, point_type::Symbol)
             empty_condition,
             empty_validation,
             missing,
-            :console
+            :console,
         )
     end
 
@@ -394,7 +394,7 @@ function compute_type_specific_statistics(df::DataFrame, point_type::Symbol)
         condition_analysis,
         validation_results,
         eigenvalue_stats,
-        :console
+        :console,
     )
 end
 
@@ -436,13 +436,13 @@ function format_table_row(label::String, value::String, width::Int; label_width_
 
     # Truncate if necessary
     display_label = if length(label) > label_width
-        label[1:(label_width - 3)] * "..."
+        label[1:(label_width-3)] * "..."
     else
         label
     end
 
     display_value = if length(value) > value_width
-        value[1:(value_width - 3)] * "..."
+        value[1:(value_width-3)] * "..."
     else
         value
     end
@@ -489,7 +489,7 @@ function format_validation_key(key::String)
         "negative_eigenvalue_count" => "Negative eigenvalues",
         "mixed_eigenvalue_signs" => "Mixed eigenvalue signs",
         "determinant_positive" => "Determinant positive",
-        "determinant_sign_consistent" => "Determinant sign consistent"
+        "determinant_sign_consistent" => "Determinant sign consistent",
     )
 
     return get(key_map, key, titlecase(replace(key, "_" => " ")))
@@ -536,32 +536,32 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
             format_table_row(
                 "Mean ± Std",
                 "$(round(hs.mean, digits=3)) ± $(round(hs.std, digits=3))",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Median (IQR)",
                 "$(round(hs.median, digits=3)) ($(round(hs.q1, digits=3))-$(round(hs.q3, digits=3)))",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Range",
                 "[$(round(hs.min, digits=3)), $(round(hs.max, digits=3))]",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Outliers",
                 "$(hs.outlier_count) ($(hs.outlier_percentage)%)",
-                table_width
-            )
+                table_width,
+            ),
         )
     else
         push!(lines, format_table_row("Count", "0", table_width))
@@ -581,40 +581,40 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
             format_table_row(
                 "Excellent (< 1e3)",
                 "$(ca.excellent_count) ($(round(100*ca.excellent_count/total, digits=1))%)",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Good (1e3-1e6)",
                 "$(ca.good_count) ($(round(100*ca.good_count/total, digits=1))%)",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Fair (1e6-1e9)",
                 "$(ca.fair_count) ($(round(100*ca.fair_count/total, digits=1))%)",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Poor (1e9-1e12)",
                 "$(ca.poor_count) ($(round(100*ca.poor_count/total, digits=1))%)",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Critical (≥ 1e12)",
                 "$(ca.critical_count) ($(round(100*ca.critical_count/total, digits=1))%)",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(lines, format_table_row("Overall Quality", ca.overall_quality, table_width))
     end
@@ -637,7 +637,7 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
                 status = format_validation_value(vr.eigenvalue_signs_correct)
                 push!(
                     lines,
-                    format_table_row("All eigenvalues positive", status, table_width)
+                    format_table_row("All eigenvalues positive", status, table_width),
                 )
             end
             if !ismissing(vr.positive_eigenvalue_count)
@@ -646,8 +646,8 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
                     format_table_row(
                         "Positive eigenvalue count",
                         string(vr.positive_eigenvalue_count),
-                        table_width
-                    )
+                        table_width,
+                    ),
                 )
             end
             if !ismissing(vr.determinant_positive)
@@ -660,7 +660,7 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
                 status = format_validation_value(vr.eigenvalue_signs_correct)
                 push!(
                     lines,
-                    format_table_row("All eigenvalues negative", status, table_width)
+                    format_table_row("All eigenvalues negative", status, table_width),
                 )
             end
             if !ismissing(vr.negative_eigenvalue_count)
@@ -669,15 +669,15 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
                     format_table_row(
                         "Negative eigenvalue count",
                         string(vr.negative_eigenvalue_count),
-                        table_width
-                    )
+                        table_width,
+                    ),
                 )
             end
             if !ismissing(vr.determinant_sign_consistent)
                 status = format_validation_value(vr.determinant_sign_consistent)
                 push!(
                     lines,
-                    format_table_row("Determinant sign consistent", status, table_width)
+                    format_table_row("Determinant sign consistent", status, table_width),
                 )
             end
 
@@ -686,7 +686,7 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
                 status = format_validation_value(vr.mixed_eigenvalue_signs)
                 push!(
                     lines,
-                    format_table_row("Mixed eigenvalue signs", status, table_width)
+                    format_table_row("Mixed eigenvalue signs", status, table_width),
                 )
             end
         end
@@ -713,23 +713,23 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
 
             push!(
                 lines,
-                format_table_row("Eigenvalue count", string(es.count), table_width)
+                format_table_row("Eigenvalue count", string(es.count), table_width),
             )
             push!(
                 lines,
                 format_table_row(
                     "Mean ± Std",
                     "$(round(es.mean, digits=6)) ± $(round(es.std, digits=6))",
-                    table_width
-                )
+                    table_width,
+                ),
             )
             push!(
                 lines,
                 format_table_row(
                     "Range",
                     "[$(round(es.min, digits=6)), $(round(es.max, digits=6))]",
-                    table_width
-                )
+                    table_width,
+                ),
             )
         end
     end
@@ -754,7 +754,7 @@ function render_console_table(stats_table::ComprehensiveStatsTable; width = 80)
                     else
                         push!(
                             lines,
-                            format_table_row("", rstrip(current_line), table_width)
+                            format_table_row("", rstrip(current_line), table_width),
                         )
                         current_line = "  " * word * " "
                     end
@@ -857,7 +857,7 @@ function render_comparative_table(stats_list::Vector{ComprehensiveStatsTable}; w
         push!(lines, create_table_border(table_width, :middle))
         push!(
             lines,
-            format_table_row("Total critical points", string(total_points), table_width)
+            format_table_row("Total critical points", string(total_points), table_width),
         )
         push!(
             lines,
@@ -865,24 +865,24 @@ function render_comparative_table(stats_list::Vector{ComprehensiveStatsTable}; w
                 "Overall numerical quality",
                 overall_well_cond > 80 ? "EXCELLENT" :
                 overall_well_cond > 60 ? "GOOD" : "FAIR",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Mathematical validation",
                 "$(overall_valid)% pass rate",
-                table_width
-            )
+                table_width,
+            ),
         )
         push!(
             lines,
             format_table_row(
                 "Production readiness",
                 (overall_well_cond > 70 && overall_valid > 80) ? "READY" : "NEEDS REVIEW",
-                table_width
-            )
+                table_width,
+            ),
         )
     end
 
@@ -947,12 +947,11 @@ export_analysis_tables(tables, "critical_point_analysis",
 ```
 """
 function export_analysis_tables(
-    rendered_tables::Dict{Symbol, String},
+    rendered_tables::Dict{Symbol,String},
     base_filename::String;
     formats = [:console],
-    include_timestamp = true
+    include_timestamp = true,
 )
-
     timestamp_str = include_timestamp ? "_$(Dates.format(now(), "yyyymmdd_HHMMSS"))" : ""
 
     for (point_type, table_content) in rendered_tables
@@ -994,7 +993,7 @@ function create_statistical_summary(df_enhanced::DataFrame)
     # Count by type
     type_counts = DataFrames.combine(
         DataFrames.groupby(df_enhanced, :critical_point_type),
-        DataFrames.nrow => :count
+        DataFrames.nrow => :count,
     )
     total_points = nrow(df_enhanced)
 
@@ -1017,7 +1016,7 @@ function create_statistical_summary(df_enhanced::DataFrame)
     push!(lines, "├─────────────────┼───────────┼───────────┤")
     push!(
         lines,
-        "│ $(rpad("TOTAL", 15)) │ $(lpad(total_points, 9)) │ $(lpad("100.0%", 9)) │"
+        "│ $(rpad("TOTAL", 15)) │ $(lpad(total_points, 9)) │ $(lpad("100.0%", 9)) │",
     )
     push!(lines, "└─────────────────┴───────────┴───────────┘")
 
@@ -1058,7 +1057,7 @@ function quick_table_preview(df::DataFrame; point_types = [:minimum, :maximum])
             println("\n$(uppercase(string(point_type))) Quick Stats:")
             println("  Count: $(hs.count)")
             println(
-                "  Hessian norm: $(round(hs.mean, digits=3)) ± $(round(hs.std, digits=3))"
+                "  Hessian norm: $(round(hs.mean, digits=3)) ± $(round(hs.std, digits=3))",
             )
             if ca.total_count > 0
                 println("  Well-conditioned: $(ca.well_conditioned_percentage)%")

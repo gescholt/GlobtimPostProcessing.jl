@@ -117,7 +117,9 @@ function find_unified_results_root()::String
         return results_root
     end
 
-    error("Could not find results directory. Set the GLOBTIM_RESULTS_ROOT environment variable or pass the path as an argument.")
+    error(
+        "Could not find results directory. Set the GLOBTIM_RESULTS_ROOT environment variable or pass the path as an argument.",
+    )
 end
 
 # ============================================================================
@@ -131,7 +133,7 @@ Show menu to select experiment type.
 
 Returns the selected ExperimentType singleton or nothing if cancelled.
 """
-function select_experiment_type()::Union{ExperimentType, Nothing}
+function select_experiment_type()::Union{ExperimentType,Nothing}
     # Build options from SUPPORTED_TYPES
     options = String[]
     for (typ, desc) in SUPPORTED_TYPES
@@ -139,7 +141,7 @@ function select_experiment_type()::Union{ExperimentType, Nothing}
     end
     push!(options, "Auto-detect from path")
 
-    menu = RadioMenu(options, pagesize=min(8, length(options)))
+    menu = RadioMenu(options, pagesize = min(8, length(options)))
     choice = request("Select experiment type:", menu)
 
     choice == -1 && return nothing
@@ -171,13 +173,10 @@ end
 
 Show menu to select results source.
 """
-function select_results_source(results_root::String)::Union{ResultsSource, Nothing}
-    options = [
-        "Browse recent experiments",
-        "Enter path manually"
-    ]
+function select_results_source(results_root::String)::Union{ResultsSource,Nothing}
+    options = ["Browse recent experiments", "Enter path manually"]
 
-    menu = RadioMenu(options, pagesize=2)
+    menu = RadioMenu(options, pagesize = 2)
     choice = request("Select results source:", menu)
 
     choice == -1 && return nothing
@@ -209,14 +208,16 @@ Show menu to select from recent experiments.
 # Returns
 Path to selected experiment or nothing if cancelled.
 """
-function select_recent_experiment(results_root::String;
-                                 type_filter::Union{ExperimentType, Nothing}=nothing,
-                                 limit::Int=15)::Union{String, Nothing}
+function select_recent_experiment(
+    results_root::String;
+    type_filter::Union{ExperimentType,Nothing} = nothing,
+    limit::Int = 15,
+)::Union{String,Nothing}
     # Build list of experiments
     experiments = String[]
 
     # Walk through results_root looking for experiment directories
-    for entry in readdir(results_root, join=true)
+    for entry in readdir(results_root, join = true)
         if isdir(entry) && is_single_experiment(entry)
             # Apply type filter if specified
             if type_filter !== nothing
@@ -228,7 +229,7 @@ function select_recent_experiment(results_root::String;
 
         # Also check subdirectories (e.g., lotka_volterra_4d/)
         if isdir(entry)
-            for subentry in readdir(entry, join=true)
+            for subentry in readdir(entry, join = true)
                 if isdir(subentry) && is_single_experiment(subentry)
                     if type_filter !== nothing
                         detected = detect_experiment_type(subentry)
@@ -246,7 +247,7 @@ function select_recent_experiment(results_root::String;
     end
 
     # Sort by modification time (most recent first)
-    sort!(experiments, by=mtime, rev=true)
+    sort!(experiments, by = mtime, rev = true)
     experiments = experiments[1:min(limit, length(experiments))]
 
     # Build options with age info
@@ -259,7 +260,7 @@ function select_recent_experiment(results_root::String;
         "[$type_str] $name ($age_str ago)"
     end
 
-    menu = RadioMenu(options, pagesize=min(12, length(options)))
+    menu = RadioMenu(options, pagesize = min(12, length(options)))
     choice = request("Select experiment:", menu)
 
     choice == -1 && return nothing
@@ -304,14 +305,24 @@ Standard analysis modes available for all types.
 """
 const COMMON_ANALYSIS_MODES = [
     AnalysisMode(:quality, "Quality", "Single experiment diagnostics", [ExperimentType]),
-    AnalysisMode(:convergence, "Convergence", "Degree convergence analysis", [ExperimentType]),
+    AnalysisMode(
+        :convergence,
+        "Convergence",
+        "Degree convergence analysis",
+        [ExperimentType],
+    ),
 ]
 
 """
 LV4D-specific analysis modes.
 """
 const LV4D_ANALYSIS_MODES = [
-    AnalysisMode(:quality, "Quality", "Single experiment critical point diagnostics", [LV4DType]),
+    AnalysisMode(
+        :quality,
+        "Quality",
+        "Single experiment critical point diagnostics",
+        [LV4DType],
+    ),
     AnalysisMode(:sweep, "Sweep", "Aggregate domain × degree analysis", [LV4DType]),
     AnalysisMode(:convergence, "Convergence", "Log-log convergence rate", [LV4DType]),
     AnalysisMode(:compare, "Compare", "Method comparison (log vs standard)", [LV4DType]),
@@ -336,11 +347,11 @@ end
 
 Show menu to select analysis mode for given experiment type.
 """
-function select_analysis_mode(type::ExperimentType)::Union{Symbol, Nothing}
+function select_analysis_mode(type::ExperimentType)::Union{Symbol,Nothing}
     modes = get_analysis_modes(type)
 
     options = ["$(m.name) - $(m.description)" for m in modes]
-    menu = RadioMenu(options, pagesize=min(8, length(options)))
+    menu = RadioMenu(options, pagesize = min(8, length(options)))
     choice = request("Select analysis mode:", menu)
 
     choice == -1 && return nothing
@@ -364,7 +375,7 @@ function confirm_selection(summary::String)::Bool
     println()
 
     options = ["Yes - Run analysis", "No - Cancel"]
-    menu = RadioMenu(options, pagesize=2)
+    menu = RadioMenu(options, pagesize = 2)
     choice = request("Proceed?", menu)
 
     return choice == 1

@@ -67,10 +67,12 @@ classify_critical_point([1.2, 0.00001, 0.9])    # "degenerate"
 classify_critical_point([1.2, 0.00001, 0.9]; sub_classify_degenerate=true)  # "degenerate_min"
 ```
 """
-function classify_critical_point(eigenvalues::Vector{Float64};
-                                 tol::Float64=1e-6,
-                                 relative_tol::Float64=0.0,
-                                 sub_classify_degenerate::Bool=false)
+function classify_critical_point(
+    eigenvalues::Vector{Float64};
+    tol::Float64 = 1e-6,
+    relative_tol::Float64 = 0.0,
+    sub_classify_degenerate::Bool = false,
+)
     # Compute effective tolerance (adaptive to eigenvalue scale)
     effective_tol = if relative_tol > 0.0 && !isempty(eigenvalues)
         max(tol, relative_tol * maximum(abs, eigenvalues))
@@ -140,7 +142,8 @@ function extract_eigenvalues_from_row(row::DataFrameRow)
     end
 
     # Sort columns to ensure consistent ordering (eigenvalue_1, eigenvalue_2, ...)
-    sorted_cols = sort(eigenvalue_cols, by=x -> parse(Int, match(r"\d+", string(x)).match))
+    sorted_cols =
+        sort(eigenvalue_cols, by = x -> parse(Int, match(r"\d+", string(x)).match))
 
     # Extract values
     eigenvalues = [Float64(row[col]) for col in sorted_cols]
@@ -175,8 +178,11 @@ println(df.point_classification)  # ["minimum", "saddle", "minimum", ...]
 # Errors
 Throws an error if no Hessian eigenvalue columns are found in the DataFrame.
 """
-function classify_all_critical_points!(df::DataFrame; tol::Float64=1e-6,
-                                       classification_col::Symbol=:point_classification)
+function classify_all_critical_points!(
+    df::DataFrame;
+    tol::Float64 = 1e-6,
+    classification_col::Symbol = :point_classification,
+)
     # Check if DataFrame is empty
     if nrow(df) == 0
         # Add empty classification column
@@ -188,8 +194,10 @@ function classify_all_critical_points!(df::DataFrame; tol::Float64=1e-6,
     eigenvalue_cols = filter(n -> occursin(r"hessian_eigenvalue_\d+", string(n)), names(df))
 
     if isempty(eigenvalue_cols)
-        error("No Hessian eigenvalue columns found in DataFrame. " *
-              "Expected columns matching pattern 'hessian_eigenvalue_N'.")
+        error(
+            "No Hessian eigenvalue columns found in DataFrame. " *
+            "Expected columns matching pattern 'hessian_eigenvalue_N'.",
+        )
     end
 
     # Classify each row
@@ -201,7 +209,7 @@ function classify_all_critical_points!(df::DataFrame; tol::Float64=1e-6,
         if eigenvalues === nothing
             push!(classifications, "unknown")
         else
-            classification = classify_critical_point(eigenvalues, tol=tol)
+            classification = classify_critical_point(eigenvalues, tol = tol)
             push!(classifications, classification)
         end
     end
@@ -233,19 +241,20 @@ counts = count_classifications(df)
 # Errors
 Throws an error if the classification column doesn't exist in the DataFrame.
 """
-function count_classifications(df::DataFrame; classification_col::Symbol=:point_classification)
+function count_classifications(
+    df::DataFrame;
+    classification_col::Symbol = :point_classification,
+)
     if !(classification_col in propertynames(df))
-        error("Classification column '$classification_col' not found in DataFrame. " *
-              "Run classify_all_critical_points! first.")
+        error(
+            "Classification column '$classification_col' not found in DataFrame. " *
+            "Run classify_all_critical_points! first.",
+        )
     end
 
     # Initialize counts
-    counts = Dict{String, Int}(
-        "minimum" => 0,
-        "maximum" => 0,
-        "saddle" => 0,
-        "degenerate" => 0
-    )
+    counts =
+        Dict{String,Int}("minimum" => 0, "maximum" => 0, "saddle" => 0, "degenerate" => 0)
 
     # Count each classification
     for classification in df[!, classification_col]
@@ -286,9 +295,11 @@ Find distinct minima and extract their rows:
     unique_minima = df[indices, :]
     println("Found ", length(indices), " distinct local minima")
 """
-function find_distinct_local_minima(df::DataFrame;
-                                    classification_col::Symbol=:point_classification,
-                                    distance_threshold::Float64=1e-3)
+function find_distinct_local_minima(
+    df::DataFrame;
+    classification_col::Symbol = :point_classification,
+    distance_threshold::Float64 = 1e-3,
+)
     # Filter for minima
     if !(classification_col in propertynames(df))
         error("Classification column '$classification_col' not found in DataFrame.")
@@ -311,7 +322,8 @@ function find_distinct_local_minima(df::DataFrame;
     end
 
     # Sort param columns by number
-    sorted_param_cols = sort(param_cols, by=x -> parse(Int, match(r"\d+", string(x)).match))
+    sorted_param_cols =
+        sort(param_cols, by = x -> parse(Int, match(r"\d+", string(x)).match))
 
     # Extract coordinates of minima
     minima_coords = Matrix(df[minima_indices, sorted_param_cols])
@@ -368,35 +380,38 @@ println("Minima: ", summary["counts"]["minimum"], " (", summary["percentages"]["
 println("Distinct local minima: ", summary["distinct_local_minima"])
 ```
 """
-function get_classification_summary(df::DataFrame;
-                                    classification_col::Symbol=:point_classification)
+function get_classification_summary(
+    df::DataFrame;
+    classification_col::Symbol = :point_classification,
+)
     total = nrow(df)
 
     if total == 0
-        return Dict{String, Any}(
+        return Dict{String,Any}(
             "total" => 0,
-            "counts" => Dict{String, Int}(),
-            "percentages" => Dict{String, Float64}(),
-            "distinct_local_minima" => 0
+            "counts" => Dict{String,Int}(),
+            "percentages" => Dict{String,Float64}(),
+            "distinct_local_minima" => 0,
         )
     end
 
-    counts = count_classifications(df, classification_col=classification_col)
+    counts = count_classifications(df, classification_col = classification_col)
 
     # Compute percentages
-    percentages = Dict{String, Float64}()
+    percentages = Dict{String,Float64}()
     for (class, count) in counts
-        percentages[class] = round(100.0 * count / total, digits=2)
+        percentages[class] = round(100.0 * count / total, digits = 2)
     end
 
     # Find distinct local minima
-    distinct_minima_indices = find_distinct_local_minima(df, classification_col=classification_col)
+    distinct_minima_indices =
+        find_distinct_local_minima(df, classification_col = classification_col)
 
-    return Dict{String, Any}(
+    return Dict{String,Any}(
         "total" => total,
         "counts" => counts,
         "percentages" => percentages,
-        "distinct_local_minima" => length(distinct_minima_indices)
+        "distinct_local_minima" => length(distinct_minima_indices),
     )
 end
 
@@ -514,8 +529,10 @@ function classify_cps_on_approximant(
     tol::Float64 = 1e-6,
     relative_tol::Float64 = 0.0,
 )::Vector{ApproximantCPClassification}
-    return [classify_cp_on_approximant(poly_eval, cp; tol=tol, relative_tol=relative_tol)
-            for cp in cps]
+    return [
+        classify_cp_on_approximant(poly_eval, cp; tol = tol, relative_tol = relative_tol)
+        for cp in cps
+    ]
 end
 
 """

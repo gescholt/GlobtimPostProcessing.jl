@@ -179,11 +179,13 @@ when optimizing to global minima (f ≈ 0).
 **Pros**: Scale-invariant, handles global minima correctly, no derivatives needed
 **Cons**: Can give false positives in flat regions
 """
-function check_objective_proximity(x_star::Vector{Float64},
-                                   x_min::Vector{Float64},
-                                   objective;
-                                   tolerance::Float64=0.05,
-                                   abs_tolerance::Float64=1e-6)
+function check_objective_proximity(
+    x_star::Vector{Float64},
+    x_min::Vector{Float64},
+    objective;
+    tolerance::Float64 = 0.05,
+    abs_tolerance::Float64 = 1e-6,
+)
     f_star = objective(x_star)
     f_min = objective(x_min)
 
@@ -245,10 +247,12 @@ r = estimate_basin_radius(x_min, f, H)
 - Assumes local quadratic approximation is valid
 - Larger threshold_factor → larger estimated basin
 """
-function estimate_basin_radius(x_min::Vector{Float64},
-                               objective,
-                               hessian_min::Matrix{Float64};
-                              threshold_factor::Float64=0.1)
+function estimate_basin_radius(
+    x_min::Vector{Float64},
+    objective,
+    hessian_min::Matrix{Float64};
+    threshold_factor::Float64 = 0.1,
+)
     # Compute eigenvalues
     eigenvalues = eigvals(hessian_min)
     λ_min = minimum(eigenvalues)
@@ -322,14 +326,20 @@ scale-adaptive basin size. Points with metric < 1.0 are inside the basin.
 **Pros**: Geometrically rigorous, adapts to local curvature
 **Cons**: Requires Hessian computation (expensive)
 """
-function check_hessian_basin(x_star::Vector{Float64},
-                             x_min::Vector{Float64},
-                             objective,
-                             hessian_min::Matrix{Float64};
-                            threshold_factor::Float64=0.1)
+function check_hessian_basin(
+    x_star::Vector{Float64},
+    x_min::Vector{Float64},
+    objective,
+    hessian_min::Matrix{Float64};
+    threshold_factor::Float64 = 0.1,
+)
     # Estimate basin radius
-    r_basin = estimate_basin_radius(x_min, objective, hessian_min,
-                                    threshold_factor=threshold_factor)
+    r_basin = estimate_basin_radius(
+        x_min,
+        objective,
+        hessian_min,
+        threshold_factor = threshold_factor,
+    )
 
     # Compute distance
     distance = norm(x_star - x_min)
@@ -412,34 +422,47 @@ println("Confidence: ", result.confidence)  # Higher with more criteria
 - `confidence = 0.5`: Split decision → uncertain case
 - `confidence = 0.0`: All criteria disagree → different basins
 """
-function assess_landscape_fidelity(x_star::Vector{Float64},
-                                   x_min::Vector{Float64},
-                                   objective;
-                                  hessian_min::Union{Matrix{Float64}, Nothing}=nothing,
-                                  obj_tolerance::Float64=0.05,
-                                  threshold_factor::Float64=0.1)
+function assess_landscape_fidelity(
+    x_star::Vector{Float64},
+    x_min::Vector{Float64},
+    objective;
+    hessian_min::Union{Matrix{Float64},Nothing} = nothing,
+    obj_tolerance::Float64 = 0.05,
+    threshold_factor::Float64 = 0.1,
+)
     criteria = NamedTuple[]
 
     # Criterion 1: Objective proximity (always available)
-    obj_result = check_objective_proximity(x_star, x_min, objective,
-                                          tolerance=obj_tolerance)
-    push!(criteria, (
-        name = "objective_proximity",
-        passed = obj_result.is_same_basin,
-        metric = obj_result.metric,
-        description = "f(x*) ≈ f(x_min)"
-    ))
+    obj_result =
+        check_objective_proximity(x_star, x_min, objective, tolerance = obj_tolerance)
+    push!(
+        criteria,
+        (
+            name = "objective_proximity",
+            passed = obj_result.is_same_basin,
+            metric = obj_result.metric,
+            description = "f(x*) ≈ f(x_min)",
+        ),
+    )
 
     # Criterion 2: Hessian basin (if available)
     if hessian_min !== nothing
-        hess_result = check_hessian_basin(x_star, x_min, objective, hessian_min,
-                                         threshold_factor=threshold_factor)
-        push!(criteria, (
-            name = "hessian_basin",
-            passed = hess_result.is_same_basin,
-            metric = hess_result.metric,
-            description = "||x* - x_min|| < r_basin"
-        ))
+        hess_result = check_hessian_basin(
+            x_star,
+            x_min,
+            objective,
+            hessian_min,
+            threshold_factor = threshold_factor,
+        )
+        push!(
+            criteria,
+            (
+                name = "hessian_basin",
+                passed = hess_result.is_same_basin,
+                metric = hess_result.metric,
+                description = "||x* - x_min|| < r_basin",
+            ),
+        )
     end
 
     # Consensus: majority vote
@@ -498,48 +521,56 @@ valid_captures = sum(results.is_same_basin)
 println("Landscape fidelity: ", valid_captures / nrow(results))
 ```
 """
-function batch_assess_fidelity(critical_points_df::DataFrame,
-                               refined_points::Vector{Vector{Float64}},
-                               objective;
-                              classification_col::Symbol=:point_classification,
-                              hessian_min_list::Union{Vector{Matrix{Float64}}, Nothing}=nothing)
+function batch_assess_fidelity(
+    critical_points_df::DataFrame,
+    refined_points::Vector{Vector{Float64}},
+    objective;
+    classification_col::Symbol = :point_classification,
+    hessian_min_list::Union{Vector{Matrix{Float64}},Nothing} = nothing,
+)
     # Prepare output columns
     n_points = length(refined_points)
     is_same_basin = Bool[]
     confidences = Float64[]
     obj_metrics = Float64[]
-    hess_metrics = Union{Float64, Missing}[]
+    hess_metrics = Union{Float64,Missing}[]
 
     # Filter for minima
     minima_mask = critical_points_df[!, classification_col] .== "minimum"
     minima_df = critical_points_df[minima_mask, :]
 
     if nrow(minima_df) != n_points
-        error("Number of refined points ($(n_points)) doesn't match number of minima ($(nrow(minima_df)))")
+        error(
+            "Number of refined points ($(n_points)) doesn't match number of minima ($(nrow(minima_df)))",
+        )
     end
 
     # Assess each point
     for (i, row) in enumerate(eachrow(minima_df))
         # Extract polynomial critical point
         param_cols = filter(n -> occursin(r"^x\d+$", string(n)), propertynames(row))
-        sorted_cols = sort(param_cols, by=x -> parse(Int, match(r"\d+", string(x)).match))
+        sorted_cols = sort(param_cols, by = x -> parse(Int, match(r"\d+", string(x)).match))
         x_star = Float64[row[col] for col in sorted_cols]
 
         x_min = refined_points[i]
         H_min = hessian_min_list !== nothing ? hessian_min_list[i] : nothing
 
         # Assess fidelity
-        result = assess_landscape_fidelity(x_star, x_min, objective, hessian_min=H_min)
+        result = assess_landscape_fidelity(x_star, x_min, objective, hessian_min = H_min)
 
         push!(is_same_basin, result.is_same_basin)
         push!(confidences, result.confidence)
 
         # Extract metrics
-        obj_crit = result.criteria[findfirst(c -> c.name == "objective_proximity", result.criteria)]
+        obj_crit = result.criteria[findfirst(
+            c -> c.name == "objective_proximity",
+            result.criteria,
+        )]
         push!(obj_metrics, obj_crit.metric)
 
         if H_min !== nothing
-            hess_crit = result.criteria[findfirst(c -> c.name == "hessian_basin", result.criteria)]
+            hess_crit =
+                result.criteria[findfirst(c -> c.name == "hessian_basin", result.criteria)]
             push!(hess_metrics, hess_crit.metric)
         else
             push!(hess_metrics, missing)

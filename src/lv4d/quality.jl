@@ -36,15 +36,26 @@ function analyze_quality(data::LV4DExperimentData)
     # --- Header ---
     println()
     println("CRITICAL POINT ANALYSIS: $(basename(data.base.path))")
-    println("─" ^ min(70, 26 + length(basename(data.base.path))))
+    println("─"^min(70, 26 + length(basename(data.base.path))))
 
     # Extract config from directory name
     params = parse_experiment_name(basename(data.base.path))
     if params !== nothing
         if params.degree_min == params.degree_max
-            @printf("Config: GN=%d, degree=%d, domain=%.2e\n", params.GN, params.degree_min, params.domain)
+            @printf(
+                "Config: GN=%d, degree=%d, domain=%.2e\n",
+                params.GN,
+                params.degree_min,
+                params.domain
+            )
         else
-            @printf("Config: GN=%d, degrees=%d-%d, domain=%.2e\n", params.GN, params.degree_min, params.degree_max, params.domain)
+            @printf(
+                "Config: GN=%d, degrees=%d-%d, domain=%.2e\n",
+                params.GN,
+                params.degree_min,
+                params.degree_max,
+                params.domain
+            )
         end
     end
     @printf("True params: [%s]\n", join([@sprintf("%.3f", p) for p in data.p_true], ", "))
@@ -99,8 +110,12 @@ function _print_quality_summary(df::DataFrame, data::LV4DExperimentData)
     n_in_domain = membership === nothing ? 0 : membership.in_domain
     n_outside = n_total - n_in_domain
 
-    @printf("• Found: %d critical points (%d in domain, %d outside)\n",
-            n_total, n_in_domain, n_outside)
+    @printf(
+        "• Found: %d critical points (%d in domain, %d outside)\n",
+        n_total,
+        n_in_domain,
+        n_outside
+    )
 
     # Best recovery error
     if hasproperty(df, :dist_to_true)
@@ -118,8 +133,12 @@ function _print_quality_summary(df::DataFrame, data::LV4DExperimentData)
     if hasproperty(df, :gradient_norm)
         valid_grads = filter(!isnan, df.gradient_norm)
         n_valid = count(g -> g < GRADIENT_VALIDATION_TOL, valid_grads)
-        @printf("• Gradient validation: %d/%d (%.0f%%) have ‖∇f‖ < 1e-6\n",
-                n_valid, length(valid_grads), 100 * n_valid / max(1, length(valid_grads)))
+        @printf(
+            "• Gradient validation: %d/%d (%.0f%%) have ‖∇f‖ < 1e-6\n",
+            n_valid,
+            length(valid_grads),
+            100 * n_valid / max(1, length(valid_grads))
+        )
     end
 end
 
@@ -128,7 +147,7 @@ end
 
 Print TOP CANDIDATES table sorted by distance to true parameters.
 """
-function _print_top_candidates(df::DataFrame, data::LV4DExperimentData; limit::Int=5)
+function _print_top_candidates(df::DataFrame, data::LV4DExperimentData; limit::Int = 5)
     println("TOP $(limit) CANDIDATES (sorted by distance to p_true)")
 
     # Need dist_to_true column
@@ -156,14 +175,15 @@ function _print_top_candidates(df::DataFrame, data::LV4DExperimentData; limit::I
     dist_pct = [@sprintf("%.1f%%", (d / p_true_norm) * 100) for d in top_df.dist_to_true]
 
     # Objective value (z column)
-    z_col = hasproperty(top_df, :z) ?
-            [isnan(z) ? "-" : @sprintf("%.3f", z) for z in top_df.z] :
-            fill("-", nrow(top_df))
+    z_col =
+        hasproperty(top_df, :z) ? [isnan(z) ? "-" : @sprintf("%.3f", z) for z in top_df.z] :
+        fill("-", nrow(top_df))
 
     # Gradient norm
-    grad_col = hasproperty(top_df, :gradient_norm) ?
-               [isnan(g) ? "-" : @sprintf("%.0e", g) for g in top_df.gradient_norm] :
-               fill("-", nrow(top_df))
+    grad_col =
+        hasproperty(top_df, :gradient_norm) ?
+        [isnan(g) ? "-" : @sprintf("%.0e", g) for g in top_df.gradient_norm] :
+        fill("-", nrow(top_df))
 
     # Annotation for winner
     note_col = fill("", nrow(top_df))
@@ -177,10 +197,11 @@ function _print_top_candidates(df::DataFrame, data::LV4DExperimentData; limit::I
         :fval => z_col,
         :grad => grad_col,
         :InDomain => in_domain_col,
-        :Note => note_col
+        :Note => note_col,
     )
 
-    styled_table(display_df;
+    styled_table(
+        display_df;
         header = ["#", "Distance", "f(x)", "‖∇f‖", "In?", ""],
         alignment = [:r, :r, :r, :r, :c, :l],
     )
@@ -213,11 +234,15 @@ function _print_quality_status(df::DataFrame, data::LV4DExperimentData)
     best_rel_error = best_dist / p_true_norm
 
     if best_rel_error < SUCCESS_THRESHOLD
-        @printf("STATUS: ✓ SUCCESS - Best candidate achieves < 5%% recovery error (%.1f%%)\n",
-                best_rel_error * 100)
+        @printf(
+            "STATUS: ✓ SUCCESS - Best candidate achieves < 5%% recovery error (%.1f%%)\n",
+            best_rel_error * 100
+        )
     else
-        @printf("STATUS: ✗ FAILED - Best candidate has %.1f%% error (threshold: 5%%)\n",
-                best_rel_error * 100)
+        @printf(
+            "STATUS: ✗ FAILED - Best candidate has %.1f%% error (threshold: 5%%)\n",
+            best_rel_error * 100
+        )
     end
 end
 
@@ -228,8 +253,12 @@ end
 function _print_domain_stats(stats)
     frac_pct = stats.fraction_in * 100
     println()
-    @printf("Domain membership: %d/%d (%.1f%%) critical points IN domain\n",
-            stats.in_domain, stats.total, frac_pct)
+    @printf(
+        "Domain membership: %d/%d (%.1f%%) critical points IN domain\n",
+        stats.in_domain,
+        stats.total,
+        frac_pct
+    )
     if stats.out_of_domain > 0
         @printf("  ⚠ %d points OUTSIDE domain bounds\n", stats.out_of_domain)
         for (i, v) in enumerate(stats.per_dim_violations)
@@ -245,13 +274,14 @@ function _print_degree_summary(df::DataFrame)
     hasproperty(df, :eval_error) || return
 
     gdf = groupby(df, :degree)
-    summary = combine(gdf,
+    summary = combine(
+        gdf,
         nrow => :count,
         :gradient_norm => (x -> minimum(filter(!isnan, x))) => :grad_min,
         :gradient_norm => (x -> median(filter(!isnan, x))) => :grad_med,
         :gradient_norm => (x -> maximum(filter(!isnan, x))) => :grad_max,
         :eval_error => (x -> minimum(filter(!isnan, x))) => :err_min,
-        :eval_error => (x -> maximum(filter(!isnan, x))) => :err_max
+        :eval_error => (x -> maximum(filter(!isnan, x))) => :err_max,
     )
     sort!(summary, :degree)
 
@@ -267,8 +297,7 @@ function _print_degree_summary(df::DataFrame)
             string(v)
         end
     end
-    styled_table(summary; header=headers, formatters=(ft,),
-                alignment=:r)
+    styled_table(summary; header = headers, formatters = (ft,), alignment = :r)
 end
 
 function _print_distance_histogram(df::DataFrame)
@@ -288,8 +317,13 @@ function _print_distance_histogram(df::DataFrame)
     _print_text_histogram(log_dists, nbins, "log₁₀(||x-p*||)")
 
     best_recovery = minimum(dists)
-    @printf("  n=%d | best=%.2e | range=[%.2e, %.2e]\n",
-            length(dists), best_recovery, minimum(dists), maximum(dists))
+    @printf(
+        "  n=%d | best=%.2e | range=[%.2e, %.2e]\n",
+        length(dists),
+        best_recovery,
+        minimum(dists),
+        maximum(dists)
+    )
 end
 
 function _print_gradient_histogram(df::DataFrame)
@@ -310,8 +344,13 @@ function _print_gradient_histogram(df::DataFrame)
     _print_text_histogram(log_grads, nbins, "log₁₀(||∇f||)")
 
     valid_count = count(g -> g < GRADIENT_TOL, grads)
-    @printf("  n=%d | range=[%.2e, %.2e] | %d valid (||∇f||<1e-6)\n",
-            length(grads), minimum(grads), maximum(grads), valid_count)
+    @printf(
+        "  n=%d | range=[%.2e, %.2e] | %d valid (||∇f||<1e-6)\n",
+        length(grads),
+        minimum(grads),
+        maximum(grads),
+        valid_count
+    )
 end
 
 function _print_eval_error_histogram(df::DataFrame)
@@ -329,8 +368,7 @@ function _print_eval_error_histogram(df::DataFrame)
 
     _print_text_histogram(log_errs, nbins, "log₁₀(|f-w|)")
 
-    @printf("  n=%d | range=[%.2e, %.2e]\n",
-            length(errs), minimum(errs), maximum(errs))
+    @printf("  n=%d | range=[%.2e, %.2e]\n", length(errs), minimum(errs), maximum(errs))
 end
 
 function _print_text_histogram(values::AbstractVector, nbins::Int, xlabel::String)
@@ -339,7 +377,7 @@ function _print_text_histogram(values::AbstractVector, nbins::Int, xlabel::Strin
     bin_width = (max_val - min_val) / nbins
 
     for i in 1:nbins
-        lo = min_val + (i-1) * bin_width
+        lo = min_val + (i - 1) * bin_width
         hi = min_val + i * bin_width
         count = i == nbins ? sum(lo .<= values .<= hi) : sum(lo .<= values .< hi)
         pct = count / n * 100
@@ -396,24 +434,26 @@ function _print_summary_table(df::DataFrame, data::LV4DExperimentData)
         :in_domain => "in?",
         :gradient_norm => "||∇f||",
         :eval_error => "|f-w|",
-        :critical_type => "type"
+        :critical_type => "type",
     )
     headers = [get(header_map, c, string(c)) for c in cols_to_show]
 
     # Formatter
-    ft = (v, _, j) -> begin
-        col = cols_to_show[j]
-        if col in [:z, :dist_to_true, :gradient_norm, :eval_error] && v isa Number && !isnan(v)
-            @sprintf("%.2e", v)
-        elseif col == :in_domain && v isa Bool
-            v ? "✓" : "✗"
-        else
-            string(v)
+    ft =
+        (v, _, j) -> begin
+            col = cols_to_show[j]
+            if col in [:z, :dist_to_true, :gradient_norm, :eval_error] &&
+               v isa Number &&
+               !isnan(v)
+                @sprintf("%.2e", v)
+            elseif col == :in_domain && v isa Bool
+                v ? "✓" : "✗"
+            else
+                string(v)
+            end
         end
-    end
 
-    styled_table(table_df; header=headers, formatters=(ft,),
-                 alignment=:r)
+    styled_table(table_df; header = headers, formatters = (ft,), alignment = :r)
 end
 
 # ============================================================================
@@ -454,7 +494,7 @@ function get_quality_summary(data::LV4DExperimentData)
             best_degree = 0,
             gradient_valid_count = 0,
             all_saddles = true,
-            success = false
+            success = false,
         )
     end
 
@@ -483,7 +523,8 @@ function get_quality_summary(data::LV4DExperimentData)
     # Gradient validation
     gradient_valid = 0
     if hasproperty(df, :gradient_norm)
-        gradient_valid = count(g -> !isnan(g) && g < GRADIENT_VALIDATION_TOL, df.gradient_norm)
+        gradient_valid =
+            count(g -> !isnan(g) && g < GRADIENT_VALIDATION_TOL, df.gradient_norm)
     end
 
     # Classification check
@@ -498,7 +539,7 @@ function get_quality_summary(data::LV4DExperimentData)
         best_degree = best_degree,
         gradient_valid_count = gradient_valid,
         all_saddles = all_saddles,
-        success = best_error < 5.0
+        success = best_error < 5.0,
     )
 end
 

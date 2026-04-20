@@ -18,8 +18,11 @@ Generate analysis report for a single experiment.
 # Returns
 - `String`: Formatted report
 """
-function generate_report(result::ExperimentResult, stats::Dict{String, Any};
-                         format::String="markdown")
+function generate_report(
+    result::ExperimentResult,
+    stats::Dict{String,Any};
+    format::String = "markdown",
+)
     if format == "markdown"
         return generate_markdown_report(result, stats)
     elseif format == "latex"
@@ -34,7 +37,7 @@ end
 
 Generate Markdown report for single experiment.
 """
-function generate_markdown_report(result::ExperimentResult, stats::Dict{String, Any})
+function generate_markdown_report(result::ExperimentResult, stats::Dict{String,Any})
     io = IOBuffer()
 
     # Header
@@ -105,7 +108,10 @@ function generate_markdown_report(result::ExperimentResult, stats::Dict{String, 
         all_passed = get(result.tolerance_validation, "all_passed", false)
         status_emoji = all_passed ? "✅" : "⚠️"
 
-        println(io, "$status_emoji **Overall status**: $(all_passed ? "PASSED" : "NEEDS REVIEW")")
+        println(
+            io,
+            "$status_emoji **Overall status**: $(all_passed ? "PASSED" : "NEEDS REVIEW")",
+        )
         println(io, "")
     end
 
@@ -117,7 +123,7 @@ end
 
 Format statistics for a specific label into markdown.
 """
-function format_label_statistics!(io::IO, label::String, stats::Dict{String, Any})
+function format_label_statistics!(io::IO, label::String, stats::Dict{String,Any})
     if label == "polynomial_quality"
         if haskey(stats, "degree")
             println(io, "- **Polynomial Degree**: $(stats["degree"])")
@@ -130,8 +136,9 @@ function format_label_statistics!(io::IO, label::String, stats::Dict{String, Any
         end
         if haskey(stats, "quality_class")
             class = stats["quality_class"]
-            emoji = class == "excellent" ? "🟢" : class == "good" ? "🟡" :
-                    class == "acceptable" ? "🟠" : "🔴"
+            emoji =
+                class == "excellent" ? "🟢" :
+                class == "good" ? "🟡" : class == "acceptable" ? "🟠" : "🔴"
             println(io, "- **Quality**: $emoji $class")
         end
 
@@ -144,7 +151,10 @@ function format_label_statistics!(io::IO, label::String, stats::Dict{String, Any
             println(io, "- **Convergence rate**: $(@sprintf("%.1f", rate))%")
         end
         if haskey(stats, "num_converged")
-            println(io, "- **Converged points**: $(stats["num_converged"])/$(stats["num_points"])")
+            println(
+                io,
+                "- **Converged points**: $(stats["num_converged"])/$(stats["num_points"])",
+            )
         end
 
     elseif label == "hessian_eigenvalues"
@@ -161,10 +171,16 @@ function format_label_statistics!(io::IO, label::String, stats::Dict{String, Any
 
     elseif label == "performance_metrics"
         if haskey(stats, "execution_time")
-            println(io, "- **Execution time**: $(@sprintf("%.2f", stats["execution_time"])) seconds")
+            println(
+                io,
+                "- **Execution time**: $(@sprintf("%.2f", stats["execution_time"])) seconds",
+            )
         end
         if haskey(stats, "time_per_degree")
-            println(io, "- **Time per degree**: $(@sprintf("%.2f", stats["time_per_degree"])) seconds")
+            println(
+                io,
+                "- **Time per degree**: $(@sprintf("%.2f", stats["time_per_degree"])) seconds",
+            )
         end
 
     elseif label == "critical_point_statistics"
@@ -172,10 +188,16 @@ function format_label_statistics!(io::IO, label::String, stats::Dict{String, Any
             println(io, "- **Total critical points**: $(stats["total_points"])")
         end
         if haskey(stats, "function_value_min")
-            println(io, "- **Min function value**: $(@sprintf("%.4f", stats["function_value_min"]))")
+            println(
+                io,
+                "- **Min function value**: $(@sprintf("%.4f", stats["function_value_min"]))",
+            )
         end
         if haskey(stats, "function_value_max")
-            println(io, "- **Max function value**: $(@sprintf("%.4f", stats["function_value_max"]))")
+            println(
+                io,
+                "- **Max function value**: $(@sprintf("%.4f", stats["function_value_max"]))",
+            )
         end
     end
 end
@@ -185,7 +207,7 @@ end
 
 Generate LaTeX report for single experiment.
 """
-function generate_latex_report(result::ExperimentResult, stats::Dict{String, Any})
+function generate_latex_report(result::ExperimentResult, stats::Dict{String,Any})
     # Placeholder for LaTeX generation
     # Future implementation
     return "% LaTeX report generation not yet implemented"
@@ -207,7 +229,11 @@ report = generate_report(result, stats)
 save_report(report, "experiment_report.md")
 ```
 """
-function save_report(report_content::String, output_path::String; format::String="markdown")
+function save_report(
+    report_content::String,
+    output_path::String;
+    format::String = "markdown",
+)
     # Ensure directory exists
     output_dir = dirname(output_path)
     if !isempty(output_dir) && !isdir(output_dir)
@@ -236,9 +262,14 @@ Generate and save a report in one step.
 # Returns
 - `String`: The generated report content (also saved to file)
 """
-function generate_and_save_report(result::ExperimentResult, stats::Dict{String, Any}, output_path::String; format::String="markdown")
-    report = generate_report(result, stats, format=format)
-    save_report(report, output_path, format=format)
+function generate_and_save_report(
+    result::ExperimentResult,
+    stats::Dict{String,Any},
+    output_path::String;
+    format::String = "markdown",
+)
+    report = generate_report(result, stats, format = format)
+    save_report(report, output_path, format = format)
     return report
 end
 
@@ -255,8 +286,12 @@ Generate and save a campaign report.
 # Returns
 - `String`: The generated report content (also saved to file)
 """
-function save_campaign_report(campaign::CampaignResults, output_path::String; format::String="markdown")
-    report = generate_campaign_report(campaign, format=format)
-    save_report(report, output_path, format=format)
+function save_campaign_report(
+    campaign::CampaignResults,
+    output_path::String;
+    format::String = "markdown",
+)
+    report = generate_campaign_report(campaign, format = format)
+    save_report(report, output_path, format = format)
     return report
 end

@@ -42,7 +42,7 @@ end
 
 Union type for filter specifications: nothing (any), FixedValue, or SweepRange.
 """
-const FilterSpec{T} = Union{Nothing, FixedValue{T}, SweepRange{T}}
+const FilterSpec{T} = Union{Nothing,FixedValue{T},SweepRange{T}}
 
 # ============================================================================
 # Convenience Constructors
@@ -58,7 +58,7 @@ Create a fixed value filter specification.
 filter = ExperimentFilter(gn=fixed(8))  # Only GN=8
 ```
 """
-fixed(value::T) where T = FixedValue{T}(value)
+fixed(value::T) where {T} = FixedValue{T}(value)
 
 """
     sweep(min, max) -> SweepRange
@@ -70,7 +70,7 @@ Create a range filter specification.
 filter = ExperimentFilter(degree=sweep(4, 12))  # Degrees 4-12
 ```
 """
-sweep(min::T, max::T) where T = SweepRange{T}(min, max)
+sweep(min::T, max::T) where {T} = SweepRange{T}(min, max)
 sweep(r::AbstractRange) = SweepRange(first(r), last(r))
 
 # ============================================================================
@@ -195,7 +195,10 @@ filter = ExperimentFilter(gn=fixed(8), domain=sweep(0.01, 0.5))
 exp_dirs = query_experiments(results_root, filter)
 ```
 """
-function query_experiments(results_root::Union{String, Nothing}, filter::ExperimentFilter)::Vector{String}
+function query_experiments(
+    results_root::Union{String,Nothing},
+    filter::ExperimentFilter,
+)::Vector{String}
     exp_dirs = find_experiments(results_root)
     matching = String[]
 
@@ -230,7 +233,7 @@ if !isempty(skipped)
 end
 ```
 """
-function query_and_load(results_root::Union{String, Nothing}, filter::ExperimentFilter)
+function query_and_load(results_root::Union{String,Nothing}, filter::ExperimentFilter)
     exp_dirs = query_experiments(results_root, filter)
     loaded = LV4DExperimentData[]
     failed = String[]
@@ -304,7 +307,11 @@ filter = ExperimentFilter(gn=fixed(8), domain=sweep(0.01, 0.5))
 summarize_query(results_root, filter; verbose=true)
 ```
 """
-function summarize_query(results_root::String, filter::ExperimentFilter; verbose::Bool=false)
+function summarize_query(
+    results_root::String,
+    filter::ExperimentFilter;
+    verbose::Bool = false,
+)
     exp_dirs = query_experiments(results_root, filter)
 
     println("Query Results:")

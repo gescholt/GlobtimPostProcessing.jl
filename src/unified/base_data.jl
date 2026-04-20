@@ -41,9 +41,9 @@ struct BaseExperimentData
     experiment_id::String
     path::String
     experiment_type::ExperimentType
-    config::Dict{String, Any}
+    config::Dict{String,Any}
     degree_results::DataFrame
-    critical_points::Union{DataFrame, Nothing}
+    critical_points::Union{DataFrame,Nothing}
 end
 
 # ============================================================================
@@ -69,7 +69,8 @@ degree_results(data::BaseExperimentData) = data.degree_results
 critical_points(data::BaseExperimentData) = data.critical_points
 
 """Check if critical points are available."""
-has_critical_points(data::BaseExperimentData) = data.critical_points !== nothing && nrow(data.critical_points) > 0
+has_critical_points(data::BaseExperimentData) =
+    data.critical_points !== nothing && nrow(data.critical_points) > 0
 
 """Get number of critical points."""
 function num_critical_points(data::BaseExperimentData)
@@ -147,7 +148,7 @@ end
 
 Get a value from experiment config with fallback default.
 """
-function get_config_value(data::BaseExperimentData, key::String, default=nothing)
+function get_config_value(data::BaseExperimentData, key::String, default = nothing)
     return get(data.config, key, default)
 end
 
@@ -156,7 +157,8 @@ end
 
 Get a value from experiment config (for type-specific data).
 """
-get_config_value(data, key::String, default=nothing) = get_config_value(get_base(data), key, default)
+get_config_value(data, key::String, default = nothing) =
+    get_config_value(get_base(data), key, default)
 
 # ============================================================================
 # Empty Constructors
@@ -169,13 +171,13 @@ Create an empty BaseExperimentData for a path.
 
 Useful when loading fails but you still want to track the experiment.
 """
-function empty_base_data(path::String, type::ExperimentType=UNKNOWN)
+function empty_base_data(path::String, type::ExperimentType = UNKNOWN)
     return BaseExperimentData(
         basename(path),
         path,
         type,
-        Dict{String, Any}(),
+        Dict{String,Any}(),
         DataFrame(),
-        nothing
+        nothing,
     )
 end

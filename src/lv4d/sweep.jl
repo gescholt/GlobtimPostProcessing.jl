@@ -30,9 +30,13 @@ analyze_sweep(nothing, filter)
 analyze_sweep(nothing, filter; show_header=false)
 ```
 """
-function analyze_sweep(results_dir::Union{String, Nothing}, filter::ExperimentFilter;
-                       export_csv::Bool=false, top_l2::Union{Int, Nothing}=nothing,
-                       show_header::Bool=true)
+function analyze_sweep(
+    results_dir::Union{String,Nothing},
+    filter::ExperimentFilter;
+    export_csv::Bool = false,
+    top_l2::Union{Int,Nothing} = nothing,
+    show_header::Bool = true,
+)
     # Validate directory if specified
     if results_dir !== nothing
         isdir(results_dir) || error("Results directory not found: $results_dir")
@@ -56,7 +60,7 @@ function analyze_sweep(results_dir::Union{String, Nothing}, filter::ExperimentFi
     end
 
     if isempty(all_results)
-        @warn "No valid results found!" n_experiments=length(exp_dirs) hint="Check results_summary.json for 'success: false' entries or missing data"
+        @warn "No valid results found!" n_experiments = length(exp_dirs) hint = "Check results_summary.json for 'success: false' entries or missing data"
         return DataFrame()
     end
 
@@ -74,7 +78,7 @@ function analyze_sweep(results_dir::Union{String, Nothing}, filter::ExperimentFi
 
     # Print top N by L2 if requested
     if top_l2 !== nothing
-        _print_top_experiments_by_l2(summary; limit=top_l2)
+        _print_top_experiments_by_l2(summary; limit = top_l2)
     end
 
     # Save outputs silently (only when results_dir is specified)
@@ -112,9 +116,15 @@ Summary DataFrame with aggregated statistics per (GN, domain, degree).
 2. RESULTS - table with success rate, recovery error, L2 error
 3. INTERPRETATION - human-readable conclusions
 """
-function analyze_sweep(results_dir::String; domain_max::Float64=0.0050, degree_min::Int=4,
-                       degree_max::Int=10, export_csv::Bool=false, top_l2::Union{Int, Nothing}=nothing,
-                       show_header::Bool=true)
+function analyze_sweep(
+    results_dir::String;
+    domain_max::Float64 = 0.0050,
+    degree_min::Int = 4,
+    degree_max::Int = 10,
+    export_csv::Bool = false,
+    top_l2::Union{Int,Nothing} = nothing,
+    show_header::Bool = true,
+)
     isdir(results_dir) || error("Results directory not found: $results_dir")
 
     # Handle single experiment vs sweep directory
@@ -134,17 +144,18 @@ function analyze_sweep(results_dir::String; domain_max::Float64=0.0050, degree_m
     end
 
     if isempty(all_results)
-        @warn "No valid results found!" n_experiments=length(exp_dirs) hint="Check results_summary.json for 'success: false' entries or missing data"
+        @warn "No valid results found!" n_experiments = length(exp_dirs) hint = "Check results_summary.json for 'success: false' entries or missing data"
         return DataFrame()
     end
 
     df = vcat(all_results...)
 
     # Filter and aggregate
-    df_sweep = _filter_sweep_results_silent(df;
-        domain_max=domain_max,
-        degree_min=degree_min,
-        degree_max=degree_max
+    df_sweep = _filter_sweep_results_silent(
+        df;
+        domain_max = domain_max,
+        degree_min = degree_min,
+        degree_max = degree_max,
     )
     summary = _aggregate_results(df_sweep)
 
@@ -156,7 +167,7 @@ function analyze_sweep(results_dir::String; domain_max::Float64=0.0050, degree_m
 
     # Print top N by L2 if requested
     if top_l2 !== nothing
-        _print_top_experiments_by_l2(summary; limit=top_l2)
+        _print_top_experiments_by_l2(summary; limit = top_l2)
     end
 
     # Save outputs silently
@@ -174,7 +185,7 @@ end
 # Helper Functions
 # ============================================================================
 
-function _load_experiment_results(exp_dir::String)::Union{DataFrame, Nothing}
+function _load_experiment_results(exp_dir::String)::Union{DataFrame,Nothing}
     results_file = joinpath(exp_dir, "results_summary.json")
     config_file = joinpath(exp_dir, "experiment_config.json")
 
@@ -227,7 +238,7 @@ function _load_experiment_results(exp_dir::String)::Union{DataFrame, Nothing}
                 hessian_saddle = get(r, "hessian_saddle", 0),
                 hessian_degenerate = get(r, "hessian_degenerate", 0),
                 computation_time = get(r, "total_computation_time", NaN),
-                experiment_dir = dirname
+                experiment_dir = dirname,
             )
             push!(rows, row)
         end
@@ -259,16 +270,26 @@ end
 
 Print the sweep analysis header with data summary.
 """
-function _print_sweep_header(df_sweep::DataFrame, domain_max::Float64,
-                             degree_min::Int, degree_max::Int)
+function _print_sweep_header(
+    df_sweep::DataFrame,
+    domain_max::Float64,
+    degree_min::Int,
+    degree_max::Int,
+)
     n_experiments = nrow(df_sweep)
     gn_values = sort(unique(df_sweep.GN))
     gn_str = length(gn_values) == 1 ? "GN=$(gn_values[1])" : "GN∈{$(join(gn_values, ","))}"
 
     println("LV4D SWEEP ANALYSIS")
-    println("─" ^ 19)
-    @printf("Data: %d experiments (%s, domain≤%.4f, degree %d-%d)\n",
-            n_experiments, gn_str, domain_max, degree_min, degree_max)
+    println("─"^19)
+    @printf(
+        "Data: %d experiments (%s, domain≤%.4f, degree %d-%d)\n",
+        n_experiments,
+        gn_str,
+        domain_max,
+        degree_min,
+        degree_max
+    )
     println("Goal: Find configurations with recovery error < 5%")
     println()
 end
@@ -287,8 +308,10 @@ function _print_results_table(summary::DataFrame)
     best_idx = 1
     if nrow(summary) > 1
         # Sort to find best: highest success rate, then lowest recovery error
-        sorted_idx = sortperm(collect(1:nrow(summary)),
-            by = i -> (-summary.success_rate[i], summary.mean_recovery[i]))
+        sorted_idx = sortperm(
+            collect(1:nrow(summary)),
+            by = i -> (-summary.success_rate[i], summary.mean_recovery[i]),
+        )
         best_idx = sorted_idx[1]
     end
 
@@ -314,7 +337,7 @@ function _print_results_table(summary::DataFrame)
             Success = success_col,
             RecErr = rec_col,
             L2 = l2_col,
-            Note = note_col
+            Note = note_col,
         )
         headers = ["GN", "Domain", "Deg", "Success", "RecErr", "L2", ""]
     else
@@ -324,12 +347,13 @@ function _print_results_table(summary::DataFrame)
             Success = success_col,
             RecErr = rec_col,
             L2 = l2_col,
-            Note = note_col
+            Note = note_col,
         )
         headers = ["Domain", "Deg", "Success", "RecErr", "L2", ""]
     end
 
-    styled_table(display_df;
+    styled_table(
+        display_df;
         header = headers,
         alignment = show_gn ? [:r, :r, :r, :r, :r, :r, :l] : [:r, :r, :r, :r, :r, :l],
     )
@@ -351,21 +375,28 @@ function _print_interpretation(summary::DataFrame)
     best = summary[best_idx, :]
 
     # Best configuration summary
-    @printf("• Best: domain=%.4f, deg=%d → %.0f%% success, %.1f%% error\n",
-            best.domain, best.degree, best.success_rate * 100, best.mean_recovery * 100)
+    @printf(
+        "• Best: domain=%.4f, deg=%d → %.0f%% success, %.1f%% error\n",
+        best.domain,
+        best.degree,
+        best.success_rate * 100,
+        best.mean_recovery * 100
+    )
 
     # Find threshold where success > 80%
-    good_configs = summary[summary.success_rate .>= 0.8, :]
+    good_configs = summary[summary.success_rate.>=0.8, :]
     if nrow(good_configs) > 0
         max_good_domain = maximum(good_configs.domain)
         @printf("• Threshold: domain ≤ %.4f achieves ≥80%% success\n", max_good_domain)
     else
         # Find threshold where success > 50%
-        okay_configs = summary[summary.success_rate .>= 0.5, :]
+        okay_configs = summary[summary.success_rate.>=0.5, :]
         if nrow(okay_configs) > 0
             max_okay_domain = maximum(okay_configs.domain)
-            @printf("• Note: domain ≤ %.4f achieves ≥50%% success (no config reaches 80%%)\n",
-                    max_okay_domain)
+            @printf(
+                "• Note: domain ≤ %.4f achieves ≥50%% success (no config reaches 80%%)\n",
+                max_okay_domain
+            )
         end
     end
 
@@ -376,14 +407,18 @@ function _print_interpretation(summary::DataFrame)
         sorted_dom = sort(domains)
         if length(sorted_dom) >= 2
             d1, d2 = sorted_dom[1], sorted_dom[end]
-            l2_1 = mean(summary[summary.domain .== d1, :mean_L2])
-            l2_2 = mean(summary[summary.domain .== d2, :mean_L2])
+            l2_1 = mean(summary[summary.domain.==d1, :mean_L2])
+            l2_2 = mean(summary[summary.domain.==d2, :mean_L2])
             if !isnan(l2_1) && !isnan(l2_2) && l2_1 > 0 && l2_2 > 0
                 ratio = l2_2 / l2_1
                 dom_ratio = d2 / d1
                 if ratio > 1.5 && dom_ratio > 1.5
-                    @printf("• L2 scales with domain (%.1f× larger at domain=%.4f vs %.4f)\n",
-                            ratio, d2, d1)
+                    @printf(
+                        "• L2 scales with domain (%.1f× larger at domain=%.4f vs %.4f)\n",
+                        ratio,
+                        d2,
+                        d1
+                    )
                 end
             end
         end
@@ -391,7 +426,9 @@ function _print_interpretation(summary::DataFrame)
 
     # Column definitions (compact legend)
     println()
-    println("Columns: Success = %runs with error<5%, RecErr = mean ‖p̂-p*‖/‖p*‖, L2 = ‖f-wₐ‖")
+    println(
+        "Columns: Success = %runs with error<5%, RecErr = mean ‖p̂-p*‖/‖p*‖, L2 = ‖f-wₐ‖",
+    )
 end
 
 """
@@ -408,11 +445,16 @@ function _print_summary_footer(summary::DataFrame)
     if nrow(valid_l2) > 0
         best_idx = argmin(valid_l2.mean_L2)
         best_row = valid_l2[best_idx, :]
-        best_l2 = round(best_row.mean_L2, digits=2)
+        best_l2 = round(best_row.mean_L2, digits = 2)
         best_domain = best_row.domain
         println()
-        @printf("Summary: %d experiments, %d configurations, best L2=%.2f at domain=%.4f\n",
-                n_experiments, n_configs, best_l2, best_domain)
+        @printf(
+            "Summary: %d experiments, %d configurations, best L2=%.2f at domain=%.4f\n",
+            n_experiments,
+            n_configs,
+            best_l2,
+            best_domain
+        )
     else
         println()
         @printf("Summary: %d experiments, %d configurations\n", n_experiments, n_configs)
@@ -424,7 +466,7 @@ end
 
 Print the top N configurations ranked by lowest L2 approximation error.
 """
-function _print_top_experiments_by_l2(summary::DataFrame; limit::Int=20)
+function _print_top_experiments_by_l2(summary::DataFrame; limit::Int = 20)
     # Filter out rows with NaN L2 values
     valid = filter(row -> !isnan(row.mean_L2), summary)
 
@@ -449,15 +491,19 @@ function _print_top_experiments_by_l2(summary::DataFrame; limit::Int=20)
         Domain = domain_col,
         Deg = deg_col,
         L2 = l2_col,
-        Success = success_col
+        Success = success_col,
     )
 
     # Use PrettyTables title parameter instead of decorative banner
     println()
-    styled_table(display_df;
+    styled_table(
+        display_df;
         header = ["GN", "Domain", "Deg", "L2", "Success"],
         alignment = [:r, :r, :r, :r, :r],
-        title = @sprintf("Top %d Configurations by Lowest L2 Error", min(limit, nrow(sorted))),
+        title = @sprintf(
+            "Top %d Configurations by Lowest L2 Error",
+            min(limit, nrow(sorted))
+        ),
     )
 end
 
@@ -466,13 +512,16 @@ end
 
 Filter sweep results without printing (for compact mode).
 """
-function _filter_sweep_results_silent(df::DataFrame;
-                                      domain_max::Float64=0.0050,
-                                      degree_min::Int=4,
-                                      degree_max::Int=10)::DataFrame
-    sweep_filter = (df.domain .<= domain_max) .&
-                   (df.degree .>= degree_min) .&
-                   (df.degree .<= degree_max)
+function _filter_sweep_results_silent(
+    df::DataFrame;
+    domain_max::Float64 = 0.0050,
+    degree_min::Int = 4,
+    degree_max::Int = 10,
+)::DataFrame
+    sweep_filter =
+        (df.domain .<= domain_max) .&
+        (df.degree .>= degree_min) .&
+        (df.degree .<= degree_max)
     df_sweep = df[sweep_filter, :]
 
     # If no results, use all data
@@ -547,7 +596,7 @@ function _print_filter_header(df_sweep::DataFrame, filter::ExperimentFilter)
     n_experiments = nrow(df_sweep)
 
     println("LV4D SWEEP ANALYSIS")
-    println("─" ^ 19)
+    println("─"^19)
     println("Filter: $(format_filter(filter))")
     @printf("Data: %d experiment-degree combinations\n", n_experiments)
     println("Goal: Find configurations with recovery error < 5%")
@@ -559,8 +608,12 @@ end
 
 Print filter information (for verbose mode).
 """
-function _print_filter_info(df_sweep::DataFrame, domain_max::Float64,
-                           degree_min::Int, degree_max::Int)
+function _print_filter_info(
+    df_sweep::DataFrame,
+    domain_max::Float64,
+    degree_min::Int,
+    degree_max::Int,
+)
     println("Filter: domain ≤ $(domain_max), degree ∈ [$degree_min, $degree_max]")
     println("Sweep results: $(nrow(df_sweep)) experiments")
     println()
@@ -571,17 +624,22 @@ end
 
 Filter sweep results to specified domain and degree ranges.
 """
-function _filter_sweep_results(df::DataFrame;
-                              domain_max::Float64=0.0050,
-                              degree_min::Int=4,
-                              degree_max::Int=10)::DataFrame
-    sweep_filter = (df.domain .<= domain_max) .&
-                   (df.degree .>= degree_min) .&
-                   (df.degree .<= degree_max)
+function _filter_sweep_results(
+    df::DataFrame;
+    domain_max::Float64 = 0.0050,
+    degree_min::Int = 4,
+    degree_max::Int = 10,
+)::DataFrame
+    sweep_filter =
+        (df.domain .<= domain_max) .&
+        (df.degree .>= degree_min) .&
+        (df.degree .<= degree_max)
     df_sweep = df[sweep_filter, :]
 
     if nrow(df_sweep) == 0
-        println("No results with domain <= $(domain_max), degree ∈ [$degree_min, $degree_max]")
+        println(
+            "No results with domain <= $(domain_max), degree ∈ [$degree_min, $degree_max]",
+        )
         println("Using all results instead")
         df_sweep = df
     else
@@ -606,7 +664,7 @@ function _aggregate_results(df::DataFrame)::DataFrame
         :hessian_minima => mean => :mean_minima,
         :critical_points => mean => :mean_crit_pts,
         :computation_time => mean => :mean_time,
-        nrow => :n_experiments
+        nrow => :n_experiments,
     )
     sort!(summary, [:GN, :domain, :degree])
     return summary
@@ -616,14 +674,26 @@ function _print_summary_table(summary::DataFrame)
     println("Summary: Mean metrics per (GN, domain, degree)")
     println()
 
-    @printf("%4s %8s %4s %9s %8s %8s %8s %6s %4s\n",
-            "GN", "Domain", "Deg", "L2_norm", "∇Valid%", "RecErr%", "Recov<5%", "#CPs", "#exp")
+    @printf(
+        "%4s %8s %4s %9s %8s %8s %8s %6s %4s\n",
+        "GN",
+        "Domain",
+        "Deg",
+        "L2_norm",
+        "∇Valid%",
+        "RecErr%",
+        "Recov<5%",
+        "#CPs",
+        "#exp"
+    )
     println("-"^80)
 
     for row in eachrow(summary)
         l2_str = isnan(row.mean_L2) ? "      -" : @sprintf("%9.2f", row.mean_L2)
         grad_str = @sprintf("%7.1f%%", row.mean_grad_valid * 100)
-        rec_str = isnan(row.mean_recovery) ? "      -" : @sprintf("%7.2f%%", row.mean_recovery * 100)
+        rec_str =
+            isnan(row.mean_recovery) ? "      -" :
+            @sprintf("%7.2f%%", row.mean_recovery * 100)
         success_str = @sprintf("%7.1f%%", row.success_rate * 100)
         crit_str = @sprintf("%6.1f", row.mean_crit_pts)
 
@@ -635,9 +705,19 @@ function _print_summary_table(summary::DataFrame)
             highlight = " *"
         end
 
-        @printf("%4d %s %4d %s %s %s %s %s %4d%s\n",
-                row.GN, format_domain(row.domain), row.degree, l2_str, grad_str,
-                rec_str, success_str, crit_str, row.n_experiments, highlight)
+        @printf(
+            "%4d %s %4d %s %s %s %s %s %4d%s\n",
+            row.GN,
+            format_domain(row.domain),
+            row.degree,
+            l2_str,
+            grad_str,
+            rec_str,
+            success_str,
+            crit_str,
+            row.n_experiments,
+            highlight
+        )
     end
     println()
     println("Highlights: *** = excellent (L2<0.1, ∇Valid>50%, Recov<5% in >80%)")
@@ -700,25 +780,44 @@ function _analyze_gradient_distribution(metrics_df::DataFrame)
     # Per-domain breakdown
     println("By domain (median gradient norm):")
     for domain in sort(unique(metrics_df.domain))
-        domain_grads = filter(x -> !isnan(x) && x > 0,
-                             metrics_df[metrics_df.domain .== domain, :gradient_norm])
+        domain_grads = filter(
+            x -> !isnan(x) && x > 0,
+            metrics_df[metrics_df.domain.==domain, :gradient_norm],
+        )
         if !isempty(domain_grads)
             med = quantile(domain_grads, 0.5)
             min_g = minimum(domain_grads)
-            @printf("  domain=%.4f: median=%.2e, min=%.2e (%d points)\n",
-                    domain, med, min_g, length(domain_grads))
+            @printf(
+                "  domain=%.4f: median=%.2e, min=%.2e (%d points)\n",
+                domain,
+                med,
+                min_g,
+                length(domain_grads)
+            )
         end
     end
     println()
 
     # Threshold analysis
     println("Gradient validation threshold analysis:")
-    @printf("  Current (1e-6):  %d/%d pass (%.1f%%)\n",
-            sum(valid_grads .< 1e-6), n_valid, 100 * sum(valid_grads .< 1e-6) / n_valid)
-    @printf("  Relaxed (1e-3):  %d/%d pass (%.1f%%)\n",
-            sum(valid_grads .< 1e-3), n_valid, 100 * sum(valid_grads .< 1e-3) / n_valid)
-    @printf("  Relaxed (1e+2):  %d/%d pass (%.1f%%)\n",
-            sum(valid_grads .< 1e2), n_valid, 100 * sum(valid_grads .< 1e2) / n_valid)
+    @printf(
+        "  Current (1e-6):  %d/%d pass (%.1f%%)\n",
+        sum(valid_grads .< 1e-6),
+        n_valid,
+        100 * sum(valid_grads .< 1e-6) / n_valid
+    )
+    @printf(
+        "  Relaxed (1e-3):  %d/%d pass (%.1f%%)\n",
+        sum(valid_grads .< 1e-3),
+        n_valid,
+        100 * sum(valid_grads .< 1e-3) / n_valid
+    )
+    @printf(
+        "  Relaxed (1e+2):  %d/%d pass (%.1f%%)\n",
+        sum(valid_grads .< 1e2),
+        n_valid,
+        100 * sum(valid_grads .< 1e2) / n_valid
+    )
 end
 
 function _analyze_objective_distribution(metrics_df::DataFrame)
@@ -745,13 +844,20 @@ function _analyze_objective_distribution(metrics_df::DataFrame)
     # Per-domain breakdown
     println("By domain (median objective value):")
     for domain in sort(unique(metrics_df.domain))
-        domain_z = filter(x -> !isnan(x) && isfinite(x) && x > 0,
-                         metrics_df[metrics_df.domain .== domain, :z])
+        domain_z = filter(
+            x -> !isnan(x) && isfinite(x) && x > 0,
+            metrics_df[metrics_df.domain.==domain, :z],
+        )
         if !isempty(domain_z)
             med = quantile(domain_z, 0.5)
             min_z = minimum(domain_z)
-            @printf("  domain=%.4f: median=%.2e, min=%.2e (%d points)\n",
-                    domain, med, min_z, length(domain_z))
+            @printf(
+                "  domain=%.4f: median=%.2e, min=%.2e (%d points)\n",
+                domain,
+                med,
+                min_z,
+                length(domain_z)
+            )
         end
     end
     println()
@@ -760,10 +866,18 @@ function _analyze_objective_distribution(metrics_df::DataFrame)
     p_min = minimum(valid_z)
     println("Best critical points (lowest objective):")
     @printf("  Minimum f(x): %.4f\n", p_min)
-    @printf("  Below 1.0:    %d/%d (%.1f%%)\n",
-            sum(valid_z .< 1.0), n_valid, 100 * sum(valid_z .< 1.0) / n_valid)
-    @printf("  Below 10.0:   %d/%d (%.1f%%)\n",
-            sum(valid_z .< 10.0), n_valid, 100 * sum(valid_z .< 10.0) / n_valid)
+    @printf(
+        "  Below 1.0:    %d/%d (%.1f%%)\n",
+        sum(valid_z .< 1.0),
+        n_valid,
+        100 * sum(valid_z .< 1.0) / n_valid
+    )
+    @printf(
+        "  Below 10.0:   %d/%d (%.1f%%)\n",
+        sum(valid_z .< 10.0),
+        n_valid,
+        100 * sum(valid_z .< 10.0) / n_valid
+    )
 end
 
 function _print_optimal_configurations(summary::DataFrame)
@@ -777,8 +891,10 @@ function _print_optimal_configurations(summary::DataFrame)
         best_l2_idx = argmin(valid_l2.mean_L2)
         best_l2 = valid_l2[best_l2_idx, :]
         println("Best polynomial approximation (lowest L2 error):")
-        println("  GN=$(best_l2.GN), domain=$(best_l2.domain), degree=$(best_l2.degree): " *
-                "L2=$(round(best_l2.mean_L2, digits=3))")
+        println(
+            "  GN=$(best_l2.GN), domain=$(best_l2.domain), degree=$(best_l2.degree): " *
+            "L2=$(round(best_l2.mean_L2, digits=3))",
+        )
     else
         println("Best polynomial approximation: No valid results")
     end
@@ -788,40 +904,51 @@ function _print_optimal_configurations(summary::DataFrame)
     best_grad_idx = argmax(summary.mean_grad_valid)
     best_grad = summary[best_grad_idx, :]
     println("Best gradient validation (highest % of true critical points):")
-    println("  GN=$(best_grad.GN), domain=$(best_grad.domain), degree=$(best_grad.degree): " *
-            "$(round(best_grad.mean_grad_valid * 100, digits=1))% with ||∇f||<1e-6")
+    println(
+        "  GN=$(best_grad.GN), domain=$(best_grad.domain), degree=$(best_grad.degree): " *
+        "$(round(best_grad.mean_grad_valid * 100, digits=1))% with ||∇f||<1e-6",
+    )
     println()
 
     # Best recovery success rate
     best_success_idx = argmax(summary.success_rate)
     best_success = summary[best_success_idx, :]
     println("Best parameter recovery (highest % achieving <5% error):")
-    println("  GN=$(best_success.GN), domain=$(best_success.domain), degree=$(best_success.degree): " *
-            "$(round(best_success.success_rate * 100, digits=1))% of experiments")
+    println(
+        "  GN=$(best_success.GN), domain=$(best_success.domain), degree=$(best_success.degree): " *
+        "$(round(best_success.success_rate * 100, digits=1))% of experiments",
+    )
     println()
 
     # Excellent configurations
-    excellent = summary[(summary.mean_L2 .< 0.1) .&
-                       (summary.mean_grad_valid .> 0.5) .&
-                       (summary.success_rate .> 0.8), :]
+    excellent = summary[
+        (summary.mean_L2.<0.1).&(summary.mean_grad_valid.>0.5).&(summary.success_rate.>0.8),
+        :,
+    ]
     if nrow(excellent) > 0
-        println("EXCELLENT configurations (L2<0.1, ∇Valid>50%, Recovery<5% in >80% of runs):")
+        println(
+            "EXCELLENT configurations (L2<0.1, ∇Valid>50%, Recovery<5% in >80% of runs):",
+        )
         for row in eachrow(excellent)
-            println("  GN=$(row.GN), domain=$(row.domain), degree=$(row.degree): " *
-                    "L2=$(round(row.mean_L2, digits=3)), " *
-                    "∇Valid=$(round(row.mean_grad_valid * 100, digits=1))%, " *
-                    "RecovSuccess=$(round(row.success_rate * 100, digits=1))%")
+            println(
+                "  GN=$(row.GN), domain=$(row.domain), degree=$(row.degree): " *
+                "L2=$(round(row.mean_L2, digits=3)), " *
+                "∇Valid=$(round(row.mean_grad_valid * 100, digits=1))%, " *
+                "RecovSuccess=$(round(row.success_rate * 100, digits=1))%",
+            )
         end
     else
         println("No configurations meet all excellent criteria")
 
-        good_grad = summary[summary.mean_grad_valid .> 0.1, :]
+        good_grad = summary[summary.mean_grad_valid.>0.1, :]
         if nrow(good_grad) > 0
             println("\nConfigurations with >10% gradient validation:")
             for row in eachrow(good_grad)
-                println("  GN=$(row.GN), domain=$(row.domain), degree=$(row.degree): " *
-                        "L2=$(round(row.mean_L2, digits=3)), " *
-                        "GradValid=$(round(row.mean_grad_valid * 100, digits=1))%")
+                println(
+                    "  GN=$(row.GN), domain=$(row.domain), degree=$(row.degree): " *
+                    "L2=$(round(row.mean_L2, digits=3)), " *
+                    "GradValid=$(round(row.mean_grad_valid * 100, digits=1))%",
+                )
             end
         else
             println("\nNo configurations achieved >10% gradient validation.")
@@ -838,20 +965,32 @@ function _print_domain_threshold_analysis(summary::DataFrame)
     for gn in sort(unique(summary.GN))
         println("GN=$gn:")
         @printf("  %8s  %3s  %8s  %6s  %6s\n", "Domain", "Deg", "L2", "Grad%", "Succ%")
-        @printf("  %8s  %3s  %8s  %6s  %6s\n", "--------", "---", "--------", "------", "------")
+        @printf(
+            "  %8s  %3s  %8s  %6s  %6s\n",
+            "--------",
+            "---",
+            "--------",
+            "------",
+            "------"
+        )
 
-        gn_results = summary[summary.GN .== gn, :]
+        gn_results = summary[summary.GN.==gn, :]
 
         for domain in sort(unique(gn_results.domain))
-            domain_results = gn_results[gn_results.domain .== domain, :]
+            domain_results = gn_results[gn_results.domain.==domain, :]
             nrow(domain_results) == 0 && continue
 
             best_idx = argmax(domain_results.success_rate)
             best = domain_results[best_idx, :]
 
-            @printf("  %8.4f  %3d  %8.2f  %5.1f%%  %5.1f%%\n",
-                    domain, best.degree, best.mean_L2,
-                    best.mean_grad_valid * 100, best.success_rate * 100)
+            @printf(
+                "  %8.4f  %3d  %8.2f  %5.1f%%  %5.1f%%\n",
+                domain,
+                best.degree,
+                best.mean_L2,
+                best.mean_grad_valid * 100,
+                best.success_rate * 100
+            )
         end
         println()
     end
@@ -891,7 +1030,7 @@ function _export_convergence_csv(results_dir::String, df_sweep::DataFrame)
         recovery_error = df_sweep.recovery_error,
         gradient_valid_rate = df_sweep.gradient_valid_rate,
         critical_points = df_sweep.critical_points,
-        success = df_sweep.recovery_error .< 0.05
+        success = df_sweep.recovery_error .< 0.05,
     )
 
     output_file = joinpath(output_dir, "lv4d_convergence_data.csv")

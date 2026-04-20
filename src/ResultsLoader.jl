@@ -59,7 +59,8 @@ function is_single_experiment(path::String)
     end
 
     files = readdir(path)
-    has_csv = any(f -> startswith(f, "critical_points_raw_deg_") && endswith(f, ".csv"), files)
+    has_csv =
+        any(f -> startswith(f, "critical_points_raw_deg_") && endswith(f, ".csv"), files)
     has_results = "results_summary.json" in files || "results_summary.jld2" in files
 
     return has_csv || has_results
@@ -104,7 +105,7 @@ function load_campaign_results(campaign_dir::String)
     println("📂 Loading campaign results from: $campaign_dir")
 
     experiments = ExperimentResult[]
-    campaign_metadata = Dict{String, Any}()
+    campaign_metadata = Dict{String,Any}()
 
     # Auto-detect: is this a single experiment or a campaign directory?
     if is_single_experiment(campaign_dir)
@@ -126,7 +127,7 @@ function load_campaign_results(campaign_dir::String)
         end
 
         # Find all experiment subdirectories
-        for entry in readdir(campaign_dir, join=true)
+        for entry in readdir(campaign_dir, join = true)
             if isdir(entry)
                 try
                     exp_result = load_experiment_results(entry)
@@ -141,12 +142,7 @@ function load_campaign_results(campaign_dir::String)
 
     campaign_id = get(campaign_metadata, "campaign_id", basename(campaign_dir))
 
-    return CampaignResults(
-        campaign_id,
-        experiments,
-        campaign_metadata,
-        now()
-    )
+    return CampaignResults(campaign_id, experiments, campaign_metadata, now())
 end
 
 """
@@ -182,22 +178,24 @@ function load_from_results_summary(dir_path::String, results_file::String)
     # 3. Dict format with degree_results: {degree_results: [{degree: 4, ...}, ...]}
     if data isa Vector
         # Format 1: Convert array format to dict format
-        normalized_data = Dict{String, Any}(
-            "results_summary" => Dict{String, Any}(
-                "degree_$(result["degree"])" => result
-                for result in data if haskey(result, "degree")
-            )
+        normalized_data = Dict{String,Any}(
+            "results_summary" => Dict{String,Any}(
+                "degree_$(result["degree"])" => result for
+                result in data if haskey(result, "degree")
+            ),
         )
         data = normalized_data
-    elseif data isa AbstractDict && haskey(data, "degree_results") && !haskey(data, "results_summary")
+    elseif data isa AbstractDict &&
+           haskey(data, "degree_results") &&
+           !haskey(data, "results_summary")
         # Format 3: Convert degree_results array to results_summary dict
         degree_results = data["degree_results"]
-        results_summary = Dict{String, Any}(
-            "degree_$(result["degree"])" => result
-            for result in degree_results if haskey(result, "degree")
+        results_summary = Dict{String,Any}(
+            "degree_$(result["degree"])" => result for
+            result in degree_results if haskey(result, "degree")
         )
         # Create new dict with results_summary, preserving other fields
-        normalized_data = Dict{String, Any}(data)
+        normalized_data = Dict{String,Any}(data)
         normalized_data["results_summary"] = results_summary
         data = normalized_data
     end
@@ -224,7 +222,7 @@ function load_from_results_summary(dir_path::String, results_file::String)
     end
 
     # Build metadata
-    metadata = Dict{String, Any}(
+    metadata = Dict{String,Any}(
         "params_dict" => get(data, "params_dict", Dict()),
         "system_info" => get(data, "system_info", Dict()),
         "experiment_type" => get(data, "experiment_type", "unknown"),
@@ -234,7 +232,7 @@ function load_from_results_summary(dir_path::String, results_file::String)
         "success_rate" => get(data, "success_rate", nothing),
         "total_critical_points" => get(data, "total_critical_points", nothing),
         "degrees_processed" => degrees_processed,
-        "results_summary" => results_summary
+        "results_summary" => results_summary,
     )
 
     # Discover tracking labels from data
@@ -257,7 +255,7 @@ function load_from_results_summary(dir_path::String, results_file::String)
         critical_points,
         performance_metrics,
         tolerance_validation,
-        dir_path
+        dir_path,
     )
 end
 
@@ -280,7 +278,8 @@ function load_from_experiment_result(dir_path::String, result_file::String)
     if haskey(data, "critical_points_dataframe")
         cp_data = data["critical_points_dataframe"]
         if haskey(cp_data, "columns") && haskey(cp_data, "data")
-            critical_points = DataFrame([row for row in cp_data["data"]], cp_data["columns"])
+            critical_points =
+                DataFrame([row for row in cp_data["data"]], cp_data["columns"])
         end
     end
 
@@ -294,7 +293,7 @@ function load_from_experiment_result(dir_path::String, result_file::String)
         critical_points,
         performance_metrics,
         tolerance_validation,
-        dir_path
+        dir_path,
     )
 end
 
@@ -389,7 +388,7 @@ function extract_performance_metrics(data::AbstractDict)
         return nothing
     end
 
-    metrics = Dict{String, Any}()
+    metrics = Dict{String,Any}()
 
     poly_times = Float64[]
     solving_times = Float64[]
@@ -406,25 +405,25 @@ function extract_performance_metrics(data::AbstractDict)
     metrics["polynomial_construction"] = Dict(
         "mean" => mean(poly_times),
         "total" => sum(poly_times),
-        "max" => maximum(poly_times)
+        "max" => maximum(poly_times),
     )
 
     metrics["critical_point_solving"] = Dict(
         "mean" => mean(solving_times),
         "total" => sum(solving_times),
-        "max" => maximum(solving_times)
+        "max" => maximum(solving_times),
     )
 
     metrics["refinement"] = Dict(
         "mean" => mean(refinement_times),
         "total" => sum(refinement_times),
-        "max" => maximum(refinement_times)
+        "max" => maximum(refinement_times),
     )
 
     metrics["total_computation"] = Dict(
         "mean" => mean(total_times),
         "total" => sum(total_times),
-        "max" => maximum(total_times)
+        "max" => maximum(total_times),
     )
 
     metrics["experiment_total_time"] = get(data, "total_time", sum(total_times))
@@ -444,7 +443,7 @@ function extract_tolerance_validation(data::AbstractDict)
         return nothing
     end
 
-    validation = Dict{String, Any}()
+    validation = Dict{String,Any}()
     refinement_stats = []
 
     for (_, degree_data) in results_summary
@@ -456,13 +455,15 @@ function extract_tolerance_validation(data::AbstractDict)
     if !isempty(refinement_stats)
         validation["refinement_stats"] = refinement_stats
 
-        total_converged = sum(something(get(stat, "converged", nothing), 0) for stat in refinement_stats)
-        total_failed = sum(something(get(stat, "failed", nothing), 0) for stat in refinement_stats)
+        total_converged =
+            sum(something(get(stat, "converged", nothing), 0) for stat in refinement_stats)
+        total_failed =
+            sum(something(get(stat, "failed", nothing), 0) for stat in refinement_stats)
 
         validation["convergence_summary"] = Dict(
             "total_converged" => total_converged,
             "total_failed" => total_failed,
-            "success_rate" => total_converged / max(total_converged + total_failed, 1)
+            "success_rate" => total_converged / max(total_converged + total_failed, 1),
         )
     end
 
@@ -493,7 +494,8 @@ function load_from_file(file_path::String)
     if haskey(data, "critical_points_dataframe")
         cp_data = data["critical_points_dataframe"]
         if haskey(cp_data, "columns") && haskey(cp_data, "data")
-            critical_points = DataFrame([row for row in cp_data["data"]], cp_data["columns"])
+            critical_points =
+                DataFrame([row for row in cp_data["data"]], cp_data["columns"])
         end
     end
 
@@ -507,6 +509,6 @@ function load_from_file(file_path::String)
         critical_points,
         performance_metrics,
         tolerance_validation,
-        file_path
+        file_path,
     )
 end

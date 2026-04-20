@@ -81,14 +81,42 @@ end
 
 # Backward-compatible constructor: 17 positional args (pre-trace)
 function RefinementResult(
-    refined, value_raw, value_refined, converged, iterations, improvement,
-    timed_out, error_message, f_calls, g_calls, h_calls, time_elapsed,
-    x_converged, f_converged, g_converged, iteration_limit_reached, convergence_reason,
+    refined,
+    value_raw,
+    value_refined,
+    converged,
+    iterations,
+    improvement,
+    timed_out,
+    error_message,
+    f_calls,
+    g_calls,
+    h_calls,
+    time_elapsed,
+    x_converged,
+    f_converged,
+    g_converged,
+    iteration_limit_reached,
+    convergence_reason,
 )
     RefinementResult(
-        refined, value_raw, value_refined, converged, iterations, improvement,
-        timed_out, error_message, f_calls, g_calls, h_calls, time_elapsed,
-        x_converged, f_converged, g_converged, iteration_limit_reached, convergence_reason,
+        refined,
+        value_raw,
+        value_refined,
+        converged,
+        iterations,
+        improvement,
+        timed_out,
+        error_message,
+        f_calls,
+        g_calls,
+        h_calls,
+        time_elapsed,
+        x_converged,
+        f_converged,
+        g_converged,
+        iteration_limit_reached,
+        convergence_reason,
         Vector{Float64}[],
     )
 end
@@ -143,11 +171,11 @@ end
 # Resolve symbol method names to Optim method objects.
 # Accepted symbols: :neldermead, :lbfgs.
 # For :lbfgs, uses LineSearches.InitialStatic(alpha=step_size) as initial step length.
-function _resolve_optim_method(method::Symbol; step_size::Float64=1.0)
+function _resolve_optim_method(method::Symbol; step_size::Float64 = 1.0)
     if method === :neldermead
         Optim.NelderMead()
     elseif method === :lbfgs
-        Optim.LBFGS(alphaguess=LineSearches.InitialStatic(alpha=step_size))
+        Optim.LBFGS(alphaguess = LineSearches.InitialStatic(alpha = step_size))
     elseif method === :bfgs
         Optim.BFGS()
     elseif method === :conjugategradient
@@ -155,16 +183,18 @@ function _resolve_optim_method(method::Symbol; step_size::Float64=1.0)
     elseif method === :gradientdescent
         Optim.GradientDescent()
     else
-        error("Unknown optimization method symbol: $method. Use :neldermead, :lbfgs, :bfgs, :conjugategradient, or :gradientdescent")
+        error(
+            "Unknown optimization method symbol: $method. Use :neldermead, :lbfgs, :bfgs, :conjugategradient, or :gradientdescent",
+        )
     end
 end
-_resolve_optim_method(method; step_size::Float64=1.0) = method  # passthrough for Optim objects
+_resolve_optim_method(method; step_size::Float64 = 1.0) = method  # passthrough for Optim objects
 
 function refine_critical_point(
     objective_func,
     initial_point::Vector{Float64};
     method = Optim.NelderMead(),
-    bounds::Union{Nothing, Vector{Tuple{Float64,Float64}}} = nothing,
+    bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
     f_abstol::Float64 = 1e-6,
     x_abstol::Float64 = 1e-6,
     max_time::Union{Float64,Nothing} = nothing,
@@ -173,7 +203,7 @@ function refine_critical_point(
     step_size::Float64 = 1.0,
 )
     # Resolve symbol methods to Optim objects
-    method = _resolve_optim_method(method; step_size=step_size)
+    method = _resolve_optim_method(method; step_size = step_size)
 
     # Unpack bounds
     lb, ub = split_bounds(bounds)
@@ -208,7 +238,7 @@ function refine_critical_point(
             false,  # f_converged
             false,  # g_converged
             false,  # iteration_limit_reached
-            :error  # convergence_reason
+            :error,  # convergence_reason
         )
     end
 
@@ -237,16 +267,11 @@ function refine_critical_point(
                     ub,
                     starting_point,
                     Optim.Fminbox(method),
-                    opt_options
+                    opt_options,
                 )
             end
         else
-            Optim.optimize(
-                objective_func,
-                initial_point,
-                method,
-                opt_options
-            )
+            Optim.optimize(objective_func, initial_point, method, opt_options)
         end
 
         elapsed_time = time() - start_time
@@ -307,8 +332,10 @@ function refine_critical_point(
         optim_trace = if store_trace
             try
                 trace_states = Optim.trace(result)
-                Vector{Float64}[copy(state.metadata["x"]) for state in trace_states
-                                if haskey(state.metadata, "x")]
+                Vector{Float64}[
+                    copy(state.metadata["x"]) for
+                    state in trace_states if haskey(state.metadata, "x")
+                ]
             catch
                 # Fallback: 2-point trace (NelderMead doesn't store "x" in metadata)
                 Vector{Float64}[copy(initial_point), copy(refined_point)]
@@ -365,7 +392,7 @@ function refine_critical_point(
             false,  # f_converged
             false,  # g_converged
             false,  # iteration_limit_reached
-            :error  # convergence_reason
+            :error,  # convergence_reason
         )
     end
 end
@@ -427,12 +454,12 @@ function refine_critical_points_batch(
     objective_func,
     points::Vector{Vector{Float64}};
     method = Optim.NelderMead(),
-    bounds::Union{Nothing, Vector{Tuple{Float64,Float64}}} = nothing,
+    bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
     f_abstol::Float64 = 1e-6,
     x_abstol::Float64 = 1e-6,
     max_time::Union{Float64,Nothing} = nothing,
     max_iterations::Int = 300,
-    show_progress::Bool = true
+    show_progress::Bool = true,
 )
     refined_results = RefinementResult[]
     n_points = length(points)
@@ -448,7 +475,9 @@ function refine_critical_points_batch(
     ub_vec = bounds !== nothing ? [b[2] for b in bounds] : nothing
 
     # Create progress bar (only if show_progress is true)
-    prog = show_progress ? Progress(n_points; desc="Refining critical points ", showspeed=true) : nothing
+    prog =
+        show_progress ?
+        Progress(n_points; desc = "Refining critical points ", showspeed = true) : nothing
 
     for pt in points
         # Count points that land on the domain boundary after clamping
@@ -459,13 +488,14 @@ function refine_critical_points_batch(
             end
         end
         result = refine_critical_point(
-            objective_func, pt;
-            method=method,
-            bounds=bounds,
-            f_abstol=f_abstol,
-            x_abstol=x_abstol,
-            max_time=max_time,
-            max_iterations=max_iterations
+            objective_func,
+            pt;
+            method = method,
+            bounds = bounds,
+            f_abstol = f_abstol,
+            x_abstol = x_abstol,
+            max_time = max_time,
+            max_iterations = max_iterations,
         )
 
         push!(refined_results, result)
@@ -487,7 +517,7 @@ function refine_critical_points_batch(
 
     # Print summary after progress bar completes
     if show_progress && n_points > 0
-        pct = round(100 * n_converged / n_points, digits=1)
+        pct = round(100 * n_converged / n_points, digits = 1)
         summary_parts = ["$n_converged/$n_points converged ($pct%)"]
         if n_timeout > 0
             push!(summary_parts, "$n_timeout timeout")
@@ -497,7 +527,9 @@ function refine_critical_points_batch(
         end
         println("Refinement complete: ", join(summary_parts, ", "))
         if n_boundary > 0
-            println("  Note: $n_boundary/$n_points initial points were on domain boundary (nudged inward by Fminbox)")
+            println(
+                "  Note: $n_boundary/$n_points initial points were on domain boundary (nudged inward by Fminbox)",
+            )
         end
     end
 

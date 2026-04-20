@@ -166,7 +166,7 @@ println("Recoveries: ", stats["num_recoveries"])
 function compute_parameter_recovery_stats(
     df::DataFrame,
     p_true::AbstractVector,
-    recovery_threshold::Float64
+    recovery_threshold::Float64,
 )
     dim = length(p_true)
     schema = detect_csv_schema(df)
@@ -174,7 +174,8 @@ function compute_parameter_recovery_stats(
 
     # Validate required columns exist
     for i in 1:dim
-        col_name = col_prefix == "theta_raw" ? Symbol("theta$(i)_raw") : Symbol("$(col_prefix)$i")
+        col_name =
+            col_prefix == "theta_raw" ? Symbol("theta$(i)_raw") : Symbol("$(col_prefix)$i")
         if !hasproperty(df, col_name)
             error("DataFrame missing column: $col_name")
         end
@@ -193,13 +194,13 @@ function compute_parameter_recovery_stats(
     mean_dist = mean(distances)
     num_recoveries = count(d -> d < recovery_threshold, distances)
 
-    return Dict{String, Any}(
+    return Dict{String,Any}(
         "min_distance" => min_dist,
         "mean_distance" => mean_dist,
         "num_recoveries" => num_recoveries,
         "all_distances" => distances,
         "schema" => schema,
-        "used_refined" => (schema == :v1_1_0 && col_prefix == "theta")
+        "used_refined" => (schema == :v1_1_0 && col_prefix == "theta"),
     )
 end
 
@@ -238,14 +239,14 @@ function generate_parameter_recovery_table(
     experiment_path::String,
     p_true::AbstractVector,
     degrees::AbstractVector{Int},
-    recovery_threshold::Float64
+    recovery_threshold::Float64,
 )
     results = DataFrame(
         degree = Int[],
         num_critical_points = Int[],
         min_distance = Float64[],
         mean_distance = Float64[],
-        num_recoveries = Int[]
+        num_recoveries = Int[],
     )
 
     for degree in degrees
@@ -256,13 +257,16 @@ function generate_parameter_recovery_table(
         stats = compute_parameter_recovery_stats(df, p_true, recovery_threshold)
 
         # Add row to results table
-        push!(results, (
-            degree = degree,
-            num_critical_points = nrow(df),
-            min_distance = stats["min_distance"],
-            mean_distance = stats["mean_distance"],
-            num_recoveries = stats["num_recoveries"]
-        ))
+        push!(
+            results,
+            (
+                degree = degree,
+                num_critical_points = nrow(df),
+                min_distance = stats["min_distance"],
+                mean_distance = stats["mean_distance"],
+                num_recoveries = stats["num_recoveries"],
+            ),
+        )
     end
 
     return results

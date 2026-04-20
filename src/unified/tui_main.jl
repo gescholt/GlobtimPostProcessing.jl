@@ -63,7 +63,7 @@ postprocess()
           → Load → Analyze → Tables/Summary → Return DataFrame
 ```
 """
-function postprocess(; results_root::Union{String, Nothing}=nothing)
+function postprocess(; results_root::Union{String,Nothing} = nothing)
     # Get results root
     root = results_root === nothing ? find_unified_results_root() : results_root
 
@@ -102,10 +102,13 @@ end
 
 Resolve experiment path from results source selection.
 """
-function _resolve_experiment_path(source::ResultsSource, root::String,
-                                   type_filter::Union{ExperimentType, Nothing})::Union{String, Nothing}
+function _resolve_experiment_path(
+    source::ResultsSource,
+    root::String,
+    type_filter::Union{ExperimentType,Nothing},
+)::Union{String,Nothing}
     if source.type == :recent
-        return select_recent_experiment(root; type_filter=type_filter)
+        return select_recent_experiment(root; type_filter = type_filter)
     elseif source.type == :path
         path = expanduser(source.value)
         if !isdir(path)
@@ -127,7 +130,12 @@ end
 
 Dispatch to type-specific analysis handler.
 """
-function _run_unified_analysis(type::ExperimentType, mode::Symbol, path::String, root::String)
+function _run_unified_analysis(
+    type::ExperimentType,
+    mode::Symbol,
+    path::String,
+    root::String,
+)
     # LV4D has its own comprehensive TUI - delegate to it
     if type isa LV4DType
         return _run_lv4d_analysis(mode, path, root)
@@ -151,7 +159,7 @@ function _run_lv4d_analysis(mode::Symbol, path::String, root::String)
     if mode == :quality
         if !is_single
             # Need to select specific experiment
-            exp_dir = select_recent_experiment(root; type_filter=LV4D)
+            exp_dir = select_recent_experiment(root; type_filter = LV4D)
             exp_dir === nothing && return nothing
             path = exp_dir
         end
@@ -165,7 +173,7 @@ function _run_lv4d_analysis(mode::Symbol, path::String, root::String)
         sweep_root = is_single ? dirname(path) : root
 
         # If root doesn't have LV4D experiments, try to find lv4d subdir
-        if !any(e -> startswith(basename(e), "lv4d_"), readdir(sweep_root, join=true))
+        if !any(e -> startswith(basename(e), "lv4d_"), readdir(sweep_root, join = true))
             lv4d_dir = joinpath(sweep_root, "lotka_volterra_4d")
             if isdir(lv4d_dir)
                 sweep_root = lv4d_dir
@@ -189,7 +197,7 @@ function _run_lv4d_analysis(mode::Symbol, path::String, root::String)
 
     elseif mode == :compare
         # Find comparison experiments
-        comp_dir = LV4DAnalysis.find_comparison_experiments(root; limit=10)
+        comp_dir = LV4DAnalysis.find_comparison_experiments(root; limit = 10)
         if isempty(comp_dir)
             tui_warning("No comparison experiments found")
             return nothing
@@ -197,7 +205,7 @@ function _run_lv4d_analysis(mode::Symbol, path::String, root::String)
 
         # Show menu to select
         options = [basename(d) for d in comp_dir]
-        menu = RadioMenu(options, pagesize=min(8, length(options)))
+        menu = RadioMenu(options, pagesize = min(8, length(options)))
         choice = request("Select comparison experiment:", menu)
         choice == -1 && return nothing
 
@@ -228,7 +236,7 @@ function _run_generic_analysis(type::ExperimentType, mode::Symbol, path::String)
     # Load experiment using unified loader
     tui_info("Loading experiment: $(basename(path))")
 
-    data = load_experiment(path; type=type)
+    data = load_experiment(path; type = type)
 
     if mode == :quality
         tui_running("Running quality analysis...")
@@ -257,7 +265,9 @@ Print quality diagnostics for generic experiment.
 function _print_generic_quality(data::BaseExperimentData)
     println()
     println("$(UNIFIED_TUI_BOLD)Experiment: $(data.experiment_id)$(UNIFIED_TUI_RESET)")
-    println("$(UNIFIED_TUI_DIM)Type: $(type_name(data.experiment_type))$(UNIFIED_TUI_RESET)")
+    println(
+        "$(UNIFIED_TUI_DIM)Type: $(type_name(data.experiment_type))$(UNIFIED_TUI_RESET)",
+    )
     println("$(UNIFIED_TUI_DIM)Path: $(data.path)$(UNIFIED_TUI_RESET)")
     println()
 
@@ -273,13 +283,15 @@ function _print_generic_quality(data::BaseExperimentData)
 
             for (i, row) in enumerate(eachrow(dr))
                 data_matrix[i, 1] = row.degree
-                data_matrix[i, 2] = hasproperty(row, :L2_norm) ? @sprintf("%.2e", row.L2_norm) : "-"
-                data_matrix[i, 3] = hasproperty(row, :critical_points) ? row.critical_points : "-"
+                data_matrix[i, 2] =
+                    hasproperty(row, :L2_norm) ? @sprintf("%.2e", row.L2_norm) : "-"
+                data_matrix[i, 3] =
+                    hasproperty(row, :critical_points) ? row.critical_points : "-"
             end
 
-            styled_table(data_matrix; header=headers, alignment=[:r, :r, :r])
+            styled_table(data_matrix; header = headers, alignment = [:r, :r, :r])
         else
-            styled_table(dr; header=string.(names(dr)), alignment=:r)
+            styled_table(dr; header = string.(names(dr)), alignment = :r)
         end
     else
         tui_warning("No degree results found")
@@ -309,7 +321,7 @@ end
 
 Compute convergence metrics for generic experiment.
 """
-function _compute_generic_convergence(data::BaseExperimentData)::Union{DataFrame, Nothing}
+function _compute_generic_convergence(data::BaseExperimentData)::Union{DataFrame,Nothing}
     dr = data.degree_results
 
     if nrow(dr) == 0 || !hasproperty(dr, :degree) || !hasproperty(dr, :L2_norm)
@@ -341,14 +353,16 @@ function _compute_generic_convergence(data::BaseExperimentData)::Union{DataFrame
     y_mean = mean(log_l2)
 
     numerator = sum((log_degrees .- x_mean) .* (log_l2 .- y_mean))
-    denominator = sum((log_degrees .- x_mean).^2)
+    denominator = sum((log_degrees .- x_mean) .^ 2)
 
     slope = denominator > 0 ? numerator / denominator : NaN
 
     println()
     println("$(UNIFIED_TUI_BOLD)Convergence Analysis:$(UNIFIED_TUI_RESET)")
     println("  Degrees: $(minimum(degrees)) - $(maximum(degrees))")
-    println("  L2 norm range: $(@sprintf("%.2e", minimum(l2_norms))) - $(@sprintf("%.2e", maximum(l2_norms)))")
+    println(
+        "  L2 norm range: $(@sprintf("%.2e", minimum(l2_norms))) - $(@sprintf("%.2e", maximum(l2_norms)))",
+    )
     if !isnan(slope)
         println("  Log-log slope: $(@sprintf("%.2f", slope))")
     end
