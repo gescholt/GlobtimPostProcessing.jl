@@ -50,7 +50,6 @@ end
 # Gradient accuracy tests
 # ============================================================================
 @testset "Level 2: Gradient Accuracy (ForwardDiff vs FiniteDiff)" begin
-
     @testset "Gradient agreement at critical points" begin
         for bf in BENCHMARK_FUNCTIONS
             @testset "$(bf.name)" begin
@@ -105,7 +104,6 @@ end
 # Hessian accuracy tests
 # ============================================================================
 @testset "Level 2: Hessian Accuracy (ForwardDiff vs FiniteDiff)" begin
-
     @testset "Hessian agreement at critical points" begin
         for bf in BENCHMARK_FUNCTIONS
             bf.name == "rastrigin_2d" && continue  # skip: 441 CPs too many Hessians
@@ -153,7 +151,8 @@ end
                     for j in eachindex(ev_forward)
                         if abs(ev_forward[j]) > 0.1
                             # For substantial eigenvalues, check relative agreement
-                            rel_error = abs(ev_forward[j] - ev_finite[j]) / abs(ev_forward[j])
+                            rel_error =
+                                abs(ev_forward[j] - ev_finite[j]) / abs(ev_forward[j])
                             @test rel_error < 0.01  # 1% relative error acceptable
                         else
                             # For near-zero eigenvalues, check absolute agreement
@@ -167,7 +166,11 @@ end
 
     @testset "Hessian symmetry" begin
         # FiniteDiff Hessian should be approximately symmetric
-        for bf in [GroundTruthFunctions.SPHERE_2D, GroundTruthFunctions.HIMMELBLAU, GroundTruthFunctions.ROSENBROCK_2D]
+        for bf in [
+            GroundTruthFunctions.SPHERE_2D,
+            GroundTruthFunctions.HIMMELBLAU,
+            GroundTruthFunctions.ROSENBROCK_2D,
+        ]
             @testset "$(bf.name) symmetry" begin
                 x = bf.known_minima[1]
                 H = FiniteDiff.finite_difference_hessian(bf.f, x)
@@ -181,7 +184,6 @@ end
 # Quantify FiniteDiff noise floor
 # ============================================================================
 @testset "Level 2: FiniteDiff Noise Characterization" begin
-
     @testset "Gradient noise at exact minima" begin
         # At exact analytic minima, ForwardDiff gradient = 0 exactly (or near machine eps)
         # FiniteDiff will have a noise floor — quantify it

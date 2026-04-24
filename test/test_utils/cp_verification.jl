@@ -19,8 +19,12 @@ module CPVerification
 using ForwardDiff
 using LinearAlgebra
 
-export verify_critical_point, classify_by_hessian, verify_local_minimum,
-       verify_and_classify, find_all_critical_points, VerifiedCP
+export verify_critical_point,
+    classify_by_hessian,
+    verify_local_minimum,
+    verify_and_classify,
+    find_all_critical_points,
+    VerifiedCP
 
 # ============================================================================
 # VerifiedCP struct
@@ -58,7 +62,7 @@ end
 Check whether `x` is a critical point of `f` by computing the gradient
 via ForwardDiff and checking ‖∇f(x)‖ < grad_tol.
 """
-function verify_critical_point(f, x::AbstractVector; grad_tol::Float64=1e-8)
+function verify_critical_point(f, x::AbstractVector; grad_tol::Float64 = 1e-8)
     g = ForwardDiff.gradient(f, x)
     return norm(g) < grad_tol
 end
@@ -78,7 +82,7 @@ Returns:
 - `:saddle` — mixed signs (some > tol, some < -tol)
 - `:degenerate` — at least one eigenvalue with |λ| ≤ tol
 """
-function classify_by_hessian(f, x::AbstractVector; tol::Float64=1e-6)
+function classify_by_hessian(f, x::AbstractVector; tol::Float64 = 1e-6)
     H = ForwardDiff.hessian(f, x)
     eigenvalues = sort(real.(eigvals(H)))
     return _classify_eigenvalues(eigenvalues, tol)
@@ -119,9 +123,12 @@ Verify that `x` is a local minimum by sampling `n_samples` random points
 in a ball of given `radius` around `x` and checking that f(x) ≤ f(y)
 for all sampled points y.
 """
-function verify_local_minimum(f, x::AbstractVector;
-                               radius::Float64=1e-4,
-                               n_samples::Int=1000)
+function verify_local_minimum(
+    f,
+    x::AbstractVector;
+    radius::Float64 = 1e-4,
+    n_samples::Int = 1000,
+)
     f_x = f(x)
     dim = length(x)
 
@@ -159,11 +166,14 @@ Returns a NamedTuple with fields:
 - `neighborhood_confirmed::Bool` — sampling confirms local minimum
 - `value::Float64` — f(x)
 """
-function verify_and_classify(f, x::AbstractVector;
-                              grad_tol::Float64=1e-8,
-                              hessian_tol::Float64=1e-6,
-                              radius::Float64=1e-4,
-                              n_samples::Int=1000)
+function verify_and_classify(
+    f,
+    x::AbstractVector;
+    grad_tol::Float64 = 1e-8,
+    hessian_tol::Float64 = 1e-6,
+    radius::Float64 = 1e-4,
+    n_samples::Int = 1000,
+)
     # Compute gradient
     g = ForwardDiff.gradient(f, x)
     grad_norm = norm(g)
@@ -175,9 +185,8 @@ function verify_and_classify(f, x::AbstractVector;
     classification = _classify_eigenvalues(eigenvalues, hessian_tol)
 
     # Neighborhood sampling (only meaningful if actually near a minimum)
-    neighborhood_confirmed = verify_local_minimum(f, x;
-                                                   radius=radius,
-                                                   n_samples=n_samples)
+    neighborhood_confirmed =
+        verify_local_minimum(f, x; radius = radius, n_samples = n_samples)
 
     value = f(x)
 
@@ -218,13 +227,17 @@ Arguments:
 - `dedup_tol` — Euclidean distance for deduplication
 - `max_iter` — max iterations for each refinement
 """
-function find_all_critical_points(f, bounds::Vector{<:Tuple}, dim::Int;
-                                   n_starts::Int=200,
-                                   method::Symbol=:newton,
-                                   grad_tol::Float64=1e-8,
-                                   hessian_tol::Float64=1e-6,
-                                   dedup_tol::Float64=1e-4,
-                                   max_iter::Int=1000)
+function find_all_critical_points(
+    f,
+    bounds::Vector{<:Tuple},
+    dim::Int;
+    n_starts::Int = 200,
+    method::Symbol = :newton,
+    grad_tol::Float64 = 1e-8,
+    hessian_tol::Float64 = 1e-6,
+    dedup_tol::Float64 = 1e-4,
+    max_iter::Int = 1000,
+)
     # Validate inputs
     length(bounds) == dim || error("bounds must have $dim entries, got $(length(bounds))")
 
@@ -240,7 +253,7 @@ function find_all_critical_points(f, bounds::Vector{<:Tuple}, dim::Int;
         x0 = [lo + rand() * (hi - lo) for (lo, hi) in bounds]
 
         # Solve ∇f = 0 via Newton with gradient descent fallback
-        x = _minimize_grad_norm_squared(g, x0, bounds, max_iter, grad_tol; f=f)
+        x = _minimize_grad_norm_squared(g, x0, bounds, max_iter, grad_tol; f = f)
 
         # Check if we found a critical point of f
         gf = grad_f(x)
@@ -252,17 +265,20 @@ function find_all_critical_points(f, bounds::Vector{<:Tuple}, dim::Int;
             eigenvalues = sort(real.(eigvals(H)))
             classification = _classify_eigenvalues(eigenvalues, hessian_tol)
             fval = f(x)
-            neighborhood_confirmed = verify_local_minimum(f, x;
-                                                           radius=1e-4, n_samples=500)
+            neighborhood_confirmed =
+                verify_local_minimum(f, x; radius = 1e-4, n_samples = 500)
 
-            push!(raw_critical_points, VerifiedCP(
-                point=x,
-                classification=classification,
-                value=fval,
-                grad_norm=gn,
-                eigenvalues=eigenvalues,
-                neighborhood_confirmed=neighborhood_confirmed,
-            ))
+            push!(
+                raw_critical_points,
+                VerifiedCP(
+                    point = x,
+                    classification = classification,
+                    value = fval,
+                    grad_norm = gn,
+                    eigenvalues = eigenvalues,
+                    neighborhood_confirmed = neighborhood_confirmed,
+                ),
+            )
         end
     end
 
@@ -280,10 +296,14 @@ When `f` is provided, uses Newton's method: x_{k+1} = x_k - H⁻¹ ∇f(x_k)
 with backtracking line search on g. Falls back to gradient descent on g
 when the Hessian is singular.
 """
-function _minimize_grad_norm_squared(g, x0::Vector{Float64},
-                                      bounds::Vector{<:Tuple},
-                                      max_iter::Int, tol::Float64;
-                                      f=nothing)
+function _minimize_grad_norm_squared(
+    g,
+    x0::Vector{Float64},
+    bounds::Vector{<:Tuple},
+    max_iter::Int,
+    tol::Float64;
+    f = nothing,
+)
     x = copy(x0)
     target = tol^2  # g = ‖∇f‖², so g < tol² means ‖∇f‖ < tol
     dim = length(x)
@@ -304,7 +324,7 @@ function _minimize_grad_norm_squared(g, x0::Vector{Float64},
                 grad = ForwardDiff.gradient(f, x)
                 H = ForwardDiff.hessian(f, x)
                 # Use damped solve to handle near-singular Hessians
-                F = lu(H; check=false)
+                F = lu(H; check = false)
                 if issuccess(F)
                     newton_step = F \ grad
                     if norm(newton_step) < 100 * norm(x .+ 1)  # sanity check
@@ -371,7 +391,7 @@ function _deduplicate_cps(cps::Vector{VerifiedCP}, tol::Float64)
     isempty(cps) && return cps
 
     # Sort by grad_norm (keep best representatives)
-    sorted = sort(cps, by=cp -> cp.grad_norm)
+    sorted = sort(cps, by = cp -> cp.grad_norm)
     unique_cps = VerifiedCP[]
 
     for cp in sorted

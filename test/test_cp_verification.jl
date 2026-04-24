@@ -59,12 +59,10 @@ degenerate_func(x) = x[1]^4 + x[2]^2
 # 1D quadratic for dimension edge case
 quadratic_1d(x) = x[1]^2
 
-
 # ============================================================================
 # 0a: verify_critical_point tests
 # ============================================================================
 @testset "0a: verify_critical_point" begin
-
     @testset "True critical points" begin
         # Origin is critical for quadratic
         @test verify_critical_point(quadratic, [0.0, 0.0]) == true
@@ -105,16 +103,16 @@ quadratic_1d(x) = x[1]^2
         # grad of quadratic at [ε,ε] is [2ε, 2ε], norm ≈ 2√2 × 1e-5 ≈ 2.83e-5
 
         # With tight tolerance, should fail
-        @test verify_critical_point(quadratic, near_critical; grad_tol=1e-6) == false
+        @test verify_critical_point(quadratic, near_critical; grad_tol = 1e-6) == false
 
         # With loose tolerance, should pass
-        @test verify_critical_point(quadratic, near_critical; grad_tol=1e-4) == true
+        @test verify_critical_point(quadratic, near_critical; grad_tol = 1e-4) == true
     end
 
     @testset "Returns gradient norm" begin
         # verify_critical_point returns Bool; grad_norm available via verify_and_classify
         # Just verify it works with exact zeros
-        @test verify_critical_point(quadratic, [0.0, 0.0]; grad_tol=1e-15) == true
+        @test verify_critical_point(quadratic, [0.0, 0.0]; grad_tol = 1e-15) == true
     end
 end
 
@@ -122,7 +120,6 @@ end
 # 0b: classify_by_hessian tests
 # ============================================================================
 @testset "0b: classify_by_hessian" begin
-
     @testset "Minimum classification" begin
         # Quadratic at origin — Hessian is [[2,0],[0,2]], both eigenvalues = 2
         @test classify_by_hessian(quadratic, [0.0, 0.0]) == :minimum
@@ -165,7 +162,7 @@ end
         @test classify_by_hessian(weak_quadratic, [0.0, 0.0]) == :minimum
 
         # With tol=0.01: eigenvalue 0.002 < 0.01, so degenerate
-        @test classify_by_hessian(weak_quadratic, [0.0, 0.0]; tol=0.01) == :degenerate
+        @test classify_by_hessian(weak_quadratic, [0.0, 0.0]; tol = 0.01) == :degenerate
     end
 end
 
@@ -173,7 +170,6 @@ end
 # 0c: verify_local_minimum tests
 # ============================================================================
 @testset "0c: verify_local_minimum" begin
-
     @testset "Confirmed local minima" begin
         # Origin is local minimum of quadratic
         @test verify_local_minimum(quadratic, [0.0, 0.0]) == true
@@ -195,10 +191,12 @@ end
 
     @testset "Radius parameter" begin
         # Very tight radius should still confirm quadratic minimum
-        @test verify_local_minimum(quadratic, [0.0, 0.0]; radius=1e-8, n_samples=500) == true
+        @test verify_local_minimum(quadratic, [0.0, 0.0]; radius = 1e-8, n_samples = 500) ==
+              true
 
         # Larger radius should also work
-        @test verify_local_minimum(quadratic, [0.0, 0.0]; radius=1.0, n_samples=1000) == true
+        @test verify_local_minimum(quadratic, [0.0, 0.0]; radius = 1.0, n_samples = 1000) ==
+              true
     end
 
     @testset "1D case" begin
@@ -217,7 +215,6 @@ end
 # 0d: verify_and_classify tests
 # ============================================================================
 @testset "0d: verify_and_classify" begin
-
     @testset "Complete minimum characterization" begin
         result = verify_and_classify(quadratic, [0.0, 0.0])
 
@@ -291,12 +288,12 @@ end
 # ============================================================================
 @testset "VerifiedCP struct" begin
     cp = VerifiedCP(
-        point=[0.0, 0.0],
-        classification=:minimum,
-        value=0.0,
-        grad_norm=1e-12,
-        eigenvalues=[2.0, 2.0],
-        neighborhood_confirmed=true
+        point = [0.0, 0.0],
+        classification = :minimum,
+        value = 0.0,
+        grad_norm = 1e-12,
+        eigenvalues = [2.0, 2.0],
+        neighborhood_confirmed = true,
     )
 
     @test cp.point == [0.0, 0.0]
@@ -311,10 +308,9 @@ end
 # 0e: find_all_critical_points tests
 # ============================================================================
 @testset "0e: find_all_critical_points" begin
-
     @testset "Simple quadratic — finds single minimum" begin
         bounds = [(-2.0, 2.0), (-2.0, 2.0)]
-        cps = find_all_critical_points(quadratic, bounds, 2; n_starts=50, grad_tol=1e-8)
+        cps = find_all_critical_points(quadratic, bounds, 2; n_starts = 50, grad_tol = 1e-8)
 
         # Should find exactly 1 critical point (the minimum at origin)
         @test length(cps) >= 1
@@ -331,7 +327,13 @@ end
 
     @testset "Shifted quadratic — finds minimum at [1,2]" begin
         bounds = [(-3.0, 5.0), (-3.0, 5.0)]
-        cps = find_all_critical_points(shifted_quadratic, bounds, 2; n_starts=50, grad_tol=1e-8)
+        cps = find_all_critical_points(
+            shifted_quadratic,
+            bounds,
+            2;
+            n_starts = 50,
+            grad_tol = 1e-8,
+        )
 
         @test length(cps) >= 1
 
@@ -350,8 +352,8 @@ end
         ]
 
         bounds = [(-5.0, 5.0), (-5.0, 5.0)]
-        cps = find_all_critical_points(himmelblau, bounds, 2;
-            n_starts=200, grad_tol=1e-8)
+        cps =
+            find_all_critical_points(himmelblau, bounds, 2; n_starts = 200, grad_tol = 1e-8)
 
         # Filter to just the minima
         minima = filter(cp -> cp.classification == :minimum, cps)
@@ -368,8 +370,8 @@ end
 
     @testset "Saddle function — finds saddle at origin" begin
         bounds = [(-2.0, 2.0), (-2.0, 2.0)]
-        cps = find_all_critical_points(saddle_func, bounds, 2;
-            n_starts=50, grad_tol=1e-8)
+        cps =
+            find_all_critical_points(saddle_func, bounds, 2; n_starts = 50, grad_tol = 1e-8)
 
         # Should find the saddle at origin
         saddle_found = any(cp -> norm(cp.point) < 1e-4 && cp.classification == :saddle, cps)
@@ -379,16 +381,22 @@ end
     @testset "Deduplication" begin
         # With many starts, quadratic should still give exactly 1 unique CP
         bounds = [(-2.0, 2.0), (-2.0, 2.0)]
-        cps = find_all_critical_points(quadratic, bounds, 2;
-            n_starts=100, grad_tol=1e-8, dedup_tol=1e-4)
+        cps = find_all_critical_points(
+            quadratic,
+            bounds,
+            2;
+            n_starts = 100,
+            grad_tol = 1e-8,
+            dedup_tol = 1e-4,
+        )
 
         @test length(cps) == 1
     end
 
     @testset "All returned CPs are verified" begin
         bounds = [(-5.0, 5.0), (-5.0, 5.0)]
-        cps = find_all_critical_points(himmelblau, bounds, 2;
-            n_starts=100, grad_tol=1e-6)
+        cps =
+            find_all_critical_points(himmelblau, bounds, 2; n_starts = 100, grad_tol = 1e-6)
 
         for cp in cps
             @test cp.grad_norm < 1e-4  # all should be near-critical
@@ -399,8 +407,13 @@ end
 
     @testset "1D case" begin
         bounds = [(-3.0, 3.0)]
-        cps = find_all_critical_points(quadratic_1d, bounds, 1;
-            n_starts=30, grad_tol=1e-8)
+        cps = find_all_critical_points(
+            quadratic_1d,
+            bounds,
+            1;
+            n_starts = 30,
+            grad_tol = 1e-8,
+        )
 
         @test length(cps) >= 1
         @test any(cp -> abs(cp.point[1]) < 1e-4, cps)

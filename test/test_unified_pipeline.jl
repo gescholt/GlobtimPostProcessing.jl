@@ -16,7 +16,6 @@ const LV4D_FIXTURE = joinpath(TEST_FIXTURES, "lv4d_minimal")
 const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
 
 @testset "Unified Pipeline" begin
-
     @testset "Experiment Type Hierarchy" begin
         # Test type hierarchy
         @test LV4D isa ExperimentType
@@ -77,8 +76,8 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
             "/path/to/test_exp",
             LV4D,
             Dict("key" => "value"),
-            DataFrame(degree=[4, 6], L2_norm=[0.01, 0.001]),
-            DataFrame(x1=[0.1, 0.2], x2=[0.3, 0.4], z=[0.01, 0.02])
+            DataFrame(degree = [4, 6], L2_norm = [0.01, 0.001]),
+            DataFrame(x1 = [0.1, 0.2], x2 = [0.3, 0.4], z = [0.01, 0.02]),
         )
 
         @test experiment_id(base) == "test_exp"
@@ -92,7 +91,8 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
 
     @testset "Single Experiment Detection" begin
         # Test unified is_single_experiment
-        @test UnifiedPipeline.is_single_experiment(LV4D, LV4D_FIXTURE) == isdir(LV4D_FIXTURE)
+        @test UnifiedPipeline.is_single_experiment(LV4D, LV4D_FIXTURE) ==
+              isdir(LV4D_FIXTURE)
 
         if isdir(GENERIC_FIXTURE)
             # Generic fixture has results_summary.json and CSVs
@@ -132,7 +132,8 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
 
         # Test that LV4DExperimentData has proper base
         # First rename fixture directory temporarily to have lv4d_ prefix
-        lv4d_test_dir = joinpath(dirname(LV4D_FIXTURE), "lv4d_GN8_deg4_dom0.1_seed1_20260124_120000")
+        lv4d_test_dir =
+            joinpath(dirname(LV4D_FIXTURE), "lv4d_GN8_deg4_dom0.1_seed1_20260124_120000")
 
         # Copy fixture to properly named directory
         cp_dir = false
@@ -170,7 +171,7 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
         finally
             # Clean up temporary directory
             if cp_dir && isdir(lv4d_test_dir)
-                rm(lv4d_test_dir, recursive=true)
+                rm(lv4d_test_dir, recursive = true)
             end
         end
     end
@@ -179,7 +180,7 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
         !isdir(GENERIC_FIXTURE) && return
 
         # Explicit type parameter
-        data = load_experiment(GENERIC_FIXTURE; type=UNKNOWN)
+        data = load_experiment(GENERIC_FIXTURE; type = UNKNOWN)
         @test data isa BaseExperimentData
         @test experiment_type(data) === UNKNOWN
 
@@ -222,5 +223,4 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
         @test any(t -> t[1] === LV4D, types)
         @test all(t -> t[2] isa String, types)
     end
-
 end

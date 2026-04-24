@@ -19,7 +19,8 @@ using Dates
         # Clear any previously loaded modules to ensure clean test
         # (Note: In Julia, we can't truly unload modules, but we can test in fresh process)
 
-        @test !isdefined(Main, :GlobtimPlots) || @warn "GlobtimPlots already loaded - test may not be accurate"
+        @test !isdefined(Main, :GlobtimPlots) ||
+              @warn "GlobtimPlots already loaded - test may not be accurate"
 
         # Load GlobtimPostProcessing
         using GlobtimPostProcessing
@@ -54,8 +55,15 @@ using Dates
         deps = get(project_toml, "deps", Dict())
 
         # Verify no plotting dependencies
-        plotting_packages = ["GlobtimPlots", "CairoMakie", "GLMakie", "Makie",
-                            "VegaLite", "Plots", "PlotlyJS"]
+        plotting_packages = [
+            "GlobtimPlots",
+            "CairoMakie",
+            "GLMakie",
+            "Makie",
+            "VegaLite",
+            "Plots",
+            "PlotlyJS",
+        ]
 
         for pkg in plotting_packages
             @test !haskey(deps, pkg)
@@ -76,18 +84,14 @@ using Dates
             nothing,
             nothing,
             nothing,
-            "/tmp/test"
+            "/tmp/test",
         )
 
         @test exp_result isa ExperimentResult
         @test exp_result.experiment_id == "test_exp"
 
-        campaign = CampaignResults(
-            "test_campaign",
-            [exp_result],
-            Dict("meta" => "data"),
-            now()
-        )
+        campaign =
+            CampaignResults("test_campaign", [exp_result], Dict("meta" => "data"), now())
 
         @test campaign isa CampaignResults
         @test length(campaign.experiments) == 1

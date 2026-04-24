@@ -28,7 +28,7 @@ const DEUFLHARD_BOUNDS = [(-1.2, 1.2), (-1.2, 1.2), (-1.2, 1.2), (-1.2, 1.2)]
     tmpdir = mktempdir()
     for f in readdir(FIXTURES_DIR)
         src = joinpath(FIXTURES_DIR, f)
-        isfile(src) && cp(src, joinpath(tmpdir, f); force=true)
+        isfile(src) && cp(src, joinpath(tmpdir, f); force = true)
     end
 
     # Suppress output during tests
@@ -119,14 +119,16 @@ end
 @testset "postprocess_experiment — error cases" begin
     # Non-existent directory
     @test_throws ErrorException postprocess_experiment(
-        "/nonexistent/dir", x -> sum(x.^2);
+        "/nonexistent/dir",
+        x -> sum(x .^ 2);
         bounds = [(-1.0, 1.0)],
     )
 
     # Directory with no raw CP files
     tmpdir = mktempdir()
     @test_throws ErrorException postprocess_experiment(
-        tmpdir, x -> sum(x.^2);
+        tmpdir,
+        x -> sum(x .^ 2);
         bounds = [(-1.0, 1.0)],
     )
 end
@@ -135,7 +137,7 @@ end
     tmpdir = mktempdir()
     for f in readdir(FIXTURES_DIR)
         src = joinpath(FIXTURES_DIR, f)
-        isfile(src) && cp(src, joinpath(tmpdir, f); force=true)
+        isfile(src) && cp(src, joinpath(tmpdir, f); force = true)
     end
 
     io = IOBuffer()
@@ -160,7 +162,7 @@ end
     tmpdir = mktempdir()
     for f in readdir(FIXTURES_DIR)
         src = joinpath(FIXTURES_DIR, f)
-        isfile(src) && cp(src, joinpath(tmpdir, f); force=true)
+        isfile(src) && cp(src, joinpath(tmpdir, f); force = true)
     end
 
     io = IOBuffer()
@@ -175,7 +177,7 @@ end
 
     @test result.experiment_dir isa String
     @test result.degrees isa Vector{Int}
-    @test result.refinements isa Dict{Int, RefinedExperimentResult}
-    @test result.degree_capture_results isa Vector{Tuple{Int, CaptureResult}}
+    @test result.refinements isa Dict{Int,RefinedExperimentResult}
+    @test result.degree_capture_results isa Vector{Tuple{Int,CaptureResult}}
     @test result.timestamp isa DateTime
 end

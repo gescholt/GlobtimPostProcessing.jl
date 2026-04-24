@@ -83,7 +83,7 @@ using CSV
 
     @testset "Load all critical points for multiple degrees" begin
         degrees = [4, 6]
-        all_data = Dict{Int, DataFrame}()
+        all_data = Dict{Int,DataFrame}()
 
         for degree in degrees
             df = load_critical_points_for_degree(fixtures_dir, degree)
@@ -111,12 +111,15 @@ using CSV
             min_idx = argmin(df.objective)
             min_point = [df[min_idx, Symbol("p$i")] for i in 1:4]
 
-            push!(minimization_data, (
-                degree = degree,
-                num_points = nrow(df),
-                min_objective = min_obj,
-                min_point = min_point
-            ))
+            push!(
+                minimization_data,
+                (
+                    degree = degree,
+                    num_points = nrow(df),
+                    min_objective = min_obj,
+                    min_point = min_point,
+                ),
+            )
         end
 
         @test length(minimization_data) == 2
@@ -168,8 +171,8 @@ using CSV
             "model_config" => Dict(
                 "name" => "lotka_volterra_4d",
                 "dimension" => 4,
-                "true_parameters" => [0.2, 0.3, 0.5, 0.6]
-            )
+                "true_parameters" => [0.2, 0.3, 0.5, 0.6],
+            ),
         )
         p = extract_true_parameters(config_nested)
         @test p isa Vector{Float64}
@@ -184,7 +187,7 @@ using CSV
     @testset "extract_true_parameters - flat takes precedence" begin
         config_both = Dict(
             "p_true" => [1.0, 2.0],
-            "model_config" => Dict("true_parameters" => [3.0, 4.0])
+            "model_config" => Dict("true_parameters" => [3.0, 4.0]),
         )
         p = extract_true_parameters(config_both)
         @test p == [1.0, 2.0]
@@ -220,5 +223,4 @@ using CSV
         @test "distance_to_true_parameters" in exp_result.enabled_tracking
         @test "distance_to_true_parameters" in exp_result.tracking_capabilities
     end
-
 end

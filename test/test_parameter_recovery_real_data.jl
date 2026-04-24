@@ -26,7 +26,7 @@ const TEST_DATASET_ROOT = joinpath(
     "experiments",
     "daisy_ex3_4d_study",
     "configs_20251006_160051",
-    "hpc_results"
+    "hpc_results",
 )
 
 @testset "Parameter Recovery - Real Data Integration" begin
@@ -79,7 +79,10 @@ const TEST_DATASET_ROOT = joinpath(
                 exp_path = joinpath(TEST_DATASET_ROOT, exp_dirs[1])
 
                 # Find available CSV files
-                csv_files = filter(f -> occursin(r"critical_points_deg_\d+\.csv", f), readdir(exp_path))
+                csv_files = filter(
+                    f -> occursin(r"critical_points_deg_\d+\.csv", f),
+                    readdir(exp_path),
+                )
 
                 if !isempty(csv_files)
                     # Extract degree from first CSV
@@ -115,7 +118,10 @@ const TEST_DATASET_ROOT = joinpath(
                     p_true = collect(config["p_true"])
 
                     # Find available degrees
-                    csv_files = filter(f -> occursin(r"critical_points_deg_(\d+)\.csv", f), readdir(exp_path))
+                    csv_files = filter(
+                        f -> occursin(r"critical_points_deg_(\d+)\.csv", f),
+                        readdir(exp_path),
+                    )
 
                     if !isempty(csv_files)
                         # Test on first available degree
@@ -138,9 +144,15 @@ const TEST_DATASET_ROOT = joinpath(
                         @test length(stats["all_distances"]) == nrow(df)
 
                         println("    Degree $degree:")
-                        println("      Min distance:  $(round(stats["min_distance"], digits=6))")
-                        println("      Mean distance: $(round(stats["mean_distance"], digits=6))")
-                        println("      Recoveries:    $(stats["num_recoveries"]) / $(nrow(df))")
+                        println(
+                            "      Min distance:  $(round(stats["min_distance"], digits=6))",
+                        )
+                        println(
+                            "      Mean distance: $(round(stats["mean_distance"], digits=6))",
+                        )
+                        println(
+                            "      Recoveries:    $(stats["num_recoveries"]) / $(nrow(df))",
+                        )
                     end
                 end
             end
@@ -158,7 +170,10 @@ const TEST_DATASET_ROOT = joinpath(
                     p_true = collect(config["p_true"])
 
                     # Find all available degrees
-                    csv_files = filter(f -> occursin(r"critical_points_deg_(\d+)\.csv", f), readdir(exp_path))
+                    csv_files = filter(
+                        f -> occursin(r"critical_points_deg_(\d+)\.csv", f),
+                        readdir(exp_path),
+                    )
                     degrees = Int[]
                     for csv_file in csv_files
                         m = match(r"critical_points_deg_(\d+)\.csv", csv_file)
@@ -172,7 +187,10 @@ const TEST_DATASET_ROOT = joinpath(
                         # Generate table for first 2 degrees
                         test_degrees = degrees[1:min(2, length(degrees))]
                         recovery_table = generate_parameter_recovery_table(
-                            exp_path, p_true, test_degrees, 0.01
+                            exp_path,
+                            p_true,
+                            test_degrees,
+                            0.01,
                         )
 
                         @test recovery_table isa DataFrame
@@ -186,9 +204,11 @@ const TEST_DATASET_ROOT = joinpath(
                         println("\n    Parameter Recovery Table:")
                         println("    " * "="^60)
                         for row in eachrow(recovery_table)
-                            println("    Degree $(row.degree): $(row.num_critical_points) CPs, " *
-                                   "min_dist=$(round(row.min_distance, digits=4)), " *
-                                   "recoveries=$(row.num_recoveries)")
+                            println(
+                                "    Degree $(row.degree): $(row.num_critical_points) CPs, " *
+                                "min_dist=$(round(row.min_distance, digits=4)), " *
+                                "recoveries=$(row.num_recoveries)",
+                            )
                         end
                         println("    " * "="^60)
                     end

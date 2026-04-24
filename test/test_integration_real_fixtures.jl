@@ -89,7 +89,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
             deuflhard_4d_fixture,
             raw_point;
             max_iterations = 1000,
-            f_abstol = 1e-8
+            f_abstol = 1e-8,
         )
 
         # Check refinement succeeded
@@ -115,17 +115,14 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         sorted_indices = sortperm(df4.objective)
         test_indices = sorted_indices[1:n_test]
 
-        raw_points = [
-            [df4[idx, Symbol("p$i")] for i in 1:4]
-            for idx in test_indices
-        ]
+        raw_points = [[df4[idx, Symbol("p$i")] for i in 1:4] for idx in test_indices]
 
         # Batch refinement
         results = refine_critical_points_batch(
             deuflhard_4d_fixture,
             raw_points;
             max_iterations = 500,
-            show_progress = false
+            show_progress = false,
         )
 
         @test length(results) == n_test
@@ -180,7 +177,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         degree_results = summary_data.degree_results
 
         # Build L2 by degree dict
-        l2_by_degree = Dict{Int, Float64}()
+        l2_by_degree = Dict{Int,Float64}()
         for entry in degree_results
             l2_by_degree[entry.degree] = entry.l2_norm
         end
@@ -234,10 +231,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         sorted_indices = sortperm(df4.objective)
         top_indices = sorted_indices[1:n_refine]
 
-        raw_points = [
-            [df4[idx, Symbol("p$i")] for i in 1:dimension]
-            for idx in top_indices
-        ]
+        raw_points = [[df4[idx, Symbol("p$i")] for i in 1:dimension] for idx in top_indices]
         raw_values = [df4[idx, :objective] for idx in top_indices]
 
         # 4. Refine with real objective function
@@ -245,7 +239,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
             deuflhard_4d_fixture,
             raw_points;
             max_iterations = 500,
-            show_progress = false
+            show_progress = false,
         )
 
         # 5. Analyze refinement quality
@@ -331,16 +325,13 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         n_test = min(20, nrow(df4))
         test_indices = 1:n_test
 
-        raw_points = [
-            [df4[idx, Symbol("p$i")] for i in 1:4]
-            for idx in test_indices
-        ]
+        raw_points = [[df4[idx, Symbol("p$i")] for i in 1:4] for idx in test_indices]
 
         results = refine_critical_points_batch(
             deuflhard_4d_fixture,
             raw_points;
             max_iterations = 500,
-            show_progress = false
+            show_progress = false,
         )
 
         # Analyze convergence statistics
@@ -356,12 +347,16 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
 
         # Convergence reasons
         reasons = [r.convergence_reason for r in results]
-        @test all(r in [:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error, :unknown] for r in reasons)
+        @test all(
+            r in [:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error, :unknown] for
+            r in reasons
+        )
 
         # If converged, most should be due to tolerance
         converged_reasons = [r.convergence_reason for r in results if r.converged]
         if !isempty(converged_reasons)
-            tolerance_converged = count(r in [:x_tol, :f_tol, :g_tol] for r in converged_reasons)
+            tolerance_converged =
+                count(r in [:x_tol, :f_tol, :g_tol] for r in converged_reasons)
             @test tolerance_converged >= length(converged_reasons) * 0.5  # At least 50%
         end
     end
@@ -412,7 +407,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         end
 
         # 4. Increases away from origin
-        directions = [[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
+        directions = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
         for direction in directions
             v_near = deuflhard_4d_fixture(0.1 * direction)
             v_far = deuflhard_4d_fixture(0.5 * direction)

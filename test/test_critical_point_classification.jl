@@ -9,7 +9,6 @@ using DataFrames
 using GlobtimPostProcessing
 
 @testset "Critical Point Classification" begin
-
     @testset "classify_critical_point - Basic Classifications" begin
         # Test minimum (all positive eigenvalues)
         @test classify_critical_point([2.5, 1.3, 0.8]) == "minimum"
@@ -45,8 +44,8 @@ using GlobtimPostProcessing
         @test classify_critical_point([1e-7, 1e-6]) == "degenerate"
 
         # Custom tolerance
-        @test classify_critical_point([1e-3], tol=1e-2) == "degenerate"
-        @test classify_critical_point([1e-3], tol=1e-4) == "minimum"
+        @test classify_critical_point([1e-3], tol = 1e-2) == "degenerate"
+        @test classify_critical_point([1e-3], tol = 1e-4) == "minimum"
     end
 
     @testset "extract_eigenvalues_from_row" begin
@@ -56,7 +55,7 @@ using GlobtimPostProcessing
             x2 = [0.3, 0.4],
             hessian_eigenvalue_1 = [2.5, -1.0],
             hessian_eigenvalue_2 = [1.3, -2.0],
-            hessian_eigenvalue_3 = [0.8, -0.5]
+            hessian_eigenvalue_3 = [0.8, -0.5],
         )
 
         # Test extraction from first row
@@ -72,7 +71,8 @@ using GlobtimPostProcessing
         # Test DataFrame without eigenvalue columns
         df_no_eigenvalues = DataFrame(x1 = [0.1], x2 = [0.3])
         row_no_eigenvalues = df_no_eigenvalues[1, :]
-        @test GlobtimPostProcessing.extract_eigenvalues_from_row(row_no_eigenvalues) === nothing
+        @test GlobtimPostProcessing.extract_eigenvalues_from_row(row_no_eigenvalues) ===
+              nothing
     end
 
     @testset "classify_all_critical_points! - Basic Functionality" begin
@@ -81,7 +81,7 @@ using GlobtimPostProcessing
             x1 = [0.1, 0.2, 0.3, 0.4, 0.5],
             x2 = [0.3, 0.4, 0.5, 0.6, 0.7],
             hessian_eigenvalue_1 = [2.5, -1.0, 1.5, 0.0, 2.0],
-            hessian_eigenvalue_2 = [1.3, -2.0, -0.8, 1.0, -1.0]
+            hessian_eigenvalue_2 = [1.3, -2.0, -0.8, 1.0, -1.0],
         )
 
         # Classify
@@ -99,10 +99,7 @@ using GlobtimPostProcessing
     end
 
     @testset "classify_all_critical_points! - Empty DataFrame" begin
-        df_empty = DataFrame(
-            x1 = Float64[],
-            hessian_eigenvalue_1 = Float64[]
-        )
+        df_empty = DataFrame(x1 = Float64[], hessian_eigenvalue_1 = Float64[])
 
         classify_all_critical_points!(df_empty)
 
@@ -111,10 +108,7 @@ using GlobtimPostProcessing
     end
 
     @testset "classify_all_critical_points! - No Eigenvalue Columns" begin
-        df_no_eigenvalues = DataFrame(
-            x1 = [0.1, 0.2],
-            x2 = [0.3, 0.4]
-        )
+        df_no_eigenvalues = DataFrame(x1 = [0.1, 0.2], x2 = [0.3, 0.4])
 
         # Should throw an error
         @test_throws ErrorException classify_all_critical_points!(df_no_eigenvalues)
@@ -124,10 +118,10 @@ using GlobtimPostProcessing
         df = DataFrame(
             x1 = [0.1],
             hessian_eigenvalue_1 = [2.5],
-            hessian_eigenvalue_2 = [1.3]
+            hessian_eigenvalue_2 = [1.3],
         )
 
-        classify_all_critical_points!(df, classification_col=:my_classification)
+        classify_all_critical_points!(df, classification_col = :my_classification)
 
         @test :my_classification in propertynames(df)
         @test df[1, :my_classification] == "minimum"
@@ -137,7 +131,7 @@ using GlobtimPostProcessing
         df = DataFrame(
             x1 = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
             hessian_eigenvalue_1 = [2.5, -1.0, 1.5, 0.0, 2.0, 3.0],
-            hessian_eigenvalue_2 = [1.3, -2.0, -0.8, 1.0, -1.0, 1.5]
+            hessian_eigenvalue_2 = [1.3, -2.0, -0.8, 1.0, -1.0, 1.5],
         )
 
         classify_all_critical_points!(df)
@@ -162,13 +156,13 @@ using GlobtimPostProcessing
             x1 = [0.1, 0.1001, 0.5, 0.2],
             x2 = [0.3, 0.3001, 0.6, -0.3],
             hessian_eigenvalue_1 = [2.5, 2.6, 3.0, -1.0],
-            hessian_eigenvalue_2 = [1.3, 1.4, 1.5, -2.0]
+            hessian_eigenvalue_2 = [1.3, 1.4, 1.5, -2.0],
         )
 
         classify_all_critical_points!(df)
 
         # Find distinct minima (points 1, 2, and 3 are minima; 1 and 2 are very close)
-        distinct_indices = find_distinct_local_minima(df, distance_threshold=1e-2)
+        distinct_indices = find_distinct_local_minima(df, distance_threshold = 1e-2)
 
         # Should return 2 distinct minima (one from cluster of 1&2, plus point 3)
         @test length(distinct_indices) == 2
@@ -183,7 +177,7 @@ using GlobtimPostProcessing
         df = DataFrame(
             x1 = [0.1, 0.2],
             hessian_eigenvalue_1 = [-1.0, 1.0],
-            hessian_eigenvalue_2 = [-2.0, -1.0]
+            hessian_eigenvalue_2 = [-2.0, -1.0],
         )
 
         classify_all_critical_points!(df)
@@ -193,15 +187,13 @@ using GlobtimPostProcessing
     end
 
     @testset "find_distinct_local_minima - No Parameter Columns" begin
-        df = DataFrame(
-            hessian_eigenvalue_1 = [2.5, 2.6],
-            hessian_eigenvalue_2 = [1.3, 1.4]
-        )
+        df = DataFrame(hessian_eigenvalue_1 = [2.5, 2.6], hessian_eigenvalue_2 = [1.3, 1.4])
 
         classify_all_critical_points!(df)
 
         # Should warn and return all minima without clustering
-        distinct_indices = @test_logs (:warn, r"No parameter columns") find_distinct_local_minima(df)
+        distinct_indices =
+            @test_logs (:warn, r"No parameter columns") find_distinct_local_minima(df)
 
         @test length(distinct_indices) == 2
     end
@@ -211,7 +203,7 @@ using GlobtimPostProcessing
             x1 = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
             x2 = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
             hessian_eigenvalue_1 = [2.5, 2.6, -1.0, 1.5, 0.0, 2.0, 3.0, -2.0, 1.0, 2.5],
-            hessian_eigenvalue_2 = [1.3, 1.4, -2.0, -0.8, 1.0, -1.0, 1.5, -1.5, 1.2, 1.6]
+            hessian_eigenvalue_2 = [1.3, 1.4, -2.0, -0.8, 1.0, -1.0, 1.5, -1.5, 1.2, 1.6],
         )
 
         classify_all_critical_points!(df)
@@ -236,10 +228,7 @@ using GlobtimPostProcessing
     end
 
     @testset "get_classification_summary - Empty DataFrame" begin
-        df_empty = DataFrame(
-            x1 = Float64[],
-            hessian_eigenvalue_1 = Float64[]
-        )
+        df_empty = DataFrame(x1 = Float64[], hessian_eigenvalue_1 = Float64[])
 
         classify_all_critical_points!(df_empty)
         summary = get_classification_summary(df_empty)
@@ -256,18 +245,18 @@ using GlobtimPostProcessing
             x2 = [0.3, 0.4, 0.5, 0.6],
             z = [100.0, 200.0, 150.0, 300.0],
             hessian_eigenvalue_1 = [2.5, -1.0, 1.5, 2.0],
-            hessian_eigenvalue_2 = [1.3, -2.0, -0.8, 1.8]
+            hessian_eigenvalue_2 = [1.3, -2.0, -0.8, 1.8],
         )
 
         exp_result = ExperimentResult(
             "test_classification",
-            Dict{String, Any}(),
+            Dict{String,Any}(),
             ["hessian_eigenvalues"],
             ["hessian_eigenvalues"],
             df,
             nothing,
             nothing,
-            "/tmp/test"
+            "/tmp/test",
         )
 
         # Compute Hessian statistics
@@ -299,7 +288,7 @@ using GlobtimPostProcessing
             hessian_eigenvalue_1 = [3.2],
             hessian_eigenvalue_2 = [2.1],
             hessian_eigenvalue_3 = [1.5],
-            hessian_eigenvalue_4 = [0.8]
+            hessian_eigenvalue_4 = [0.8],
         )
 
         classify_all_critical_points!(df)
@@ -318,5 +307,4 @@ using GlobtimPostProcessing
         eigenvalues_10d_saddle = vcat([1.0, 1.0, 1.0], fill(-1.0, 7))
         @test classify_critical_point(eigenvalues_10d_saddle) == "saddle"
     end
-
 end

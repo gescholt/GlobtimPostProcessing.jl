@@ -60,7 +60,6 @@ const ND_MAX = [[0.0, 0.0]]
 # ── Tests ──────────────────────────────────────────────────────────────────
 
 @testset "Hessian Classification Dispatch" begin
-
     @testset "Function dispatch (baseline)" begin
         cls = GlobtimPostProcessing.classify_refined_points(rosenbrock, ROSENBROCK_MIN)
         @test !isempty(cls)
@@ -74,18 +73,27 @@ const ND_MAX = [[0.0, 0.0]]
         @test GlobtimPostProcessing._as_function(obj_pd) isa Function
 
         # ForwardDiff path (default)
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_pd), PD_MIN)
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_pd),
+            PD_MIN,
+        )
         @test !isempty(cls)
         @test cls[1] == :minimum
 
         # Saddle
         obj_indef = GenericQuadratic(INDEF_A, INDEF_B)
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_indef), INDEF_SADDLE)
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_indef),
+            INDEF_SADDLE,
+        )
         @test cls[1] == :saddle
 
         # Maximum
         obj_nd = GenericQuadratic(ND_A, ND_B)
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_nd), ND_MAX)
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_nd),
+            ND_MAX,
+        )
         @test cls[1] == :maximum
     end
 
@@ -96,28 +104,52 @@ const ND_MAX = [[0.0, 0.0]]
         @test !(obj_pd isa Function)
 
         # ForwardDiff path → Hessian computation fails, returns :error
-        cls_ad = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_pd), PD_MIN; gradient_method=:forwarddiff)
+        cls_ad = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_pd),
+            PD_MIN;
+            gradient_method = :forwarddiff,
+        )
         @test cls_ad[1] == :error  # Expected: ForwardDiff can't handle Float64-restricted callables
 
         # FiniteDiff path → works correctly (this is what ODE models must use)
-        cls_fd = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_pd), PD_MIN; gradient_method=:finitediff)
+        cls_fd = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_pd),
+            PD_MIN;
+            gradient_method = :finitediff,
+        )
         @test cls_fd[1] == :minimum
 
         # Saddle
         obj_indef = RestrictedQuadratic(INDEF_A, INDEF_B)
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_indef), INDEF_SADDLE; gradient_method=:finitediff)
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_indef),
+            INDEF_SADDLE;
+            gradient_method = :finitediff,
+        )
         @test cls[1] == :saddle
 
         # Maximum
         obj_nd = RestrictedQuadratic(ND_A, ND_B)
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj_nd), ND_MAX; gradient_method=:finitediff)
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj_nd),
+            ND_MAX;
+            gradient_method = :finitediff,
+        )
         @test cls[1] == :maximum
     end
 
     @testset "ForwardDiff vs FiniteDiff consistency" begin
         # For ForwardDiff-compatible functions, both methods should agree
-        cls_ad = GlobtimPostProcessing.classify_refined_points(rosenbrock, ROSENBROCK_MIN; gradient_method=:forwarddiff)
-        cls_fd = GlobtimPostProcessing.classify_refined_points(rosenbrock, ROSENBROCK_MIN; gradient_method=:finitediff)
+        cls_ad = GlobtimPostProcessing.classify_refined_points(
+            rosenbrock,
+            ROSENBROCK_MIN;
+            gradient_method = :forwarddiff,
+        )
+        cls_fd = GlobtimPostProcessing.classify_refined_points(
+            rosenbrock,
+            ROSENBROCK_MIN;
+            gradient_method = :finitediff,
+        )
         @test cls_ad == cls_fd
         @test cls_ad[1] == :minimum
     end
@@ -125,7 +157,10 @@ const ND_MAX = [[0.0, 0.0]]
     @testset "Multiple points" begin
         obj = GenericQuadratic(PD_A, PD_B)
         points = [PD_MIN[1], PD_MIN[1]]  # same point twice
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj), points)
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj),
+            points,
+        )
         @test length(cls) == 2
         @test all(c -> c == :minimum, cls)
     end
@@ -133,10 +168,17 @@ const ND_MAX = [[0.0, 0.0]]
     @testset "3D objective" begin
         A3 = Float64[3 0 0; 0 2 0; 0 0 1]
         obj3 = GenericQuadratic(A3, zeros(3))
-        cls = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj3), [[0.0, 0.0, 0.0]])
+        cls = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj3),
+            [[0.0, 0.0, 0.0]],
+        )
         @test cls[1] == :minimum
 
-        cls_fd = GlobtimPostProcessing.classify_refined_points(GlobtimPostProcessing._as_function(obj3), [[0.0, 0.0, 0.0]]; gradient_method=:finitediff)
+        cls_fd = GlobtimPostProcessing.classify_refined_points(
+            GlobtimPostProcessing._as_function(obj3),
+            [[0.0, 0.0, 0.0]];
+            gradient_method = :finitediff,
+        )
         @test cls_fd[1] == :minimum
     end
 

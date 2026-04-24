@@ -18,7 +18,8 @@ using Test
 
         # BUG: 0.010 < 0.01 is false, so threshold not included
         # FIX: Should use <= instead of <
-        matching_thresholds = filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
+        matching_thresholds =
+            filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
 
         @test 0.010 in matching_thresholds  # This tests the fix
         @test length(matching_thresholds) == 1
@@ -33,7 +34,8 @@ using Test
         standard_thresholds = [0.002, 0.005, 0.010, 0.050, 0.100]
 
         # 0.005 should be included when max_domain == 0.005
-        matching_thresholds = filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
+        matching_thresholds =
+            filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
 
         @test 0.002 in matching_thresholds
         @test 0.005 in matching_thresholds
@@ -48,7 +50,8 @@ using Test
         max_domain = maximum(domains)
 
         standard_thresholds = [0.002, 0.005, 0.010, 0.050, 0.100]
-        matching_thresholds = filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
+        matching_thresholds =
+            filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
 
         @test 0.005 in matching_thresholds
         @test 0.010 in matching_thresholds
@@ -65,7 +68,8 @@ using Test
         max_domain = maximum(domains)
 
         standard_thresholds = [0.002, 0.005, 0.010, 0.050, 0.100]
-        matching_thresholds = filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
+        matching_thresholds =
+            filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
 
         @test isempty(matching_thresholds)
     end
@@ -77,7 +81,8 @@ using Test
         max_domain = maximum(domains)
 
         standard_thresholds = [0.002, 0.005, 0.010, 0.050, 0.100]
-        matching_thresholds = filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
+        matching_thresholds =
+            filter(t -> min_domain <= t && t <= max_domain, standard_thresholds)
 
         # All thresholds should be included since they're all within [0.001, 0.2]
         @test length(matching_thresholds) == 5

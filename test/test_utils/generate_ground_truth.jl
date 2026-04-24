@@ -33,14 +33,14 @@ const OUTPUT_DIR = joinpath(@__DIR__, "..", "fixtures", "ground_truth")
 
 # Per-function n_starts configuration (more starts for harder functions)
 const N_STARTS_CONFIG = Dict(
-    "sphere_2d"           => 50,
-    "himmelblau"          => 300,
-    "sixhump_camel"       => 500,
-    "rosenbrock_2d"       => 100,
-    "deuflhard_2d"        => 1000,
-    "styblinski_tang_2d"  => 300,
-    "rastrigin_2d"        => 5000,   # 121 minima — need many starts
-    "deuflhard_4d"        => 3000,   # 4D needs more starts
+    "sphere_2d" => 50,
+    "himmelblau" => 300,
+    "sixhump_camel" => 500,
+    "rosenbrock_2d" => 100,
+    "deuflhard_2d" => 1000,
+    "styblinski_tang_2d" => 300,
+    "rastrigin_2d" => 5000,   # 121 minima — need many starts
+    "deuflhard_4d" => 3000,   # 4D needs more starts
 )
 
 # ============================================================================
@@ -53,18 +53,28 @@ const N_STARTS_CONFIG = Dict(
 Write a vector of VerifiedCP to CSV with columns:
     x1, x2, ..., xN, value, grad_norm, classification, eigenvalue_1, ..., eigenvalue_N, neighborhood_confirmed
 """
-function write_ground_truth_csv(filepath::String, cps::Vector{CPVerification.VerifiedCP}, dim::Int)
+function write_ground_truth_csv(
+    filepath::String,
+    cps::Vector{CPVerification.VerifiedCP},
+    dim::Int,
+)
     open(filepath, "w") do io
         # Header
         x_cols = join(["x$i" for i in 1:dim], ",")
         ev_cols = join(["eigenvalue_$i" for i in 1:dim], ",")
-        println(io, "$x_cols,value,grad_norm,classification,$ev_cols,neighborhood_confirmed")
+        println(
+            io,
+            "$x_cols,value,grad_norm,classification,$ev_cols,neighborhood_confirmed",
+        )
 
         # Data rows
         for cp in cps
             x_str = join([@sprintf("%.15e", cp.point[i]) for i in 1:dim], ",")
             ev_str = join([@sprintf("%.15e", cp.eigenvalues[i]) for i in 1:dim], ",")
-            println(io, "$x_str,$(@sprintf("%.15e", cp.value)),$(@sprintf("%.15e", cp.grad_norm)),$(cp.classification),$ev_str,$(cp.neighborhood_confirmed)")
+            println(
+                io,
+                "$x_str,$(@sprintf("%.15e", cp.value)),$(@sprintf("%.15e", cp.grad_norm)),$(cp.classification),$ev_str,$(cp.neighborhood_confirmed)",
+            )
         end
     end
 end
@@ -85,11 +95,13 @@ function generate_all()
 
         # Find all critical points
         t = @elapsed cps = find_all_critical_points(
-            bf.f, bf.bounds, bf.dim;
-            n_starts=n_starts,
-            grad_tol=1e-10,
-            hessian_tol=1e-6,
-            dedup_tol=1e-4,
+            bf.f,
+            bf.bounds,
+            bf.dim;
+            n_starts = n_starts,
+            grad_tol = 1e-10,
+            hessian_tol = 1e-6,
+            dedup_tol = 1e-4,
         )
 
         # Classify counts
@@ -98,7 +110,9 @@ function generate_all()
         saddles = filter(cp -> cp.classification == :saddle, cps)
         degenerate = filter(cp -> cp.classification == :degenerate, cps)
 
-        println("  Found: $(length(cps)) CPs ($(length(minima)) min, $(length(maxima)) max, $(length(saddles)) saddle, $(length(degenerate)) degen)")
+        println(
+            "  Found: $(length(cps)) CPs ($(length(minima)) min, $(length(maxima)) max, $(length(saddles)) saddle, $(length(degenerate)) degen)",
+        )
         println("  Time: $(@sprintf("%.2f", t))s with $n_starts starts")
 
         # Verify analytically known minima are found
@@ -119,7 +133,9 @@ function generate_all()
             if length(minima) == bf.n_expected_minima
                 println("  ✓ Found expected $(bf.n_expected_minima) minima")
             else
-                println("  ⚠ Found $(length(minima)) minima, expected $(bf.n_expected_minima)")
+                println(
+                    "  ⚠ Found $(length(minima)) minima, expected $(bf.n_expected_minima)",
+                )
             end
         end
 

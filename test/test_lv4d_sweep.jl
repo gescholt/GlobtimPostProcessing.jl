@@ -12,10 +12,10 @@ using GlobtimPostProcessing.LV4DAnalysis: ExperimentFilter, fixed, sweep, query_
     @testset "Query experiments with impossible filter returns empty" begin
         # Use a filter that won't match any real experiments
         filter = ExperimentFilter(
-            gn=fixed(999),  # Unlikely to exist
-            degree=sweep(4:12),
-            domain=nothing,
-            seed=nothing
+            gn = fixed(999),  # Unlikely to exist
+            degree = sweep(4:12),
+            domain = nothing,
+            seed = nothing,
         )
 
         # This should return empty - the point is to test the code path
@@ -29,20 +29,20 @@ using GlobtimPostProcessing.LV4DAnalysis: ExperimentFilter, fixed, sweep, query_
     @testset "ExperimentFilter construction" begin
         # Test that filters can be constructed with various configurations
         filter1 = ExperimentFilter(
-            gn=fixed(16),
-            degree=sweep(4, 12),
-            domain=nothing,
-            seed=nothing
+            gn = fixed(16),
+            degree = sweep(4, 12),
+            domain = nothing,
+            seed = nothing,
         )
         @test filter1.gn.value == 16
         @test filter1.degree.min == 4
         @test filter1.degree.max == 12
 
         filter2 = ExperimentFilter(
-            gn=nothing,
-            degree=sweep(6:10),
-            domain=fixed(0.01),
-            seed=nothing
+            gn = nothing,
+            degree = sweep(6:10),
+            domain = fixed(0.01),
+            seed = nothing,
         )
         @test filter2.gn === nothing
         @test filter2.domain.value == 0.01

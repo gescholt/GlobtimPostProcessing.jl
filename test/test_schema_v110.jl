@@ -16,15 +16,18 @@ using LinearAlgebra
 const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
 
 @testset "Schema v1.1.0 Support" begin
-
     @testset "CSV Schema Detection" begin
         @testset "Detects v1.1.0 format" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             @test detect_csv_schema(df) == :v1_1_0
         end
 
         @testset "Detects Phase 2 format" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_raw_deg_4.csv"), DataFrame)
+            df =
+                CSV.read(joinpath(FIXTURES_DIR, "critical_points_raw_deg_4.csv"), DataFrame)
             @test detect_csv_schema(df) == :phase2
         end
 
@@ -34,21 +37,25 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
         end
 
         @testset "Errors on unrecognized schema" begin
-            df = DataFrame(a=[1,2], b=[3,4])
+            df = DataFrame(a = [1, 2], b = [3, 4])
             @test_throws ErrorException detect_csv_schema(df)
         end
     end
 
     @testset "Coordinate Column Resolution" begin
         @testset "v1.1.0 prefers refined coordinates" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             prefix, has_refinement = get_coordinate_columns(df, 4)
             @test prefix == "theta"
             @test has_refinement == true
         end
 
         @testset "Phase 2 uses p prefix" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_raw_deg_4.csv"), DataFrame)
+            df =
+                CSV.read(joinpath(FIXTURES_DIR, "critical_points_raw_deg_4.csv"), DataFrame)
             prefix, has_refinement = get_coordinate_columns(df, 4)
             @test prefix == "p"
             @test has_refinement == false
@@ -64,7 +71,10 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
 
     @testset "v1.1.0 CSV Loading" begin
         @testset "Load v1.1.0 degree 4" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             @test nrow(df) == 5
             @test hasproperty(df, :theta1_raw)
             @test hasproperty(df, :theta1)
@@ -75,26 +85,38 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
         end
 
         @testset "Load v1.1.0 degree 6" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_6.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_6.csv"),
+                DataFrame,
+            )
             @test nrow(df) == 7
             @test hasproperty(df, :theta1_raw)
             @test hasproperty(df, :theta4)
         end
 
         @testset "All v1.1.0 columns have numeric data" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             for col in names(df)
                 @test eltype(df[!, col]) <: Real
             end
         end
 
         @testset "Refinement improvement is non-negative" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             @test all(df.refinement_improvement .>= 0)
         end
 
         @testset "Refined objective <= raw objective" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             @test all(df.objective .<= df.objective_raw)
         end
     end
@@ -103,7 +125,10 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
         p_true = [0.2, 0.3, 0.5, 0.6]
 
         @testset "Uses refined coordinates for recovery" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
             stats = compute_parameter_recovery_stats(df, p_true, 1.0)
 
             @test haskey(stats, "schema")
@@ -115,7 +140,10 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
         end
 
         @testset "Refined coordinates give better recovery than raw" begin
-            df = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
+            df = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
 
             # Recovery with refined coordinates (default)
             stats_refined = compute_parameter_recovery_stats(df, p_true, 1.0)
@@ -123,7 +151,8 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
             # Manually compute distance using raw coordinates for comparison
             raw_distances = Float64[]
             for row in eachrow(df)
-                p_raw = [row[:theta1_raw], row[:theta2_raw], row[:theta3_raw], row[:theta4_raw]]
+                p_raw =
+                    [row[:theta1_raw], row[:theta2_raw], row[:theta3_raw], row[:theta4_raw]]
                 push!(raw_distances, norm(p_raw - p_true))
             end
             min_raw_distance = minimum(raw_distances)
@@ -133,8 +162,14 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
         end
 
         @testset "Degree 6 has better recovery than degree 4" begin
-            df4 = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"), DataFrame)
-            df6 = CSV.read(joinpath(FIXTURES_DIR, "critical_points_v110_deg_6.csv"), DataFrame)
+            df4 = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_4.csv"),
+                DataFrame,
+            )
+            df6 = CSV.read(
+                joinpath(FIXTURES_DIR, "critical_points_v110_deg_6.csv"),
+                DataFrame,
+            )
 
             stats4 = compute_parameter_recovery_stats(df4, p_true, 1.0)
             stats6 = compute_parameter_recovery_stats(df6, p_true, 1.0)
@@ -191,5 +226,4 @@ const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
             @test has_ground_truth(tempdir()) == false
         end
     end
-
 end

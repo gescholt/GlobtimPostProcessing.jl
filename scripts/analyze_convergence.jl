@@ -10,9 +10,11 @@ using Printf
 const RESULTS_DIR = let
     root = get(ENV, "GLOBTIM_RESULTS_ROOT", nothing)
     if root === nothing
-        error("GLOBTIM_RESULTS_ROOT environment variable is not set. " *
-              "Set it to the path containing your globtim_results, e.g.: " *
-              "export GLOBTIM_RESULTS_ROOT=/path/to/globtim_results")
+        error(
+            "GLOBTIM_RESULTS_ROOT environment variable is not set. " *
+            "Set it to the path containing your globtim_results, e.g.: " *
+            "export GLOBTIM_RESULTS_ROOT=/path/to/globtim_results",
+        )
     end
     lv4d = joinpath(root, "lotka_volterra_4d")
     if !isdir(lv4d)
@@ -23,10 +25,10 @@ end
 
 # Collect data from all lv4d_GN8_deg8-8 experiments
 function collect_data()
-    data = Dict{Float64, Vector{Float64}}()  # domain => [recovery_errors...]
-    l2_data = Dict{Float64, Vector{Float64}}()  # domain => [L2_norms...]
+    data = Dict{Float64,Vector{Float64}}()  # domain => [recovery_errors...]
+    l2_data = Dict{Float64,Vector{Float64}}()  # domain => [L2_norms...]
 
-    for dir in readdir(RESULTS_DIR, join=true)
+    for dir in readdir(RESULTS_DIR, join = true)
         basename_dir = basename(dir)
         if !startswith(basename_dir, "lv4d_GN8_deg8-8_domain")
             continue
@@ -73,8 +75,15 @@ function print_summary(data, l2_data)
     println("LV4D Convergence Summary (GN=8, degree=8)")
     println("="^70)
     println()
-    @printf("%-8s  %5s  %8s  %10s  %10s  %10s\n",
-            "Domain", "N", "Pass%", "Mean Rec", "Std Rec", "Mean L2")
+    @printf(
+        "%-8s  %5s  %8s  %10s  %10s  %10s\n",
+        "Domain",
+        "N",
+        "Pass%",
+        "Mean Rec",
+        "Std Rec",
+        "Mean L2"
+    )
     println("-"^70)
 
     for d in domains
@@ -84,8 +93,15 @@ function print_summary(data, l2_data)
         std_rec = std(data[d]) * 100
         mean_l2 = mean(l2_data[d])
 
-        @printf("%-8.3f  %5d  %7.0f%%  %9.1f%%  %9.1f%%  %10.1f\n",
-                d, n, pass_rate, mean_rec, std_rec, mean_l2)
+        @printf(
+            "%-8.3f  %5d  %7.0f%%  %9.1f%%  %9.1f%%  %10.1f\n",
+            d,
+            n,
+            pass_rate,
+            mean_rec,
+            std_rec,
+            mean_l2
+        )
     end
     println("="^70)
 end
@@ -108,8 +124,9 @@ function compute_convergence_rate(data)
 
     # Simple linear regression
     n = length(log_d)
-    slope = (n * sum(log_d .* log_r) - sum(log_d) * sum(log_r)) /
-            (n * sum(log_d.^2) - sum(log_d)^2)
+    slope =
+        (n * sum(log_d .* log_r) - sum(log_d) * sum(log_r)) /
+        (n * sum(log_d .^ 2) - sum(log_d)^2)
     intercept = (sum(log_r) - slope * sum(log_d)) / n
 
     # Print log-log data for external plotting
@@ -132,7 +149,9 @@ function main()
         error("No data found!")
     end
 
-    println("Found $(length(data)) domains, $(sum(length(v) for v in values(data))) total experiments")
+    println(
+        "Found $(length(data)) domains, $(sum(length(v) for v in values(data))) total experiments",
+    )
 
     print_summary(data, l2_data)
 

@@ -13,7 +13,6 @@ using Test
 using GlobtimPostProcessing
 
 @testset "Quality Diagnostics (Issue #7, Phase 3)" begin
-
     @testset "Load quality thresholds from TOML" begin
         thresholds = load_quality_thresholds()
 
@@ -76,12 +75,7 @@ using GlobtimPostProcessing
         thresholds = load_quality_thresholds()
 
         # L2 improving consistently (10% per degree)
-        l2_by_degree = Dict(
-            4 => 1.0,
-            6 => 0.9,
-            8 => 0.81,
-            10 => 0.729
-        )
+        l2_by_degree = Dict(4 => 1.0, 6 => 0.9, 8 => 0.81, 10 => 0.729)
 
         result = detect_stagnation(l2_by_degree, thresholds)
 
@@ -99,7 +93,7 @@ using GlobtimPostProcessing
             8 => 0.5,
             10 => 0.501,  # No improvement
             12 => 0.502,  # No improvement
-            14 => 0.503   # No improvement (3 consecutive)
+            14 => 0.503,   # No improvement (3 consecutive)
         )
 
         result = detect_stagnation(l2_by_degree, thresholds)
@@ -114,12 +108,7 @@ using GlobtimPostProcessing
 
         # L2 is already very small (below absolute_improvement_threshold)
         # Should not report stagnation even if not improving
-        l2_by_degree = Dict(
-            4 => 1.0e-6,
-            6 => 9.5e-7,
-            8 => 9.6e-7,
-            10 => 9.7e-7
-        )
+        l2_by_degree = Dict(4 => 1.0e-6, 6 => 9.5e-7, 8 => 9.6e-7, 10 => 9.7e-7)
 
         result = detect_stagnation(l2_by_degree, thresholds)
 
@@ -173,23 +162,21 @@ using GlobtimPostProcessing
         experiment_data = Dict(
             "dimension" => 4,
             "l2_norm" => 0.08,
-            "objectives" => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9]
+            "objectives" => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9],
         )
 
         # Check L2 quality
         l2_quality = check_l2_quality(
             experiment_data["l2_norm"],
             experiment_data["dimension"],
-            thresholds
+            thresholds,
         )
 
         @test l2_quality == :good
 
         # Check objective distribution
-        obj_quality = check_objective_distribution_quality(
-            experiment_data["objectives"],
-            thresholds
-        )
+        obj_quality =
+            check_objective_distribution_quality(experiment_data["objectives"], thresholds)
 
         @test obj_quality.quality == :good
     end

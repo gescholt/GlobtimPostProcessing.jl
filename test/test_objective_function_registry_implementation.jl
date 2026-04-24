@@ -19,7 +19,7 @@ include(joinpath(dirname(@__DIR__), "src", "ObjectiveFunctionRegistry.jl"))
 using .ObjectiveFunctionRegistry
 
 # Create test config
-test_config = Dict{String, Any}(
+test_config = Dict{String,Any}(
     "model_func" => "define_daisy_ex3_model_4D",
     "p_true" => [0.2, 0.3, 0.5, 0.6],
     "p_center" => [0.224, 0.273, 0.473, 0.578],
@@ -27,11 +27,10 @@ test_config = Dict{String, Any}(
     "time_interval" => [0.0, 10.0],
     "num_points" => 25,
     "dimension" => 4,
-    "experiment_id" => 1
+    "experiment_id" => 1,
 )
 
 @testset "ObjectiveFunctionRegistry Implementation" begin
-
     @testset "1. Load DynamicalSystems Module" begin
         println("\n[Test 1] Loading DynamicalSystems module...")
 
@@ -93,9 +92,9 @@ test_config = Dict{String, Any}(
     @testset "5. Validate Config - Missing Keys" begin
         println("\n[Test 5] Testing validation of incomplete config...")
 
-        incomplete_config = Dict{String, Any}(
+        incomplete_config = Dict{String,Any}(
             "model_func" => "define_daisy_ex3_model_4D",
-            "p_true" => [0.2, 0.3, 0.5, 0.6]
+            "p_true" => [0.2, 0.3, 0.5, 0.6],
             # Missing: ic, time_interval, num_points
         )
 
@@ -116,12 +115,12 @@ test_config = Dict{String, Any}(
     @testset "6. Validate Config - Wrong Types" begin
         println("\n[Test 6] Testing validation of incorrect types...")
 
-        bad_config = Dict{String, Any}(
+        bad_config = Dict{String,Any}(
             "model_func" => "define_daisy_ex3_model_4D",
             "p_true" => [0.2, 0.3, 0.5, 0.6],
             "ic" => [1.0, 2.0, 1.0, 1.0],
             "time_interval" => [0.0, 10.0],
-            "num_points" => "not an integer"  # Wrong type!
+            "num_points" => "not an integer",  # Wrong type!
         )
 
         @test_throws ErrorException validate_config(bad_config)
@@ -186,12 +185,12 @@ test_config = Dict{String, Any}(
         println("\n[Test 10] Testing with different model function...")
 
         # Test with Lotka-Volterra 3D model
-        lv3d_config = Dict{String, Any}(
+        lv3d_config = Dict{String,Any}(
             "model_func" => "define_lotka_volterra_3D_model",
             "p_true" => [0.5, -0.05, -0.5],
             "ic" => [1.0, 2.0],
             "time_interval" => [0.0, 10.0],
-            "num_points" => 25
+            "num_points" => 25,
         )
 
         @test validate_config(lv3d_config) == true
@@ -205,7 +204,6 @@ test_config = Dict{String, Any}(
 
         println("✓ Different model function works correctly")
     end
-
 end
 
 println("\n" * "=" ^ 70)

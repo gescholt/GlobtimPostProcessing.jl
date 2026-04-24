@@ -46,7 +46,7 @@ using Optim  # Need Optim for type checks
             method = Optim.BFGS(),
             f_abstol = 1e-8,
             max_iterations = 500,
-            robust_mode = false
+            robust_mode = false,
         )
         @test custom.method isa Optim.BFGS
         @test custom.f_abstol == 1e-8
@@ -70,15 +70,11 @@ using Optim  # Need Optim for type checks
         # Simple quadratic: f(p) = sum(p.^2)
         # Minimum at [0, 0] with value 0
         function simple_quadratic(p::Vector{Float64})
-            return sum(p.^2)
+            return sum(p .^ 2)
         end
 
         # Start from [1.0, 1.0] (value = 2.0)
-        result = refine_critical_point(
-            simple_quadratic,
-            [1.0, 1.0];
-            max_iterations = 100
-        )
+        result = refine_critical_point(simple_quadratic, [1.0, 1.0]; max_iterations = 100)
 
         @test result.converged
         @test result.value_refined < result.value_raw
@@ -99,11 +95,7 @@ using Optim  # Need Optim for type checks
         end
 
         # Start near minimum
-        result = refine_critical_point(
-            rosenbrock,
-            [0.9, 0.8];
-            max_iterations = 1000
-        )
+        result = refine_critical_point(rosenbrock, [0.9, 0.8]; max_iterations = 1000)
 
         @test result.converged
         @test result.value_refined < result.value_raw
@@ -114,22 +106,17 @@ using Optim  # Need Optim for type checks
 
     @testset "Batch Refinement" begin
         function sphere(p::Vector{Float64})
-            return sum(p.^2)
+            return sum(p .^ 2)
         end
 
         # Multiple starting points
-        raw_points = [
-            [1.0, 0.0],
-            [0.0, 1.0],
-            [1.0, 1.0],
-            [2.0, 2.0]
-        ]
+        raw_points = [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [2.0, 2.0]]
 
         results = refine_critical_points_batch(
             sphere,
             raw_points;
             max_iterations = 100,
-            show_progress = false
+            show_progress = false,
         )
 
         @test length(results) == 4
@@ -142,7 +129,7 @@ using Optim  # Need Optim for type checks
         # Very slow function (sleep-based)
         function slow_function(p::Vector{Float64})
             sleep(0.1)  # 100ms per evaluation
-            return sum(p.^2)
+            return sum(p .^ 2)
         end
 
         # Should timeout after 0.2 seconds
@@ -151,7 +138,7 @@ using Optim  # Need Optim for type checks
             slow_function,
             [1.0, 1.0];
             max_time = 0.2,
-            max_iterations = 1000
+            max_iterations = 1000,
         )
 
         # Should timeout before reaching 1000 iterations
@@ -160,7 +147,7 @@ using Optim  # Need Optim for type checks
 
     @testset "RefinementResult Structure" begin
         function simple(p::Vector{Float64})
-            return sum(p.^2)
+            return sum(p .^ 2)
         end
 
         result = refine_critical_point(simple, [1.0, 1.0])
@@ -189,7 +176,7 @@ using Optim  # Need Optim for type checks
     @testset "Phase 2: Tier 1 Diagnostics" begin
         @testset "Diagnostic Fields Exist" begin
             function simple(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             result = refine_critical_point(simple, [1.0, 1.0])
@@ -219,7 +206,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Call Counts Populated" begin
             function sphere(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             result = refine_critical_point(sphere, [1.0, 1.0])
@@ -231,7 +218,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Timing Information" begin
             function simple(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             result = refine_critical_point(simple, [1.0, 1.0])
@@ -242,7 +229,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Fine-Grained Convergence Flags" begin
             function quadratic(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             result = refine_critical_point(quadratic, [1.0, 1.0])
@@ -260,13 +247,14 @@ using Optim  # Need Optim for type checks
 
         @testset "Convergence Reason Logic" begin
             function simple(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             result = refine_critical_point(simple, [1.0, 1.0])
 
             # Convergence reason should be one of the valid symbols
-            valid_reasons = [:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error, :unknown]
+            valid_reasons =
+                [:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error, :unknown]
             @test result.convergence_reason in valid_reasons
 
             # If converged, reason should not be :error or :iterations
@@ -288,14 +276,10 @@ using Optim  # Need Optim for type checks
         @testset "Timeout Convergence Reason" begin
             function slow(p::Vector{Float64})
                 sleep(0.05)
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
-            result = refine_critical_point(
-                slow,
-                [1.0, 1.0];
-                max_time = 0.1
-            )
+            result = refine_critical_point(slow, [1.0, 1.0]; max_time = 0.1)
 
             # If timed out, convergence reason should be :timeout
             if result.timed_out
@@ -319,20 +303,20 @@ using Optim  # Need Optim for type checks
 
         @testset "Batch Refinement Diagnostics" begin
             function sphere(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             points = [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
-            results = refine_critical_points_batch(
-                sphere,
-                points;
-                show_progress = false
-            )
+            results = refine_critical_points_batch(sphere, points; show_progress = false)
 
             # All results should have diagnostics
             @test all(r -> r.f_calls > 0, results)
             @test all(r -> r.time_elapsed >= 0.0, results)
-            @test all(r -> r.convergence_reason in [:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error, :unknown], results)
+            @test all(
+                r -> r.convergence_reason in
+                [:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error, :unknown],
+                results,
+            )
 
             # All should converge for simple sphere
             @test all(r -> r.converged, results)
@@ -347,14 +331,14 @@ using Optim  # Need Optim for type checks
 
             # Config with bounds
             b = [(-1.0, 1.0), (-1.0, 1.0)]
-            bounded_config = RefinementConfig(bounds=b)
+            bounded_config = RefinementConfig(bounds = b)
             @test bounded_config.bounds == b
         end
 
         @testset "Initial Point Clamping" begin
             # Objective with minimum at [0, 0]
             function sphere(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             # Start OUTSIDE bounds [-1, 1]^2
@@ -364,8 +348,8 @@ using Optim  # Need Optim for type checks
             result = refine_critical_point(
                 sphere,
                 initial_outside;
-                bounds=b,
-                max_iterations=100
+                bounds = b,
+                max_iterations = 100,
             )
 
             # Initial should have been clamped: raw_value = sphere([1,1]) = 2.0
@@ -375,7 +359,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Refined Points Stay Within Bounds" begin
             function sphere(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             b = [(-1.0, 1.0), (-1.0, 1.0)]
@@ -391,12 +375,8 @@ using Optim  # Need Optim for type checks
             ]
 
             for initial in test_cases
-                result = refine_critical_point(
-                    sphere,
-                    initial;
-                    bounds=b,
-                    max_iterations=200
-                )
+                result =
+                    refine_critical_point(sphere, initial; bounds = b, max_iterations = 200)
 
                 # Refined point must be within bounds
                 @test all(result.refined .>= lb)
@@ -415,11 +395,8 @@ using Optim  # Need Optim for type checks
             ub = upper_bounds(b)
 
             # Unbounded: should find true minimum at [2, 2]
-            result_unbounded = refine_critical_point(
-                offset_sphere,
-                initial;
-                max_iterations=200
-            )
+            result_unbounded =
+                refine_critical_point(offset_sphere, initial; max_iterations = 200)
             @test result_unbounded.refined[1] ≈ 2.0 atol=0.1
             @test result_unbounded.refined[2] ≈ 2.0 atol=0.1
 
@@ -428,8 +405,8 @@ using Optim  # Need Optim for type checks
             result_bounded = refine_critical_point(
                 offset_sphere,
                 initial;
-                bounds=b,
-                max_iterations=200
+                bounds = b,
+                max_iterations = 200,
             )
             @test all(result_bounded.refined .<= ub)
             @test result_bounded.refined[1] ≈ 1.0 atol=0.05
@@ -438,7 +415,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Batch Refinement With Bounds" begin
             function sphere(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             b = [(-0.5, 0.5), (-0.5, 0.5)]
@@ -456,9 +433,9 @@ using Optim  # Need Optim for type checks
             results = refine_critical_points_batch(
                 sphere,
                 points;
-                bounds=b,
-                max_iterations=100,
-                show_progress=false
+                bounds = b,
+                max_iterations = 100,
+                show_progress = false,
             )
 
             @test length(results) == 4
@@ -469,7 +446,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Asymmetric Bounds" begin
             function sphere(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             # Asymmetric bounds: minimum at origin is within bounds
@@ -477,12 +454,8 @@ using Optim  # Need Optim for type checks
             lb = lower_bounds(b)
             ub = upper_bounds(b)
 
-            result = refine_critical_point(
-                sphere,
-                [0.3, 0.3];
-                bounds=b,
-                max_iterations=100
-            )
+            result =
+                refine_critical_point(sphere, [0.3, 0.3]; bounds = b, max_iterations = 100)
 
             @test result.converged
             @test all(result.refined .>= lb)
@@ -492,7 +465,7 @@ using Optim  # Need Optim for type checks
 
         @testset "Higher Dimensions (4D)" begin
             function sphere_4d(p::Vector{Float64})
-                return sum(p.^2)
+                return sum(p .^ 2)
             end
 
             b = [(-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)]
@@ -502,12 +475,8 @@ using Optim  # Need Optim for type checks
             # Start outside in some dimensions
             initial = [0.5, 1.5, -0.5, 2.0]
 
-            result = refine_critical_point(
-                sphere_4d,
-                initial;
-                bounds=b,
-                max_iterations=200
-            )
+            result =
+                refine_critical_point(sphere_4d, initial; bounds = b, max_iterations = 200)
 
             @test length(result.refined) == 4
             @test all(result.refined .>= lb)
@@ -549,7 +518,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
     @testset "compute_gradient_norms with FiniteDiff" begin
         f_quad(x) = (x[1] - 1.0)^2 + (x[2] - 2.0)^2
 
-        norms = compute_gradient_norms([[1.0, 2.0]], f_quad; gradient_method=:finitediff)
+        norms = compute_gradient_norms([[1.0, 2.0]], f_quad; gradient_method = :finitediff)
         @test length(norms) == 1
         @test norms[1] < 1e-6  # FiniteDiff less precise than ForwardDiff
     end
@@ -583,13 +552,17 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         # Print statistics for diagnostic visibility
         sorted_norms = sort(norms)
         println("Raw ||∇f|| stats (Deuflhard 4D, deg 6, $(length(norms)) points):")
-        println("  min=$(round(sorted_norms[1], sigdigits=3)), " *
-                "median=$(round(sorted_norms[div(length(sorted_norms)+1, 2)], sigdigits=3)), " *
-                "mean=$(round(mean(sorted_norms), sigdigits=3)), " *
-                "max=$(round(sorted_norms[end], sigdigits=3))")
-        println("  < 0.1: $(count(n -> n < 0.1, norms)), " *
-                "< 1.0: $(count(n -> n < 1.0, norms)), " *
-                "< 10.0: $(count(n -> n < 10.0, norms))")
+        println(
+            "  min=$(round(sorted_norms[1], sigdigits=3)), " *
+            "median=$(round(sorted_norms[div(length(sorted_norms)+1, 2)], sigdigits=3)), " *
+            "mean=$(round(mean(sorted_norms), sigdigits=3)), " *
+            "max=$(round(sorted_norms[end], sigdigits=3))",
+        )
+        println(
+            "  < 0.1: $(count(n -> n < 0.1, norms)), " *
+            "< 1.0: $(count(n -> n < 1.0, norms)), " *
+            "< 10.0: $(count(n -> n < 10.0, norms))",
+        )
     end
 
     @testset "Raw gradient norms on Deuflhard 4D fixture (degree 4)" begin
@@ -608,13 +581,17 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
 
         sorted_norms = sort(norms)
         println("Raw ||∇f|| stats (Deuflhard 4D, deg 4, $(length(norms)) points):")
-        println("  min=$(round(sorted_norms[1], sigdigits=3)), " *
-                "median=$(round(sorted_norms[div(length(sorted_norms)+1, 2)], sigdigits=3)), " *
-                "mean=$(round(mean(sorted_norms), sigdigits=3)), " *
-                "max=$(round(sorted_norms[end], sigdigits=3))")
-        println("  < 0.1: $(count(n -> n < 0.1, norms)), " *
-                "< 1.0: $(count(n -> n < 1.0, norms)), " *
-                "< 10.0: $(count(n -> n < 10.0, norms))")
+        println(
+            "  min=$(round(sorted_norms[1], sigdigits=3)), " *
+            "median=$(round(sorted_norms[div(length(sorted_norms)+1, 2)], sigdigits=3)), " *
+            "mean=$(round(mean(sorted_norms), sigdigits=3)), " *
+            "max=$(round(sorted_norms[end], sigdigits=3))",
+        )
+        println(
+            "  < 0.1: $(count(n -> n < 0.1, norms)), " *
+            "< 1.0: $(count(n -> n < 1.0, norms)), " *
+            "< 10.0: $(count(n -> n < 10.0, norms))",
+        )
     end
 
     @testset "Degree 6 vs Degree 4: both find near-critical points" begin
@@ -637,14 +614,16 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         # Degree 6 should have more raw points (higher degree → more critical points of p)
         @test length(norms6) > length(norms4)
 
-        println("Best raw ||∇f||: deg 4 = $(round(minimum(norms4), sigdigits=3)), " *
-                "deg 6 = $(round(minimum(norms6), sigdigits=3))")
+        println(
+            "Best raw ||∇f||: deg 4 = $(round(minimum(norms4), sigdigits=3)), " *
+            "deg 6 = $(round(minimum(norms6), sigdigits=3))",
+        )
     end
 
     @testset "print_refinement_summary with raw gradient norms" begin
         # Verify the updated print_refinement_summary accepts raw_gradient_norms
         # Create a minimal RefinedExperimentResult for testing
-        f_quad(x) = sum(x.^2)
+        f_quad(x) = sum(x .^ 2)
         raw_pts = [[0.1, 0.2], [0.3, 0.4]]
         config = RefinementConfig()
 
@@ -669,7 +648,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
             tempdir(),                  # output_dir
             6,                          # degree
             0.1,                        # total_time
-            config                      # refinement_config
+            config,                      # refinement_config
         )
 
         raw_norms = compute_gradient_norms(raw_pts, f_quad)
@@ -696,4 +675,6 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
     end
 end
 
-println("✅ Phase 1, Phase 2 Tier 1, Phase 3 Box-Constrained, and Raw Gradient Validation tests passed!")
+println(
+    "✅ Phase 1, Phase 2 Tier 1, Phase 3 Box-Constrained, and Raw Gradient Validation tests passed!",
+)

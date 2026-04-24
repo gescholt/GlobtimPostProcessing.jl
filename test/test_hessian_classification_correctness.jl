@@ -57,7 +57,6 @@ end
 # Classification agreement tests
 # ============================================================================
 @testset "Level 3: Hessian Classification Correctness" begin
-
     @testset "Pipeline classify agrees with oracle at default tolerance" begin
         for bf in BENCHMARK_FUNCTIONS
             @testset "$(bf.name)" begin
@@ -170,8 +169,8 @@ end
                     eigenvalues = Float64[row[c] for c in ev_cols]
 
                     class_default = classify_critical_point(eigenvalues)
-                    class_relative = classify_critical_point(eigenvalues;
-                        relative_tol=0.01)
+                    class_relative =
+                        classify_critical_point(eigenvalues; relative_tol = 0.01)
 
                     # For well-conditioned functions, both should agree
                     @test class_default == class_relative
@@ -186,13 +185,16 @@ end
         # remaining eigenvalues all positive → should sub-classify as degenerate_min
         ev_degen_min = [1e-8, 2.0, 3.0]
         @test classify_critical_point(ev_degen_min) == "degenerate"
-        @test classify_critical_point(ev_degen_min; sub_classify_degenerate=true) == "degenerate_min"
+        @test classify_critical_point(ev_degen_min; sub_classify_degenerate = true) ==
+              "degenerate_min"
 
         ev_degen_max = [1e-8, -2.0, -3.0]
-        @test classify_critical_point(ev_degen_max; sub_classify_degenerate=true) == "degenerate_max"
+        @test classify_critical_point(ev_degen_max; sub_classify_degenerate = true) ==
+              "degenerate_max"
 
         ev_degen_saddle = [1e-8, 2.0, -3.0]
-        @test classify_critical_point(ev_degen_saddle; sub_classify_degenerate=true) == "degenerate_saddle"
+        @test classify_critical_point(ev_degen_saddle; sub_classify_degenerate = true) ==
+              "degenerate_saddle"
     end
 
     @testset "Classification counts match ground truth" begin
@@ -212,8 +214,8 @@ end
                 df === nothing && continue
 
                 for (class, expected_n) in counts
-                    actual_n = count(row -> string(row[:classification]) == class,
-                                     eachrow(df))
+                    actual_n =
+                        count(row -> string(row[:classification]) == class, eachrow(df))
                     @test actual_n == expected_n
                 end
             end

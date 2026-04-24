@@ -13,7 +13,6 @@ using GlobtimPostProcessing
 using Dates
 
 @testset "TableFormatting Tests" begin
-
     @testset "Number Formatting" begin
         # Import the formatting function from CampaignAnalysis
         include("../src/CampaignAnalysis.jl")
@@ -47,7 +46,7 @@ using Dates
 
         # Test truncation
         long_name = "very_long_experiment_name_with_many_details_and_parameters"
-        truncated = extract_experiment_label(long_name, max_length=20)
+        truncated = extract_experiment_label(long_name, max_length = 20)
         @test length(truncated) <= 20
 
         # Test that short names are preserved
@@ -62,14 +61,16 @@ using Dates
         for i in 1:3
             exp = ExperimentResult(
                 "exp$i",
-                Dict("params_dict" => Dict("domain_size" => 0.1 * i, "GN" => 14),
-                     "total_critical_points" => 100 * i),
+                Dict(
+                    "params_dict" => Dict("domain_size" => 0.1 * i, "GN" => 14),
+                    "total_critical_points" => 100 * i,
+                ),
                 ["approximation_quality", "parameter_recovery"],
                 ["approximation_quality", "parameter_recovery", "timing"],
                 nothing,
                 nothing,
                 nothing,
-                "/tmp/exp$i"
+                "/tmp/exp$i",
             )
             push!(mock_experiments, exp)
         end
@@ -78,7 +79,7 @@ using Dates
             "test_campaign",
             mock_experiments,
             Dict("description" => "Test campaign"),
-            now()
+            now(),
         )
 
         # This would normally run aggregate_campaign_statistics
@@ -97,7 +98,7 @@ using Dates
                     "max" => 3.45e-3,
                     "std" => 8.90e-5,
                     "num_experiments" => 3,
-                    "best_experiment" => "/path/to/exp1_GN14_dom0.1"
+                    "best_experiment" => "/path/to/exp1_GN14_dom0.1",
                 ),
                 "numerical_stability" => Dict(
                     "mean" => 2.46e30,  # Very large condition number
@@ -105,22 +106,22 @@ using Dates
                     "max" => 5.67e31,
                     "std" => 1.23e30,
                     "num_experiments" => 3,
-                    "best_experiment" => "/path/to/exp1_GN14_dom0.1"
-                )
+                    "best_experiment" => "/path/to/exp1_GN14_dom0.1",
+                ),
             ),
             "campaign_summary" => Dict(
                 "num_experiments" => 3,
                 "successful_experiments" => 3,
                 "success_rate" => 1.0,
-                "total_computation_hours" => 2.5
-            )
+                "total_computation_hours" => 2.5,
+            ),
         )
 
         # Test grouped formatting
         grouped_output = TableFormatting.format_metrics_table(
             mock_agg_stats,
-            style=:grouped,
-            max_width=100
+            style = :grouped,
+            max_width = 100,
         )
 
         @test occursin("Quality Metrics", grouped_output)
@@ -139,10 +140,8 @@ using Dates
         @test length(long_lines) < length(lines) * 0.1  # < 10% of lines too long
 
         # Test compact formatting
-        compact_output = TableFormatting.format_metrics_table(
-            mock_agg_stats,
-            style=:compact
-        )
+        compact_output =
+            TableFormatting.format_metrics_table(mock_agg_stats, style = :compact)
 
         @test occursin("CAMPAIGN OVERVIEW", compact_output)
         @test occursin("Quick Summary", compact_output)
@@ -157,15 +156,15 @@ using Dates
                 "num_experiments" => 5,
                 "successful_experiments" => 5,
                 "success_rate" => 1.0,
-                "total_computation_hours" => 1.5
-            )
+                "total_computation_hours" => 1.5,
+            ),
         )
 
         # Test with narrow width
         narrow_output = TableFormatting.format_metrics_table(
             mock_agg_stats,
-            style=:grouped,
-            max_width=80
+            style = :grouped,
+            max_width = 80,
         )
 
         # Verify most lines fit
@@ -176,8 +175,8 @@ using Dates
         # Test with wide width
         wide_output = TableFormatting.format_metrics_table(
             mock_agg_stats,
-            style=:grouped,
-            max_width=120
+            style = :grouped,
+            max_width = 120,
         )
 
         @test length(wide_output) > length(narrow_output)  # Should use more space

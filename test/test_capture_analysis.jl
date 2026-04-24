@@ -12,7 +12,6 @@ if !@isdefined(deuflhard_2d)
 end
 
 @testset "Capture Analysis" begin
-
     @testset "Exports" begin
         @test isdefined(GlobtimPostProcessing, :KnownCriticalPoints)
         @test isdefined(GlobtimPostProcessing, :CaptureResult)
@@ -40,67 +39,80 @@ end
 
         @testset "Domain diameter computation" begin
             # 1D domain [-1, 1]: diameter = 2.0
-            known_1d = KnownCriticalPoints(
-                [[0.0]], [0.0], [:min],
-                [(-1.0, 1.0)]
-            )
+            known_1d = KnownCriticalPoints([[0.0]], [0.0], [:min], [(-1.0, 1.0)])
             @test known_1d.domain_diameter ≈ 2.0
 
             # 3D domain [0, 1]^3: diameter = sqrt(3)
             known_3d = KnownCriticalPoints(
-                [[0.5, 0.5, 0.5]], [1.0], [:min],
-                [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
+                [[0.5, 0.5, 0.5]],
+                [1.0],
+                [:min],
+                [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
             )
             @test known_3d.domain_diameter ≈ sqrt(3)
 
             # Asymmetric domain [-1.2, 1.2]^4: diameter = norm([2.4, 2.4, 2.4, 2.4]) = 2.4*sqrt(4) = 4.8
             known_4d = KnownCriticalPoints(
-                [[0.0, 0.0, 0.0, 0.0]], [0.0], [:min],
-                [(-1.2, 1.2), (-1.2, 1.2), (-1.2, 1.2), (-1.2, 1.2)]
+                [[0.0, 0.0, 0.0, 0.0]],
+                [0.0],
+                [:min],
+                [(-1.2, 1.2), (-1.2, 1.2), (-1.2, 1.2), (-1.2, 1.2)],
             )
             @test known_4d.domain_diameter ≈ 4.8
         end
 
         @testset "Error on empty points" begin
             @test_throws ErrorException KnownCriticalPoints(
-                Vector{Float64}[], Float64[], Symbol[],
-                [(-1.0, 1.0)]
+                Vector{Float64}[],
+                Float64[],
+                Symbol[],
+                [(-1.0, 1.0)],
             )
         end
 
         @testset "Error on mismatched lengths" begin
             # values too short
             @test_throws ErrorException KnownCriticalPoints(
-                [[0.0], [1.0]], [0.0], [:min, :max],
-                [(-1.0, 1.0)]
+                [[0.0], [1.0]],
+                [0.0],
+                [:min, :max],
+                [(-1.0, 1.0)],
             )
             # types too short
             @test_throws ErrorException KnownCriticalPoints(
-                [[0.0], [1.0]], [0.0, 1.0], [:min],
-                [(-1.0, 1.0)]
+                [[0.0], [1.0]],
+                [0.0, 1.0],
+                [:min],
+                [(-1.0, 1.0)],
             )
         end
 
         @testset "Error on invalid type" begin
             @test_throws ErrorException KnownCriticalPoints(
-                [[0.0]], [0.0], [:minimum],  # :minimum is not valid, must be :min
-                [(-1.0, 1.0)]
+                [[0.0]],
+                [0.0],
+                [:minimum],  # :minimum is not valid, must be :min
+                [(-1.0, 1.0)],
             )
         end
 
         @testset "Error on mismatched bounds" begin
             # 2D point with 1D bounds
             @test_throws ErrorException KnownCriticalPoints(
-                [[0.0, 0.0]], [0.0], [:min],
-                [(-1.0, 1.0)]  # 1D bounds, 2D point
+                [[0.0, 0.0]],
+                [0.0],
+                [:min],
+                [(-1.0, 1.0)],  # 1D bounds, 2D point
             )
         end
 
         @testset "Error on point dimension mismatch with bounds" begin
             # 3D point with 2D bounds
             @test_throws ErrorException KnownCriticalPoints(
-                [[0.0, 0.0, 0.0]], [0.0], [:min],
-                [(-1.0, 1.0), (-1.0, 1.0)]
+                [[0.0, 0.0, 0.0]],
+                [0.0],
+                [:min],
+                [(-1.0, 1.0), (-1.0, 1.0)],
             )
         end
     end
@@ -111,7 +123,7 @@ end
             [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]],
             [0.0, 1.0, 1.0],
             [:min, :saddle, :max],
-            [(-2.0, 2.0), (-2.0, 2.0)]
+            [(-2.0, 2.0), (-2.0, 2.0)],
         )
         # Computed points are exactly at known CPs
         computed = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]
@@ -136,7 +148,7 @@ end
             [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]],
             [0.0, 1.0, 1.0],
             [:min, :saddle, :max],
-            [(-2.0, 2.0), (-2.0, 2.0)]
+            [(-2.0, 2.0), (-2.0, 2.0)],
         )
         # Computed points are far away (outside any reasonable tolerance)
         computed = [[100.0, 100.0], [-100.0, -100.0]]
@@ -155,7 +167,7 @@ end
             [[0.0, 0.0], [1.0, 0.0]],
             [0.0, 1.0],
             [:min, :saddle],
-            [(-2.0, 2.0), (-2.0, 2.0)]
+            [(-2.0, 2.0), (-2.0, 2.0)],
         )
         computed = Vector{Float64}[]
 
@@ -173,14 +185,16 @@ end
             [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]],
             [0.0, 1.0, 1.0, 2.0],
             [:min, :saddle, :saddle, :max],
-            [(-2.0, 2.0), (-2.0, 2.0)]
+            [(-2.0, 2.0), (-2.0, 2.0)],
         )
         # domain_diameter = norm([4, 4]) = 4*sqrt(2) ≈ 5.657
         # Computed points: very close to [0,0] and [1,1], far from [1,0] and [0,1]
         computed = [[0.001, -0.001], [1.001, 1.001], [50.0, 50.0]]
 
-        result = compute_capture_analysis(known, computed;
-            tolerance_fractions = [0.001, 0.01, 0.05, 0.1]
+        result = compute_capture_analysis(
+            known,
+            computed;
+            tolerance_fractions = [0.001, 0.01, 0.05, 0.1],
         )
 
         # At the smallest tolerance (0.001 * 5.657 ≈ 0.00566), the close points have
@@ -209,7 +223,7 @@ end
             [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]],
             [0.0, 1.0, 4.0],
             [:min, :saddle, :max],
-            [(-5.0, 5.0), (-5.0, 5.0)]
+            [(-5.0, 5.0), (-5.0, 5.0)],
         )
         # domain_diameter = norm([10, 10]) = 10*sqrt(2) ≈ 14.14
         computed = [[0.05, 0.0]]
@@ -224,8 +238,10 @@ end
         # 0.06  * 14.142 = 0.849  → still only [0,0] (dist=0.95 > 0.849)
         # 0.07  * 14.142 = 0.990  → captures [0,0] and [1,0] (dist=0.95 < 0.990)
         # 0.15  * 14.142 = 2.121  → captures all 3 (dist=1.95 < 2.121)
-        result = compute_capture_analysis(known, computed;
-            tolerance_fractions = [0.004, 0.06, 0.07, 0.15]
+        result = compute_capture_analysis(
+            known,
+            computed;
+            tolerance_fractions = [0.004, 0.06, 0.07, 0.15],
         )
 
         # Verify tolerance_fractions are sorted (they already are)
@@ -251,12 +267,16 @@ end
     @testset "Per-Type Capture Tracking" begin
         # 2 minima, 2 saddles, 1 maximum
         known = KnownCriticalPoints(
-            [[0.0, 0.0], [1.0, 0.0],   # minima
-             [0.5, 0.5], [0.5, -0.5],  # saddles
-             [2.0, 2.0]],               # maximum
+            [
+                [0.0, 0.0],
+                [1.0, 0.0],   # minima
+                [0.5, 0.5],
+                [0.5, -0.5],  # saddles
+                [2.0, 2.0],
+            ],               # maximum
             [0.0, 0.1, 1.0, 1.0, 5.0],
             [:min, :min, :saddle, :saddle, :max],
-            [(-5.0, 5.0), (-5.0, 5.0)]
+            [(-5.0, 5.0), (-5.0, 5.0)],
         )
         # domain_diameter = 10*sqrt(2) ≈ 14.14
 
@@ -270,8 +290,10 @@ end
         # Distance to [0.5, -0.5]: nearest is [0.51, 0.49] → dist ≈ 0.99
         # Distance to [2.0, 2.0]: nearest is [0.51, 0.49] → dist ≈ 2.12
 
-        result = compute_capture_analysis(known, computed;
-            tolerance_fractions = [0.002, 0.01, 0.1]
+        result = compute_capture_analysis(
+            known,
+            computed;
+            tolerance_fractions = [0.002, 0.01, 0.1],
         )
         # tol_abs: [0.028, 0.1414, 1.414]
 
@@ -296,19 +318,17 @@ end
             [[0.0, 0.0], [10.0, 10.0]],
             [0.0, 100.0],
             [:min, :max],
-            [(-20.0, 20.0), (-20.0, 20.0)]
+            [(-20.0, 20.0), (-20.0, 20.0)],
         )
         # domain_diameter = norm([40, 40]) = 40*sqrt(2) ≈ 56.57
 
         # 3 computed points all near [0,0], none near [10,10]
-        computed = [
-            [0.01, 0.01],
-            [-0.01, 0.01],
-            [0.02, -0.02],
-        ]
+        computed = [[0.01, 0.01], [-0.01, 0.01], [0.02, -0.02]]
 
-        result = compute_capture_analysis(known, computed;
-            tolerance_fractions = [0.001, 0.01, 0.1]
+        result = compute_capture_analysis(
+            known,
+            computed;
+            tolerance_fractions = [0.001, 0.01, 0.1],
         )
 
         # At tol 0.001 (abs ≈ 0.057): all 3 computed points are near [0,0]
@@ -326,13 +346,12 @@ end
             [[0.0, 0.0], [5.0, 5.0], [10.0, 10.0]],
             [0.0, 25.0, 100.0],
             [:min, :saddle, :max],
-            [(-15.0, 15.0), (-15.0, 15.0)]
+            [(-15.0, 15.0), (-15.0, 15.0)],
         )
         computed = [[0.01, -0.01]]  # only near [0,0]
 
-        result = compute_capture_analysis(known, computed;
-            tolerance_fractions = [0.01, 0.05]
-        )
+        result =
+            compute_capture_analysis(known, computed; tolerance_fractions = [0.01, 0.05])
 
         # At largest tolerance (0.05): only [0,0] captured
         missed = missed_critical_points(result, known)
@@ -362,8 +381,16 @@ end
         @test length(missed_strict) >= length(missed)  # stricter tolerance → more missed
 
         # Error on invalid tolerance_index
-        @test_throws ErrorException missed_critical_points(result, known; tolerance_index = 0)
-        @test_throws ErrorException missed_critical_points(result, known; tolerance_index = 100)
+        @test_throws ErrorException missed_critical_points(
+            result,
+            known;
+            tolerance_index = 0,
+        )
+        @test_throws ErrorException missed_critical_points(
+            result,
+            known;
+            tolerance_index = 100,
+        )
     end
 
     @testset "Adaptive Tolerance - Domain Size Effect" begin
@@ -378,16 +405,21 @@ end
         # Small domain: [-1, 1]^2, diameter = 2*sqrt(2) ≈ 2.83
         # tol at 0.2 = 0.566 → captures (0.5 < 0.566)
         known_small = KnownCriticalPoints(points, values, types, [(-1.0, 1.0), (-1.0, 1.0)])
-        result_small = compute_capture_analysis(known_small, computed;
-            tolerance_fractions = [0.1, 0.2]
+        result_small = compute_capture_analysis(
+            known_small,
+            computed;
+            tolerance_fractions = [0.1, 0.2],
         )
 
         # Large domain: [-10, 10]^2, diameter = 20*sqrt(2) ≈ 28.28
         # tol at 0.2 = 5.66 → captures (0.5 < 5.66)
         # tol at 0.01 = 0.283 → does NOT capture (0.5 > 0.283)
-        known_large = KnownCriticalPoints(points, values, types, [(-10.0, 10.0), (-10.0, 10.0)])
-        result_large = compute_capture_analysis(known_large, computed;
-            tolerance_fractions = [0.01, 0.2]
+        known_large =
+            KnownCriticalPoints(points, values, types, [(-10.0, 10.0), (-10.0, 10.0)])
+        result_large = compute_capture_analysis(
+            known_large,
+            computed;
+            tolerance_fractions = [0.01, 0.2],
         )
 
         # Verify tolerance_values scale with domain
@@ -405,15 +437,14 @@ end
     end
 
     @testset "Tolerance Fractions Sorted" begin
-        known = KnownCriticalPoints(
-            [[0.0, 0.0]], [0.0], [:min],
-            [(-1.0, 1.0), (-1.0, 1.0)]
-        )
+        known = KnownCriticalPoints([[0.0, 0.0]], [0.0], [:min], [(-1.0, 1.0), (-1.0, 1.0)])
         computed = [[0.1, 0.0]]
 
         # Pass unsorted tolerance fractions
-        result = compute_capture_analysis(known, computed;
-            tolerance_fractions = [0.1, 0.01, 0.05, 0.001]
+        result = compute_capture_analysis(
+            known,
+            computed;
+            tolerance_fractions = [0.1, 0.01, 0.05, 0.001],
         )
 
         # Should be sorted ascending in result
@@ -426,7 +457,7 @@ end
             [[0.0, 0.0], [3.0, 0.0]],
             [0.0, 9.0],
             [:min, :max],
-            [(-5.0, 5.0), (-5.0, 5.0)]
+            [(-5.0, 5.0), (-5.0, 5.0)],
         )
         computed = [
             [10.0, 10.0],  # idx 1: far from both
@@ -450,7 +481,7 @@ end
             [[0.0, 0.0], [1.0, 0.0], [0.5, 0.5]],
             [0.0, 1.0, 0.5],
             [:min, :max, :saddle],
-            [(-2.0, 2.0), (-2.0, 2.0)]
+            [(-2.0, 2.0), (-2.0, 2.0)],
         )
         computed = [[0.01, 0.01], [0.99, 0.01]]
 
@@ -458,7 +489,11 @@ end
 
         @testset "print_capture_summary" begin
             pipe = Pipe()
-            Base.link_pipe!(pipe; reader_supports_async=true, writer_supports_async=true)
+            Base.link_pipe!(
+                pipe;
+                reader_supports_async = true,
+                writer_supports_async = true,
+            )
             print_capture_summary(result, known; io = pipe.in)
             close(pipe.in)
             output = read(pipe.out, String)
@@ -478,7 +513,11 @@ end
             degree_results = [(4, result), (6, result2)]
 
             pipe = Pipe()
-            Base.link_pipe!(pipe; reader_supports_async=true, writer_supports_async=true)
+            Base.link_pipe!(
+                pipe;
+                reader_supports_async = true,
+                writer_supports_async = true,
+            )
             print_degree_capture_convergence(degree_results; io = pipe.in)
             close(pipe.in)
             output = read(pipe.out, String)
@@ -490,36 +529,38 @@ end
 
         @testset "print_degree_capture_convergence error on empty" begin
             @test_throws ErrorException print_degree_capture_convergence(
-                Tuple{Int, CaptureResult}[]
+                Tuple{Int,CaptureResult}[],
             )
         end
 
         @testset "print_degree_capture_convergence error on inconsistent tolerances" begin
-            known2 = KnownCriticalPoints(
-                [[0.0, 0.0]], [0.0], [:min],
-                [(-2.0, 2.0), (-2.0, 2.0)]
+            known2 =
+                KnownCriticalPoints([[0.0, 0.0]], [0.0], [:min], [(-2.0, 2.0), (-2.0, 2.0)])
+            r_a = compute_capture_analysis(
+                known2,
+                [[0.01, 0.01]];
+                tolerance_fractions = [0.01, 0.05],
             )
-            r_a = compute_capture_analysis(known2, [[0.01, 0.01]];
-                tolerance_fractions = [0.01, 0.05])
-            r_b = compute_capture_analysis(known2, [[0.01, 0.01]];
-                tolerance_fractions = [0.02, 0.1])  # different fractions
-            @test_throws ErrorException print_degree_capture_convergence(
-                [(4, r_a), (6, r_b)]
-            )
+            r_b = compute_capture_analysis(
+                known2,
+                [[0.01, 0.01]];
+                tolerance_fractions = [0.02, 0.1],
+            )  # different fractions
+            @test_throws ErrorException print_degree_capture_convergence([
+                (4, r_a),
+                (6, r_b),
+            ])
         end
     end
 
     @testset "All Captured - No Missed Table" begin
         # When all CPs are captured, print should say so
-        known = KnownCriticalPoints(
-            [[0.0, 0.0]], [0.0], [:min],
-            [(-1.0, 1.0), (-1.0, 1.0)]
-        )
+        known = KnownCriticalPoints([[0.0, 0.0]], [0.0], [:min], [(-1.0, 1.0), (-1.0, 1.0)])
         computed = [[0.0, 0.0]]
         result = compute_capture_analysis(known, computed)
 
         pipe = Pipe()
-        Base.link_pipe!(pipe; reader_supports_async=true, writer_supports_async=true)
+        Base.link_pipe!(pipe; reader_supports_async = true, writer_supports_async = true)
         print_capture_summary(result, known; io = pipe.in)
         close(pipe.in)
         output = read(pipe.out, String)
@@ -537,14 +578,16 @@ end
             [[0.0, 0.0]],
             [f_origin],
             [:min],
-            [(-1.2, 1.2), (-1.2, 1.2)]
+            [(-1.2, 1.2), (-1.2, 1.2)],
         )
         # domain_diameter = norm([2.4, 2.4]) = 2.4*sqrt(2) ≈ 3.394
 
         # Computed point near origin (as if polynomial found it)
         computed_near = [[0.02, -0.01]]
-        result_near = compute_capture_analysis(known, computed_near;
-            tolerance_fractions = [0.01, 0.05, 0.1]
+        result_near = compute_capture_analysis(
+            known,
+            computed_near;
+            tolerance_fractions = [0.01, 0.05, 0.1],
         )
 
         # Distance ≈ 0.022, tol at 0.01 = 0.034 → captured
@@ -552,8 +595,10 @@ end
 
         # Computed point far from origin
         computed_far = [[1.0, 1.0]]
-        result_far = compute_capture_analysis(known, computed_far;
-            tolerance_fractions = [0.01, 0.05, 0.1]
+        result_far = compute_capture_analysis(
+            known,
+            computed_far;
+            tolerance_fractions = [0.01, 0.05, 0.1],
         )
 
         # Distance ≈ 1.414, even tol at 0.1 = 0.339 → NOT captured
@@ -614,8 +659,15 @@ end
 
         @testset "Full Deuflhard CSV" begin
             # Load actual CSV if available
-            csv_path = joinpath(@__DIR__, "..", "..", "globtim", "data",
-                "matlab_critical_points", "valid_points_deuflhard.csv")
+            csv_path = joinpath(
+                @__DIR__,
+                "..",
+                "..",
+                "globtim",
+                "data",
+                "matlab_critical_points",
+                "valid_points_deuflhard.csv",
+            )
             if isfile(csv_path)
                 using CSV, DataFrames
                 df = CSV.read(csv_path, DataFrame)
@@ -648,11 +700,15 @@ end
 
         @testset "Error handling" begin
             @test_throws ErrorException build_known_cps_from_2d_product(
-                deuflhard_2d, Vector{Float64}[], [(-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)]
+                deuflhard_2d,
+                Vector{Float64}[],
+                [(-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)],
             )
             # Wrong dimension bounds
             @test_throws ErrorException build_known_cps_from_2d_product(
-                deuflhard_2d, [[0.0, 0.0]], [(-1.0, 1.0), (-1.0, 1.0)]  # 2D bounds, not 4D
+                deuflhard_2d,
+                [[0.0, 0.0]],
+                [(-1.0, 1.0), (-1.0, 1.0)],  # 2D bounds, not 4D
             )
         end
     end
@@ -663,7 +719,7 @@ end
             [[0.0, 0.0], [1.0, 0.0]],
             [0.0, 1.0],
             [:min, :min],
-            [(-2.0, 2.0), (-2.0, 2.0)]
+            [(-2.0, 2.0), (-2.0, 2.0)],
         )
         computed = [[0.0, 0.0], [1.0, 0.0]]
         result = compute_capture_analysis(known, computed)
@@ -674,7 +730,7 @@ end
 
         # Print should work without error (per-type table skipped for single type)
         pipe = Pipe()
-        Base.link_pipe!(pipe; reader_supports_async=true, writer_supports_async=true)
+        Base.link_pipe!(pipe; reader_supports_async = true, writer_supports_async = true)
         print_capture_summary(result, known; io = pipe.in)
         close(pipe.in)
         output = read(pipe.out, String)
@@ -697,7 +753,8 @@ end
         f_quad(x) = x[1]^2 + x[2]^2
 
         @testset "Finds minimum of quadratic (ForwardDiff)" begin
-            result = refine_to_critical_point(f_quad, [0.5, 0.3]; gradient_method=:forwarddiff)
+            result =
+                refine_to_critical_point(f_quad, [0.5, 0.3]; gradient_method = :forwarddiff)
             @test result.converged
             @test result.gradient_norm < 1e-8
             @test result.cp_type == :min
@@ -710,7 +767,8 @@ end
         end
 
         @testset "Finds minimum of quadratic (FiniteDiff)" begin
-            result = refine_to_critical_point(f_quad, [0.5, 0.3]; gradient_method=:finitediff)
+            result =
+                refine_to_critical_point(f_quad, [0.5, 0.3]; gradient_method = :finitediff)
             @test result.converged
             @test result.gradient_norm < 1e-6
             @test result.cp_type == :min
@@ -720,7 +778,11 @@ end
         @testset "Finds saddle point" begin
             # f(x) = x₁² - x₂² → saddle at origin
             f_saddle(x) = x[1]^2 - x[2]^2
-            result = refine_to_critical_point(f_saddle, [0.1, 0.05]; gradient_method=:forwarddiff)
+            result = refine_to_critical_point(
+                f_saddle,
+                [0.1, 0.05];
+                gradient_method = :forwarddiff,
+            )
             @test result.converged
             @test result.cp_type == :saddle
             @test norm(result.point) < 1e-6
@@ -729,16 +791,19 @@ end
         @testset "Finds maximum" begin
             # f(x) = -(x₁² + x₂²) → maximum at origin
             f_max(x) = -(x[1]^2 + x[2]^2)
-            result = refine_to_critical_point(f_max, [0.3, -0.2]; gradient_method=:forwarddiff)
+            result =
+                refine_to_critical_point(f_max, [0.3, -0.2]; gradient_method = :forwarddiff)
             @test result.converged
             @test result.cp_type == :max
             @test norm(result.point) < 1e-6
         end
 
         @testset "Respects box constraints" begin
-            result = refine_to_critical_point(f_quad, [2.0, 2.0];
-                gradient_method=:forwarddiff,
-                bounds=[(0.5, 3.0), (0.5, 3.0)],
+            result = refine_to_critical_point(
+                f_quad,
+                [2.0, 2.0];
+                gradient_method = :forwarddiff,
+                bounds = [(0.5, 3.0), (0.5, 3.0)],
             )
             # The true minimum is at origin but box is [0.5, 3.0]²
             # Newton should converge but be clamped at lower bound
@@ -747,7 +812,7 @@ end
 
         @testset "Batch version" begin
             pts = [[0.5, 0.3], [-0.2, 0.4], [0.1, -0.1]]
-            results = refine_to_critical_points(f_quad, pts; gradient_method=:forwarddiff)
+            results = refine_to_critical_points(f_quad, pts; gradient_method = :forwarddiff)
             @test length(results) == 3
             @test all(r -> r isa CriticalPointRefinementResult, results)
             @test all(r -> r.converged, results)
@@ -755,8 +820,12 @@ end
 
         @testset "Deuflhard 2D — finds various CP types" begin
             # Start near a known saddle point of Deuflhard: approximately (0.507, -0.918)
-            result = refine_to_critical_point(deuflhard_2d, [0.51, -0.92];
-                gradient_method=:forwarddiff, tol=1e-10)
+            result = refine_to_critical_point(
+                deuflhard_2d,
+                [0.51, -0.92];
+                gradient_method = :forwarddiff,
+                tol = 1e-10,
+            )
             @test result.converged
             @test result.gradient_norm < 1e-8
             @test result.cp_type in [:min, :max, :saddle]  # should find the nearby CP
@@ -768,9 +837,14 @@ end
 
             # With max_iterations=2 and strict tol, should NOT converge from [5,5]
             # accept_tol=1e-20 means the CP also won't be "accepted" → Hessian skipped
-            result = refine_to_critical_point(f_rosen, [5.0, 5.0];
-                gradient_method=:forwarddiff, tol=1e-12, accept_tol=1e-20,
-                max_iterations=2)
+            result = refine_to_critical_point(
+                f_rosen,
+                [5.0, 5.0];
+                gradient_method = :forwarddiff,
+                tol = 1e-12,
+                accept_tol = 1e-20,
+                max_iterations = 2,
+            )
             @test !result.converged
             @test result.gradient_norm >= 1e-20  # not within accept_tol
             @test result.cp_type == :unknown
@@ -783,9 +857,14 @@ end
 
             # From close-ish start with few iters, won't reach tol=1e-20 but gradient
             # should be moderate. Use generous accept_tol so it's "accepted".
-            result = refine_to_critical_point(f_rosen, [0.9, 0.81];
-                gradient_method=:forwarddiff, tol=1e-20, accept_tol=1e3,
-                max_iterations=3)
+            result = refine_to_critical_point(
+                f_rosen,
+                [0.9, 0.81];
+                gradient_method = :forwarddiff,
+                tol = 1e-20,
+                accept_tol = 1e3,
+                max_iterations = 3,
+            )
             @test !result.converged  # tol is impossibly tight
             @test result.gradient_norm < 1e3  # within accept_tol
             @test result.cp_type in [:min, :max, :saddle, :degenerate]  # Hessian was computed
@@ -797,8 +876,13 @@ end
             f_rosen(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
             # Default accept_tol=Inf means Hessian is always computed even on rejected CPs
-            result = refine_to_critical_point(f_rosen, [5.0, 5.0];
-                gradient_method=:forwarddiff, tol=1e-12, max_iterations=2)
+            result = refine_to_critical_point(
+                f_rosen,
+                [5.0, 5.0];
+                gradient_method = :forwarddiff,
+                tol = 1e-12,
+                max_iterations = 2,
+            )
             @test !result.converged
             @test result.cp_type in [:min, :max, :saddle, :degenerate]  # NOT :unknown
             @test !isempty(result.eigenvalues)
@@ -812,9 +896,15 @@ end
             # From close start with few iters: gradient won't reach 1e-20 but f(x)
             # should be small (< 1.0). Set accept_tol=1e-20 (impossible by gradient)
             # but f_accept_tol=1.0 (accepts by function value).
-            result = refine_to_critical_point(f_rosen, [0.9, 0.81];
-                gradient_method=:forwarddiff, tol=1e-20, accept_tol=1e-20,
-                f_accept_tol=1.0, max_iterations=3)
+            result = refine_to_critical_point(
+                f_rosen,
+                [0.9, 0.81];
+                gradient_method = :forwarddiff,
+                tol = 1e-20,
+                accept_tol = 1e-20,
+                f_accept_tol = 1.0,
+                max_iterations = 3,
+            )
             @test !result.converged  # tol is impossibly tight
             @test result.gradient_norm >= 1e-20  # not grad-accepted
             @test result.objective_value < 1.0   # f-accepted
@@ -826,9 +916,14 @@ end
             f_rosen(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
             # Same setup but without f_accept_tol — CP is rejected
-            result = refine_to_critical_point(f_rosen, [0.9, 0.81];
-                gradient_method=:forwarddiff, tol=1e-20, accept_tol=1e-20,
-                max_iterations=3)  # f_accept_tol defaults to nothing
+            result = refine_to_critical_point(
+                f_rosen,
+                [0.9, 0.81];
+                gradient_method = :forwarddiff,
+                tol = 1e-20,
+                accept_tol = 1e-20,
+                max_iterations = 3,
+            )  # f_accept_tol defaults to nothing
             @test !result.converged
             @test result.gradient_norm >= 1e-20
             @test result.cp_type == :unknown  # Hessian skipped
@@ -839,17 +934,29 @@ end
             f_rosen(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
             # Case 1: accepted by gradient criterion (accept_tol=1e3), NOT by f_accept_tol
-            result1 = refine_to_critical_point(f_rosen, [0.9, 0.81];
-                gradient_method=:forwarddiff, tol=1e-20, accept_tol=1e3,
-                f_accept_tol=1e-30, max_iterations=3)
+            result1 = refine_to_critical_point(
+                f_rosen,
+                [0.9, 0.81];
+                gradient_method = :forwarddiff,
+                tol = 1e-20,
+                accept_tol = 1e3,
+                f_accept_tol = 1e-30,
+                max_iterations = 3,
+            )
             @test !result1.converged
             @test result1.gradient_norm < 1e3  # grad-accepted
             @test result1.cp_type in [:min, :max, :saddle, :degenerate]
 
             # Case 2: accepted by f_accept_tol, NOT by gradient criterion
-            result2 = refine_to_critical_point(f_rosen, [0.9, 0.81];
-                gradient_method=:forwarddiff, tol=1e-20, accept_tol=1e-20,
-                f_accept_tol=1.0, max_iterations=3)
+            result2 = refine_to_critical_point(
+                f_rosen,
+                [0.9, 0.81];
+                gradient_method = :forwarddiff,
+                tol = 1e-20,
+                accept_tol = 1e-20,
+                f_accept_tol = 1.0,
+                max_iterations = 3,
+            )
             @test !result2.converged
             @test result2.gradient_norm >= 1e-20  # not grad-accepted
             @test result2.objective_value < 1.0   # f-accepted
@@ -859,8 +966,12 @@ end
 
     @testset "trace_gradient_norms recorded when trace=true" begin
         f_quad(x) = x[1]^2 + x[2]^2
-        result = refine_to_critical_point(f_quad, [0.5, 0.3];
-            gradient_method=:forwarddiff, trace=true)
+        result = refine_to_critical_point(
+            f_quad,
+            [0.5, 0.3];
+            gradient_method = :forwarddiff,
+            trace = true,
+        )
         @test result.converged
         @test !isempty(result.trace)
         @test !isempty(result.trace_gradient_norms)
@@ -874,8 +985,12 @@ end
 
     @testset "trace_gradient_norms empty when trace=false" begin
         f_quad(x) = x[1]^2 + x[2]^2
-        result = refine_to_critical_point(f_quad, [0.5, 0.3];
-            gradient_method=:forwarddiff, trace=false)
+        result = refine_to_critical_point(
+            f_quad,
+            [0.5, 0.3];
+            gradient_method = :forwarddiff,
+            trace = false,
+        )
         @test isempty(result.trace_gradient_norms)
     end
 
@@ -888,7 +1003,8 @@ end
         @test classify_eigenvalues([2.0, -1.0, 1e-10], 1e-6) == :degenerate_saddle
         @test classify_eigenvalues([1e-10, -1e-10], 1e-6) == :degenerate
         # With relative_tol
-        @test classify_eigenvalues([100.0, 0.5], 1e-6; relative_tol=0.01) == :degenerate_min
+        @test classify_eigenvalues([100.0, 0.5], 1e-6; relative_tol = 0.01) ==
+              :degenerate_min
     end
 
     @testset "build_known_cps_from_refinement" begin
@@ -900,8 +1016,13 @@ end
             raw_points = [[0.5, 0.3], [-0.2, 0.4], [0.1, -0.1], [-0.3, -0.2]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
 
-            result = build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                method=NewtonCP(; gradient_method=:forwarddiff), dedup_fraction=0.01)
+            result = build_known_cps_from_refinement(
+                f_quad,
+                raw_points,
+                b2d;
+                method = NewtonCP(; gradient_method = :forwarddiff),
+                dedup_fraction = 0.01,
+            )
             @test result !== nothing
             known = result.known_cps
             @test result.refinement_results isa Vector
@@ -910,7 +1031,8 @@ end
             @test length(known.points) == 1
             @test known.types[1] == :min
             @test norm(known.points[1]) < 1e-4
-            lb, ub = GlobtimPostProcessing.lower_bounds(b2d), GlobtimPostProcessing.upper_bounds(b2d)
+            lb, ub = GlobtimPostProcessing.lower_bounds(b2d),
+            GlobtimPostProcessing.upper_bounds(b2d)
             @test known.domain_diameter ≈ norm(ub .- lb)
         end
 
@@ -926,9 +1048,13 @@ end
             ]
             b2d = [(-2.0, 2.0), (-2.0, 2.0)]
 
-            result = build_known_cps_from_refinement(f_two_min, raw_points, b2d;
-                method=NewtonCP(; gradient_method=:forwarddiff),
-                dedup_fraction=0.01)
+            result = build_known_cps_from_refinement(
+                f_two_min,
+                raw_points,
+                b2d;
+                method = NewtonCP(; gradient_method = :forwarddiff),
+                dedup_fraction = 0.01,
+            )
             @test result !== nothing
             known = result.known_cps
 
@@ -942,14 +1068,20 @@ end
 
         @testset "Error on empty raw_points" begin
             @test_throws ErrorException build_known_cps_from_refinement(
-                f_quad, Vector{Float64}[], [(-1.0, 1.0), (-1.0, 1.0)];
-                method=NewtonCP(; gradient_method=:forwarddiff))
+                f_quad,
+                Vector{Float64}[],
+                [(-1.0, 1.0), (-1.0, 1.0)];
+                method = NewtonCP(; gradient_method = :forwarddiff),
+            )
         end
 
         @testset "Error on dimension mismatch" begin
             @test_throws ErrorException build_known_cps_from_refinement(
-                f_quad, [[0.5, 0.3]], [(-1.0, 1.0)];  # 1D bounds, 2D points
-                method=NewtonCP(; gradient_method=:forwarddiff))
+                f_quad,
+                [[0.5, 0.3]],
+                [(-1.0, 1.0)];  # 1D bounds, 2D points
+                method = NewtonCP(; gradient_method = :forwarddiff),
+            )
         end
 
         @testset "f_accept_tol includes CPs that gradient criterion rejects (Newton)" begin
@@ -962,17 +1094,32 @@ end
             b2d = [(-2.0, 2.0), (-2.0, 2.0)]
 
             # Without f_accept_tol: very tight accept_tol=1e-20 rejects everything
-            result_without = build_known_cps_from_refinement(f_rosen, raw_points, b2d;
-                method=NewtonCP(; gradient_method=:forwarddiff, accept_tol=1e-20,
-                                 max_iterations=5),
-                dedup_fraction=0.01)
+            result_without = build_known_cps_from_refinement(
+                f_rosen,
+                raw_points,
+                b2d;
+                method = NewtonCP(;
+                    gradient_method = :forwarddiff,
+                    accept_tol = 1e-20,
+                    max_iterations = 5,
+                ),
+                dedup_fraction = 0.01,
+            )
             @test result_without === nothing
 
             # With f_accept_tol: same tight gradient acceptance, but accept by f(x)
-            result_with = build_known_cps_from_refinement(f_rosen, raw_points, b2d;
-                method=NewtonCP(; gradient_method=:forwarddiff, accept_tol=1e-20,
-                                 f_accept_tol=1.0, max_iterations=5),
-                dedup_fraction=0.01)
+            result_with = build_known_cps_from_refinement(
+                f_rosen,
+                raw_points,
+                b2d;
+                method = NewtonCP(;
+                    gradient_method = :forwarddiff,
+                    accept_tol = 1e-20,
+                    f_accept_tol = 1.0,
+                    max_iterations = 5,
+                ),
+                dedup_fraction = 0.01,
+            )
             @test result_with !== nothing
             @test length(result_with.known_cps.points) >= 1
             @test result_with.refinement_results isa Vector
@@ -982,9 +1129,13 @@ end
             raw_points = [[0.5, 0.3], [-0.2, 0.4], [0.1, -0.1], [-0.3, -0.2]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
 
-            result = build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                method=OptimNelderMead(; gradient_method=:forwarddiff),
-                dedup_fraction=0.01)
+            result = build_known_cps_from_refinement(
+                f_quad,
+                raw_points,
+                b2d;
+                method = OptimNelderMead(; gradient_method = :forwarddiff),
+                dedup_fraction = 0.01,
+            )
             @test result !== nothing
             known = result.known_cps
             @test result.refinement_results isa Vector
@@ -1009,9 +1160,13 @@ end
             raw_points = [[0.5, 0.3], [-0.2, 0.4], [0.1, -0.1], [-0.3, -0.2]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
 
-            result = build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                method=NewtonCP(; gradient_method=:forwarddiff),
-                dedup_fraction=0.01)
+            result = build_known_cps_from_refinement(
+                f_quad,
+                raw_points,
+                b2d;
+                method = NewtonCP(; gradient_method = :forwarddiff),
+                dedup_fraction = 0.01,
+            )
             @test result !== nothing
             known = result.known_cps
             @test length(known.points) == 1
@@ -1023,8 +1178,12 @@ end
             raw_points = [[0.5, 0.3]]
             b2d = [(-1.0, 1.0), (-1.0, 1.0)]
             # method kwarg must be a RefinementMethod subtype; passing a Symbol errors
-            @test_throws TypeError build_known_cps_from_refinement(f_quad, raw_points, b2d;
-                method=:invalid_goal)
+            @test_throws TypeError build_known_cps_from_refinement(
+                f_quad,
+                raw_points,
+                b2d;
+                method = :invalid_goal,
+            )
         end
     end
 
@@ -1038,13 +1197,25 @@ end
 
         @testset "Prints without error" begin
             types = [:min, :saddle]
-            known = KnownCriticalPoints([[0.0, 0.0], [1.0, 1.0]], [0.0, 2.0], types,
-                [(-1.0, 1.0), (-1.0, 1.0)])
+            known = KnownCriticalPoints(
+                [[0.0, 0.0], [1.0, 1.0]],
+                [0.0, 2.0],
+                types,
+                [(-1.0, 1.0), (-1.0, 1.0)],
+            )
             dd = known.domain_diameter
             tol_fracs = [0.01, 0.05, 0.1]
 
-            cr4 = compute_capture_analysis(known, [[0.3, 0.3], [1.2, 1.2]]; tolerance_fractions=tol_fracs)
-            cr6 = compute_capture_analysis(known, [[0.01, 0.01], [1.0, 1.0]]; tolerance_fractions=tol_fracs)
+            cr4 = compute_capture_analysis(
+                known,
+                [[0.3, 0.3], [1.2, 1.2]];
+                tolerance_fractions = tol_fracs,
+            )
+            cr6 = compute_capture_analysis(
+                known,
+                [[0.01, 0.01], [1.0, 1.0]];
+                tolerance_fractions = tol_fracs,
+            )
 
             degree_capture = [(4, cr4), (6, cr6)]
             info = [
@@ -1053,8 +1224,12 @@ end
             ]
 
             pipe = Pipe()
-            Base.link_pipe!(pipe; reader_supports_async=true, writer_supports_async=true)
-            print_degree_convergence_summary(degree_capture, info; io=pipe.in)
+            Base.link_pipe!(
+                pipe;
+                reader_supports_async = true,
+                writer_supports_async = true,
+            )
+            print_degree_convergence_summary(degree_capture, info; io = pipe.in)
             close(pipe.in)
             output = read(pipe.out, String)
             @test contains(output, "Degree Convergence Summary")
@@ -1073,16 +1248,25 @@ end
             types = [:min, :min, :saddle]
             known = KnownCriticalPoints(
                 [[0.0, 0.0], [1.0, 0.0], [0.5, 0.5]],
-                [0.0, 1.0, 0.5], types,
-                [(-2.0, 2.0), (-2.0, 2.0)])
+                [0.0, 1.0, 0.5],
+                types,
+                [(-2.0, 2.0), (-2.0, 2.0)],
+            )
             dd = known.domain_diameter
             tol_fracs = [0.01, 0.05, 0.1]
 
             # At degree 4: capture 1/3 at 5%
-            cr4 = compute_capture_analysis(known, [[0.01, 0.01]]; tolerance_fractions=tol_fracs)
+            cr4 = compute_capture_analysis(
+                known,
+                [[0.01, 0.01]];
+                tolerance_fractions = tol_fracs,
+            )
             # At degree 8: capture 3/3 at 5%
-            cr8 = compute_capture_analysis(known, [[0.0, 0.0], [1.0, 0.0], [0.5, 0.5]];
-                tolerance_fractions=tol_fracs)
+            cr8 = compute_capture_analysis(
+                known,
+                [[0.0, 0.0], [1.0, 0.0], [0.5, 0.5]];
+                tolerance_fractions = tol_fracs,
+            )
 
             verdict = compute_capture_verdict([(4, cr4), (8, cr8)])
             @test verdict.best_degree == 8
@@ -1098,17 +1282,26 @@ end
             types = [:min, :saddle]
             known = KnownCriticalPoints(
                 [[0.0, 0.0], [1.0, 1.0]],
-                [0.0, 2.0], types,
-                [(-2.0, 2.0), (-2.0, 2.0)])
+                [0.0, 2.0],
+                types,
+                [(-2.0, 2.0), (-2.0, 2.0)],
+            )
             tol_fracs = [0.01, 0.05, 0.1]
-            cr = compute_capture_analysis(known, [[0.0, 0.0], [1.0, 1.0]];
-                tolerance_fractions=tol_fracs)
+            cr = compute_capture_analysis(
+                known,
+                [[0.0, 0.0], [1.0, 1.0]];
+                tolerance_fractions = tol_fracs,
+            )
 
             verdict = compute_capture_verdict([(6, cr)])
 
             pipe = Pipe()
-            Base.link_pipe!(pipe; reader_supports_async=true, writer_supports_async=true)
-            print_capture_verdict(verdict; io=pipe.in)
+            Base.link_pipe!(
+                pipe;
+                reader_supports_async = true,
+                writer_supports_async = true,
+            )
+            print_capture_verdict(verdict; io = pipe.in)
             close(pipe.in)
             output = read(pipe.out, String)
             @test contains(output, "CAPTURE RESULT")
@@ -1117,12 +1310,16 @@ end
 
         @testset "Error on missing tolerance fraction" begin
             types = [:min]
-            known = KnownCriticalPoints([[0.0, 0.0]], [0.0], types, [(-1.0, 1.0), (-1.0, 1.0)])
-            cr = compute_capture_analysis(known, [[0.0, 0.0]]; tolerance_fractions=[0.01, 0.1])
+            known =
+                KnownCriticalPoints([[0.0, 0.0]], [0.0], types, [(-1.0, 1.0), (-1.0, 1.0)])
+            cr = compute_capture_analysis(
+                known,
+                [[0.0, 0.0]];
+                tolerance_fractions = [0.01, 0.1],
+            )
 
             # Default reference is 0.05, which is not in [0.01, 0.1]
             @test_throws ErrorException compute_capture_verdict([(4, cr)])
         end
     end
-
 end

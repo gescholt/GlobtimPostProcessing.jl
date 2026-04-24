@@ -15,21 +15,21 @@ using JSON3
 using Dates
 
 # Test data paths
-TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_083530",
-                              "campaign_lotka_volterra_4d_extended_degrees")
+TEST_CAMPAIGN_PATH = joinpath(
+    @__DIR__,
+    "..",
+    "collected_experiments_20251013_083530",
+    "campaign_lotka_volterra_4d_extended_degrees",
+)
 NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
 
 @testset "Phase 2: Batch Processing" begin
-
     @testset "1. batch_analyze_campaign - Basic Functionality" begin
         @testset "1.1 Silent mode with markdown output" begin
             output_file = tempname() * ".md"
 
-            success, result = batch_analyze_campaign(
-                TEST_CAMPAIGN_PATH,
-                output_file,
-                silent=true
-            )
+            success, result =
+                batch_analyze_campaign(TEST_CAMPAIGN_PATH, output_file, silent = true)
 
             @test success == true
             @test result == output_file
@@ -38,10 +38,11 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             # Verify report content
             content = read(output_file, String)
             @test length(content) > 0
-            @test occursin("Campaign Report", content) || occursin("campaign", lowercase(content))
+            @test occursin("Campaign Report", content) ||
+                  occursin("campaign", lowercase(content))
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "1.2 With return_stats option" begin
@@ -50,8 +51,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result, stats = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                return_stats=true
+                silent = true,
+                return_stats = true,
             )
 
             @test success == true
@@ -60,24 +61,22 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             @test haskey(stats, "campaign_summary") || haskey(stats, "experiments")
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "1.3 Auto-creates nested output directories" begin
-            nested_dir = joinpath(tempdir(), "test_nested_$(rand(UInt32))", "subdir", "report.md")
+            nested_dir =
+                joinpath(tempdir(), "test_nested_$(rand(UInt32))", "subdir", "report.md")
 
-            success, result = batch_analyze_campaign(
-                TEST_CAMPAIGN_PATH,
-                nested_dir,
-                silent=true
-            )
+            success, result =
+                batch_analyze_campaign(TEST_CAMPAIGN_PATH, nested_dir, silent = true)
 
             @test success == true
             @test isfile(nested_dir)
             @test dirname(nested_dir) |> isdir
 
             # Cleanup
-            rm(dirname(dirname(nested_dir)), recursive=true, force=true)
+            rm(dirname(dirname(nested_dir)), recursive = true, force = true)
         end
     end
 
@@ -85,15 +84,13 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
         @testset "2.1 Non-existent campaign directory" begin
             output_file = tempname() * ".md"
 
-            success, result = batch_analyze_campaign(
-                NONEXISTENT_PATH,
-                output_file,
-                silent=true
-            )
+            success, result =
+                batch_analyze_campaign(NONEXISTENT_PATH, output_file, silent = true)
 
             @test success == false
             @test result isa String  # Error message
-            @test occursin("not found", lowercase(result)) || occursin("error", lowercase(result))
+            @test occursin("not found", lowercase(result)) ||
+                  occursin("error", lowercase(result))
             @test !isfile(output_file)  # Should not create file on error
         end
 
@@ -103,8 +100,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result, stats = batch_analyze_campaign(
                 NONEXISTENT_PATH,
                 output_file,
-                silent=true,
-                return_stats=true
+                silent = true,
+                return_stats = true,
             )
 
             @test success == false
@@ -121,9 +118,9 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result, stats = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                return_stats=true,
-                format="json"
+                silent = true,
+                return_stats = true,
+                format = "json",
             )
 
             @test success == true
@@ -147,7 +144,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             end
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "3.2 JSON format includes all expected fields" begin
@@ -156,8 +153,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                format="json"
+                silent = true,
+                format = "json",
             )
 
             parsed = JSON3.read(read(output_file, String))
@@ -172,7 +169,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             end
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
     end
 
@@ -180,7 +177,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
         @testset "4.1 Loads campaign successfully with progress" begin
             campaign = load_campaign_with_progress(
                 TEST_CAMPAIGN_PATH,
-                show_progress=false  # Disable for testing
+                show_progress = false,  # Disable for testing
             )
 
             @test campaign isa CampaignResults
@@ -188,24 +185,21 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
         end
 
         @testset "4.2 Returns same result as standard loader" begin
-            campaign_with_progress = load_campaign_with_progress(
-                TEST_CAMPAIGN_PATH,
-                show_progress=false
-            )
+            campaign_with_progress =
+                load_campaign_with_progress(TEST_CAMPAIGN_PATH, show_progress = false)
 
             campaign_standard = load_campaign_results(TEST_CAMPAIGN_PATH)
 
             @test campaign_with_progress.campaign_id == campaign_standard.campaign_id
-            @test length(campaign_with_progress.experiments) == length(campaign_standard.experiments)
+            @test length(campaign_with_progress.experiments) ==
+                  length(campaign_standard.experiments)
         end
 
         @testset "4.3 Progress enabled doesn't crash" begin
             # This test just verifies progress bars don't cause errors
             # (they may not display in test environment)
-            @test_nowarn campaign = load_campaign_with_progress(
-                TEST_CAMPAIGN_PATH,
-                show_progress=true
-            )
+            @test_nowarn campaign =
+                load_campaign_with_progress(TEST_CAMPAIGN_PATH, show_progress = true)
         end
     end
 
@@ -213,20 +207,16 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
         campaign = load_campaign_results(TEST_CAMPAIGN_PATH)
 
         @testset "5.1 Computes statistics with progress disabled" begin
-            stats = aggregate_campaign_statistics_with_progress(
-                campaign,
-                show_progress=false
-            )
+            stats =
+                aggregate_campaign_statistics_with_progress(campaign, show_progress = false)
 
             @test stats isa Dict
             @test haskey(stats, "experiments") || haskey(stats, "campaign_summary")
         end
 
         @testset "5.2 Returns same result as standard aggregation" begin
-            stats_with_progress = aggregate_campaign_statistics_with_progress(
-                campaign,
-                show_progress=false
-            )
+            stats_with_progress =
+                aggregate_campaign_statistics_with_progress(campaign, show_progress = false)
 
             # Note: Standard function may have different output due to progress callback
             # We just verify structure is similar
@@ -235,10 +225,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
         end
 
         @testset "5.3 Progress enabled doesn't crash" begin
-            @test_nowarn stats = aggregate_campaign_statistics_with_progress(
-                campaign,
-                show_progress=true
-            )
+            @test_nowarn stats =
+                aggregate_campaign_statistics_with_progress(campaign, show_progress = true)
         end
     end
 
@@ -249,8 +237,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result, stats = batch_analyze_campaign_with_progress(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                show_progress=false,
-                silent=true
+                show_progress = false,
+                silent = true,
             )
 
             @test success == true
@@ -260,7 +248,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             @test !isempty(stats)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "6.2 Verbose mode runs successfully" begin
@@ -270,16 +258,16 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result, stats = batch_analyze_campaign_with_progress(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                show_progress=false,
-                silent=false,
-                verbose=true
+                show_progress = false,
+                silent = false,
+                verbose = true,
             )
 
             @test success == true
             @test isfile(output_file)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "6.3 Error handling" begin
@@ -288,8 +276,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             success, result, stats = batch_analyze_campaign_with_progress(
                 NONEXISTENT_PATH,
                 output_file,
-                show_progress=false,
-                silent=true
+                show_progress = false,
+                silent = true,
             )
 
             @test success == false
@@ -304,12 +292,12 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             @test_nowarn success, result, stats = batch_analyze_campaign_with_progress(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                show_progress=true,
-                silent=true
+                show_progress = true,
+                silent = true,
             )
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
     end
 
@@ -317,17 +305,14 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
         @testset "7.1 Multiple campaigns in sequence" begin
             campaigns = [
                 TEST_CAMPAIGN_PATH,
-                TEST_CAMPAIGN_PATH  # Process same campaign twice for testing
+                TEST_CAMPAIGN_PATH,  # Process same campaign twice for testing
             ]
 
             results = []
             for (i, campaign_path) in enumerate(campaigns)
                 output_file = tempname() * "_$i.md"
-                success, result = batch_analyze_campaign(
-                    campaign_path,
-                    output_file,
-                    silent=true
-                )
+                success, result =
+                    batch_analyze_campaign(campaign_path, output_file, silent = true)
                 push!(results, (success, result))
             end
 
@@ -336,7 +321,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
 
             # Cleanup
             for (success, result) in results
-                rm(result, force=true)
+                rm(result, force = true)
             end
         end
 
@@ -347,17 +332,17 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             md_success, _, md_stats = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 md_file,
-                silent=true,
-                return_stats=true,
-                format="markdown"
+                silent = true,
+                return_stats = true,
+                format = "markdown",
             )
 
             json_success, _, json_stats = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 json_file,
-                silent=true,
-                return_stats=true,
-                format="json"
+                silent = true,
+                return_stats = true,
+                format = "json",
             )
 
             @test md_success == true
@@ -369,8 +354,8 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             @test typeof(md_stats) == typeof(json_stats)
 
             # Cleanup
-            rm(md_file, force=true)
-            rm(json_file, force=true)
+            rm(md_file, force = true)
+            rm(json_file, force = true)
         end
     end
 
@@ -382,7 +367,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
                 success, result = batch_analyze_campaign(
                     TEST_CAMPAIGN_PATH,
                     output_file,
-                    silent=true
+                    silent = true,
                 )
             end
 
@@ -390,7 +375,7 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
             @test elapsed < 120.0  # Should complete within 2 minutes for small campaign
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "8.2 No file leaks on repeated operations" begin
@@ -398,18 +383,15 @@ NONEXISTENT_PATH = "/tmp/nonexistent_campaign_$(rand(UInt32))"
 
             # Run 5 times to check for resource leaks
             for i in 1:5
-                success, result = batch_analyze_campaign(
-                    TEST_CAMPAIGN_PATH,
-                    output_file,
-                    silent=true
-                )
+                success, result =
+                    batch_analyze_campaign(TEST_CAMPAIGN_PATH, output_file, silent = true)
                 @test success == true
             end
 
             @test isfile(output_file)  # Last one should exist
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
     end
 end
@@ -431,8 +413,10 @@ end
             end
 
             # Should show help without error
-            @test occursin("Usage", result) || occursin("batch_analyze", result) ||
-                  occursin("--input", result) || occursin("help", lowercase(result))
+            @test occursin("Usage", result) ||
+                  occursin("batch_analyze", result) ||
+                  occursin("--input", result) ||
+                  occursin("help", lowercase(result))
         end
 
         @testset "9.3 Missing required arguments fails" begin
@@ -455,7 +439,9 @@ end
             output_file = tempname() * ".md"
 
             exit_code = try
-                run(`julia $CLI_SCRIPT --input $TEST_CAMPAIGN_PATH --output $output_file --silent`)
+                run(
+                    `julia $CLI_SCRIPT --input $TEST_CAMPAIGN_PATH --output $output_file --silent`,
+                )
                 0
             catch e
                 if e isa ProcessFailedException
@@ -469,7 +455,7 @@ end
             @test isfile(output_file)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
     end
 end

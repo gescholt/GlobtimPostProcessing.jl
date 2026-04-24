@@ -26,13 +26,18 @@ using Pkg
 Pkg.activate(@__DIR__)
 
 using GlobtimPostProcessing
-using GlobtimPostProcessing: load_experiment_config, load_experiment_results,
-                             compute_statistics, has_ground_truth,
-                             load_critical_points_for_degree,
-                             detect_csv_schema,
-                             compute_parameter_recovery_stats,
-                             load_quality_thresholds, check_l2_quality,
-                             detect_stagnation, check_objective_distribution_quality
+using GlobtimPostProcessing:
+    load_experiment_config,
+    load_experiment_results,
+    compute_statistics,
+    has_ground_truth,
+    load_critical_points_for_degree,
+    detect_csv_schema,
+    compute_parameter_recovery_stats,
+    load_quality_thresholds,
+    check_l2_quality,
+    detect_stagnation,
+    check_objective_distribution_quality
 using DataFrames
 using Printf
 using Dates
@@ -87,7 +92,7 @@ Get list of objective function directories in results root, excluding special di
 function get_objective_directories(results_root::String)
     dirs = String[]
 
-    for entry in readdir(results_root, join=true)
+    for entry in readdir(results_root, join = true)
         if isdir(entry)
             basename_entry = basename(entry)
             # Exclude git, hidden directories, and indices
@@ -158,7 +163,9 @@ end
 Display all found experiments in a numbered list with status indicators.
 """
 function display_experiments_list(experiments::Vector{String})
-    println("\n$(BOLD)$(CYAN)═══ Found $(length(experiments)) Experiments (sorted newest first) ═══$(RESET)\n")
+    println(
+        "\n$(BOLD)$(CYAN)═══ Found $(length(experiments)) Experiments (sorted newest first) ═══$(RESET)\n",
+    )
 
     for (idx, exp_path) in enumerate(experiments)
         exp_name = basename(exp_path)
@@ -306,34 +313,47 @@ function display_quality_diagnostics(exp_path::String)
 
         # Check L2 quality
         l2_quality = check_l2_quality(final_l2, dimension, thresholds)
-        quality_color = l2_quality == :excellent ? GREEN :
-                       l2_quality == :good ? CYAN :
-                       l2_quality == :fair ? YELLOW : RED
+        quality_color =
+            l2_quality == :excellent ? GREEN :
+            l2_quality == :good ? CYAN : l2_quality == :fair ? YELLOW : RED
         quality_symbol = l2_quality == :poor ? "✗" : "✓"
 
-        println("  $(quality_color)$(quality_symbol) L2 Norm Quality:$(RESET) $(uppercase(string(l2_quality)))")
+        println(
+            "  $(quality_color)$(quality_symbol) L2 Norm Quality:$(RESET) $(uppercase(string(l2_quality)))",
+        )
         @printf("    Final L2 norm (degree %d): %.6g\n", final_degree, final_l2)
 
         threshold_key = "dim_$(dimension)"
-        threshold = get(thresholds["l2_norm_thresholds"], threshold_key,
-                       thresholds["l2_norm_thresholds"]["default"])
+        threshold = get(
+            thresholds["l2_norm_thresholds"],
+            threshold_key,
+            thresholds["l2_norm_thresholds"]["default"],
+        )
         @printf("    Threshold for %dD: %.6g\n", dimension, threshold)
 
         # Check convergence stagnation if we have multiple degrees
         if length(l2_norms) >= 3 && length(degrees) == length(l2_norms)
-            l2_by_degree = Dict{Int, Float64}()
+            l2_by_degree = Dict{Int,Float64}()
             for (i, degree) in enumerate(degrees)
                 l2_by_degree[degree] = l2_norms[i]
             end
 
             stagnation = detect_stagnation(l2_by_degree, thresholds)
             if stagnation.is_stagnant
-                println("  $(YELLOW)⚠ Convergence Stagnation:$(RESET) Detected at degree $(stagnation.stagnation_start_degree)")
-                @printf("    Consecutive stagnant degrees: %d\n", stagnation.consecutive_stagnant_degrees)
+                println(
+                    "  $(YELLOW)⚠ Convergence Stagnation:$(RESET) Detected at degree $(stagnation.stagnation_start_degree)",
+                )
+                @printf(
+                    "    Consecutive stagnant degrees: %d\n",
+                    stagnation.consecutive_stagnant_degrees
+                )
             else
                 println("  $(GREEN)✓ Convergence:$(RESET) Improving")
                 if !isnothing(stagnation.avg_improvement_factor)
-                    @printf("    Average improvement: %.1f%%\n", (1 - stagnation.avg_improvement_factor) * 100)
+                    @printf(
+                        "    Average improvement: %.1f%%\n",
+                        (1 - stagnation.avg_improvement_factor) * 100
+                    )
                 end
             end
         end
@@ -342,8 +362,14 @@ function display_quality_diagnostics(exp_path::String)
         if length(best_values) >= 3
             dist_result = check_objective_distribution_quality(best_values, thresholds)
             if dist_result.has_outliers && dist_result.quality == :poor
-                println("  $(YELLOW)⚠ Objective Distribution:$(RESET) High outlier fraction ($(dist_result.outlier_fraction * 100)%)")
-                @printf("    Outliers: %d / %d\n", dist_result.num_outliers, length(best_values))
+                println(
+                    "  $(YELLOW)⚠ Objective Distribution:$(RESET) High outlier fraction ($(dist_result.outlier_fraction * 100)%)",
+                )
+                @printf(
+                    "    Outliers: %d / %d\n",
+                    dist_result.num_outliers,
+                    length(best_values)
+                )
             else
                 println("  $(GREEN)✓ Objective Distribution:$(RESET) Normal")
             end
@@ -375,12 +401,15 @@ function display_validation_stats(exp_path::String)
         # Check schema version
         schema_version = get(data, "schema_version", "unknown")
         if schema_version < "1.2.0"
-            println("  $(YELLOW)⚠ No validation data (requires Schema v1.2.0, found $schema_version)$(RESET)")
+            println(
+                "  $(YELLOW)⚠ No validation data (requires Schema v1.2.0, found $schema_version)$(RESET)",
+            )
             return
         end
 
         # Get validation stats from latest degree
-        degree_keys = filter(k -> startswith(string(k), "degree_"), keys(data["results_summary"]))
+        degree_keys =
+            filter(k -> startswith(string(k), "degree_"), keys(data["results_summary"]))
         if isempty(degree_keys)
             println("  $(YELLOW)⚠ No degree results found$(RESET)")
             return
@@ -400,7 +429,9 @@ function display_validation_stats(exp_path::String)
         println("  $(BOLD)Gradient Verification:$(RESET)")
         println("    Tolerance: $(vstats["gradient_tol"])")
         println("    Verified critical points: $(vstats["critical_verified"])")
-        println("    $(RED)Spurious critical points: $(vstats["critical_spurious"])$(RESET)")
+        println(
+            "    $(RED)Spurious critical points: $(vstats["critical_spurious"])$(RESET)",
+        )
         @printf("    Mean gradient norm: %.6g\n", vstats["gradient_norm_mean"])
         @printf("    Max gradient norm: %.6g\n", vstats["gradient_norm_max"])
 
@@ -408,7 +439,7 @@ function display_validation_stats(exp_path::String)
         println("\n  $(BOLD)Hessian Classifications:$(RESET)")
         classifications = vstats["classifications"]
         total_classified = sum(values(classifications))
-        for (ctype, count) in sort(collect(classifications), by=x->x[2], rev=true)
+        for (ctype, count) in sort(collect(classifications), by = x->x[2], rev = true)
             color = if ctype == "minimum"
                 GREEN
             elseif ctype == "saddle"
@@ -430,7 +461,9 @@ function display_validation_stats(exp_path::String)
             if length(cluster_sizes) > 0 && length(cluster_sizes) <= 10
                 println("    Cluster sizes: $(join(cluster_sizes, ", "))")
             elseif length(cluster_sizes) > 10
-                println("    Cluster sizes: $(join(cluster_sizes[1:5], ", ")), ... ($(length(cluster_sizes)) total)")
+                println(
+                    "    Cluster sizes: $(join(cluster_sizes[1:5], ", ")), ... ($(length(cluster_sizes)) total)",
+                )
             end
         else
             println("\n  $(YELLOW)⚠ No local minima found$(RESET)")
@@ -451,8 +484,10 @@ and raw vs refined objective comparisons.
 function display_refinement_statistics(exp_path::String)
     try
         # Get all degrees from CSV files
-        csv_files = filter(f -> startswith(basename(f), "critical_points_deg_"),
-                          readdir(exp_path, join=true))
+        csv_files = filter(
+            f -> startswith(basename(f), "critical_points_deg_"),
+            readdir(exp_path, join = true),
+        )
         degrees = Int[]
         for csv_file in csv_files
             m = match(r"deg_(\d+)\.csv", basename(csv_file))
@@ -464,8 +499,10 @@ function display_refinement_statistics(exp_path::String)
 
         if isempty(degrees)
             # Also check Phase 2 format files
-            csv_files = filter(f -> startswith(basename(f), "critical_points_raw_deg_"),
-                              readdir(exp_path, join=true))
+            csv_files = filter(
+                f -> startswith(basename(f), "critical_points_raw_deg_"),
+                readdir(exp_path, join = true),
+            )
             for csv_file in csv_files
                 m = match(r"deg_(\d+)\.csv", basename(csv_file))
                 if m !== nothing
@@ -491,14 +528,23 @@ function display_refinement_statistics(exp_path::String)
         end
 
         if !has_v110
-            println("  $(YELLOW)⚠ No refinement data (requires Schema v1.1.0 CSV format)$(RESET)")
+            println(
+                "  $(YELLOW)⚠ No refinement data (requires Schema v1.1.0 CSV format)$(RESET)",
+            )
             return
         end
 
         # Display table header
         println("  " * "="^95)
-        @printf("  %-8s | %-8s | %-14s | %-14s | %-14s | %-14s\n",
-                "Degree", "# CPs", "Mean Improve", "Max Improve", "Mean L2 Err", "Refined Obj")
+        @printf(
+            "  %-8s | %-8s | %-14s | %-14s | %-14s | %-14s\n",
+            "Degree",
+            "# CPs",
+            "Mean Improve",
+            "Max Improve",
+            "Mean L2 Err",
+            "Refined Obj"
+        )
         println("  " * "="^95)
 
         for degree in degrees
@@ -506,8 +552,15 @@ function display_refinement_statistics(exp_path::String)
             schema = detect_csv_schema(df)
 
             if schema != :v1_1_0
-                @printf("  %-8d | %-8d | %-14s | %-14s | %-14s | %-14s\n",
-                        degree, nrow(df), "N/A", "N/A", "N/A", "N/A")
+                @printf(
+                    "  %-8d | %-8d | %-14s | %-14s | %-14s | %-14s\n",
+                    degree,
+                    nrow(df),
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A"
+                )
                 continue
             end
 
@@ -527,10 +580,17 @@ function display_refinement_statistics(exp_path::String)
             best_obj = minimum(objectives)
 
             improve_color = mean_improve > 0 ? GREEN : YELLOW
-            @printf("  %-8d | %-8d | %s%-14.6g%s | %-14.6g | %-14.6g | %-14.6g\n",
-                    degree, n_points,
-                    improve_color, mean_improve, RESET,
-                    max_improve, mean_l2, best_obj)
+            @printf(
+                "  %-8d | %-8d | %s%-14.6g%s | %-14.6g | %-14.6g | %-14.6g\n",
+                degree,
+                n_points,
+                improve_color,
+                mean_improve,
+                RESET,
+                max_improve,
+                mean_l2,
+                best_obj
+            )
         end
         println("  " * "="^95)
 
@@ -555,8 +615,10 @@ function display_parameter_recovery(exp_path::String)
         recovery_threshold = thresholds["parameter_recovery"]["param_distance_threshold"]
 
         # Get all degrees from CSV files
-        csv_files = filter(f -> startswith(basename(f), "critical_points_deg_"),
-                          readdir(exp_path, join=true))
+        csv_files = filter(
+            f -> startswith(basename(f), "critical_points_deg_"),
+            readdir(exp_path, join = true),
+        )
         degrees = Int[]
         for csv_file in csv_files
             m = match(r"deg_(\d+)\.csv", basename(csv_file))
@@ -576,8 +638,14 @@ function display_parameter_recovery(exp_path::String)
         println("  Recovery threshold: distance < $recovery_threshold")
         println()
         println("  " * "="^80)
-        @printf("  %-8s | %-8s | %-12s | %-12s | %-12s\n",
-                "Degree", "# CPs", "Min Dist", "Mean Dist", "Recoveries")
+        @printf(
+            "  %-8s | %-8s | %-12s | %-12s | %-12s\n",
+            "Degree",
+            "# CPs",
+            "Min Dist",
+            "Mean Dist",
+            "Recoveries"
+        )
         println("  " * "="^80)
 
         # Display each degree
@@ -587,13 +655,18 @@ function display_parameter_recovery(exp_path::String)
             n_points = nrow(df)
 
             recovery_color = stats["num_recoveries"] > 0 ? GREEN : YELLOW
-            @printf("  %-8d | %-8d | %s%-12.6g%s | %-12.6g | %s%-12d%s\n",
-                    degree, n_points,
-                    stats["min_distance"] < recovery_threshold ? GREEN : "",
-                    stats["min_distance"],
-                    RESET,
-                    stats["mean_distance"],
-                    recovery_color, stats["num_recoveries"], RESET)
+            @printf(
+                "  %-8d | %-8d | %s%-12.6g%s | %-12.6g | %s%-12d%s\n",
+                degree,
+                n_points,
+                stats["min_distance"] < recovery_threshold ? GREEN : "",
+                stats["min_distance"],
+                RESET,
+                stats["mean_distance"],
+                recovery_color,
+                stats["num_recoveries"],
+                RESET
+            )
         end
         println("  " * "="^80)
 
@@ -679,7 +752,9 @@ function display_convergence_by_degree(exp_path::String)
             push!(condition_numbers, parse(Float64, m.captures[1]))
         end
 
-        if isempty(degrees) || length(degrees) != length(l2_norms) || length(degrees) != length(critical_points)
+        if isempty(degrees) ||
+           length(degrees) != length(l2_norms) ||
+           length(degrees) != length(critical_points)
             println("  $(YELLOW)⚠ Incomplete or inconsistent results data$(RESET)")
             return
         end
@@ -687,11 +762,22 @@ function display_convergence_by_degree(exp_path::String)
         # Display enhanced table header
         println("  " * "="^100)
         if !isempty(condition_numbers) && length(condition_numbers) == length(degrees)
-            @printf("  %-8s | %-15s | %-15s | %-12s | %-15s\n",
-                    "Degree", "L2 Norm", "Improvement", "Critical Pts", "Cond Number")
+            @printf(
+                "  %-8s | %-15s | %-15s | %-12s | %-15s\n",
+                "Degree",
+                "L2 Norm",
+                "Improvement",
+                "Critical Pts",
+                "Cond Number"
+            )
         else
-            @printf("  %-8s | %-15s | %-15s | %-12s\n",
-                    "Degree", "L2 Norm", "Improvement", "Critical Pts")
+            @printf(
+                "  %-8s | %-15s | %-15s | %-12s\n",
+                "Degree",
+                "L2 Norm",
+                "Improvement",
+                "Critical Pts"
+            )
         end
         println("  " * "="^100)
 
@@ -704,11 +790,16 @@ function display_convergence_by_degree(exp_path::String)
             if i == 1
                 # First degree has no improvement to compare
                 if !isempty(condition_numbers) && length(condition_numbers) >= i
-                    @printf("  %-8d | %-15.6g | %-15s | %-12d | %-15.6g\n",
-                            degree, l2, "-", n_cp, condition_numbers[i])
+                    @printf(
+                        "  %-8d | %-15.6g | %-15s | %-12d | %-15.6g\n",
+                        degree,
+                        l2,
+                        "-",
+                        n_cp,
+                        condition_numbers[i]
+                    )
                 else
-                    @printf("  %-8d | %-15.6g | %-15s | %-12d\n",
-                            degree, l2, "-", n_cp)
+                    @printf("  %-8d | %-15.6g | %-15s | %-12d\n", degree, l2, "-", n_cp)
                 end
             else
                 # Calculate improvement percentage
@@ -719,12 +810,26 @@ function display_convergence_by_degree(exp_path::String)
                 improvement_color = improvement_pct > 0 ? GREEN : RED
 
                 if !isempty(condition_numbers) && length(condition_numbers) >= i
-                    @printf("  %-8d | %-15.6g | %s%14.1f%%%s | %-12d | %-15.6g\n",
-                            degree, l2, improvement_color, improvement_pct, RESET, n_cp,
-                            condition_numbers[i])
+                    @printf(
+                        "  %-8d | %-15.6g | %s%14.1f%%%s | %-12d | %-15.6g\n",
+                        degree,
+                        l2,
+                        improvement_color,
+                        improvement_pct,
+                        RESET,
+                        n_cp,
+                        condition_numbers[i]
+                    )
                 else
-                    @printf("  %-8d | %-15.6g | %s%14.1f%%%s | %-12d\n",
-                            degree, l2, improvement_color, improvement_pct, RESET, n_cp)
+                    @printf(
+                        "  %-8d | %-15.6g | %s%14.1f%%%s | %-12d\n",
+                        degree,
+                        l2,
+                        improvement_color,
+                        improvement_pct,
+                        RESET,
+                        n_cp
+                    )
                 end
             end
         end
@@ -739,22 +844,37 @@ function display_convergence_by_degree(exp_path::String)
 
             println()
             println("  $(BOLD)Summary:$(RESET)")
-            @printf("    Overall L2 improvement: %.2f× (%.1f%% reduction)\n",
-                    overall_improvement_factor, overall_reduction_pct)
+            @printf(
+                "    Overall L2 improvement: %.2f× (%.1f%% reduction)\n",
+                overall_improvement_factor,
+                overall_reduction_pct
+            )
             @printf("    Final L2 norm: %.6g\n", last_l2)
 
             # Display numerical stability summary if available
             if haskey(numerical_stability, "mean_condition_number")
-                @printf("    Mean condition number: %.6g\n", numerical_stability["mean_condition_number"])
+                @printf(
+                    "    Mean condition number: %.6g\n",
+                    numerical_stability["mean_condition_number"]
+                )
             end
             if haskey(numerical_stability, "max_condition_number")
-                @printf("    Max condition number: %.6g\n", numerical_stability["max_condition_number"])
+                @printf(
+                    "    Max condition number: %.6g\n",
+                    numerical_stability["max_condition_number"]
+                )
             end
             if haskey(numerical_stability, "median_numerical_rank")
-                @printf("    Median numerical rank: %.6g\n", numerical_stability["median_numerical_rank"])
+                @printf(
+                    "    Median numerical rank: %.6g\n",
+                    numerical_stability["median_numerical_rank"]
+                )
             end
             if haskey(numerical_stability, "mean_numerical_rank")
-                @printf("    Mean numerical rank: %.6g\n", numerical_stability["mean_numerical_rank"])
+                @printf(
+                    "    Mean numerical rank: %.6g\n",
+                    numerical_stability["mean_numerical_rank"]
+                )
             end
         end
 
@@ -889,11 +1009,14 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
 
             if has_p_true
                 p_true = collect(config["p_true"])
-                recovery_threshold = thresholds["parameter_recovery"]["param_distance_threshold"]
+                recovery_threshold =
+                    thresholds["parameter_recovery"]["param_distance_threshold"]
 
                 # Get all degrees
-                csv_files = filter(f -> startswith(basename(f), "critical_points_deg_"),
-                                  readdir(exp_path, join=true))
+                csv_files = filter(
+                    f -> startswith(basename(f), "critical_points_deg_"),
+                    readdir(exp_path, join = true),
+                )
 
                 for csv_file in csv_files
                     try
@@ -901,7 +1024,11 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
                         if m !== nothing
                             degree = parse(Int, m[1])
                             df = load_critical_points_for_degree(exp_path, degree)
-                            stats = compute_parameter_recovery_stats(df, p_true, recovery_threshold)
+                            stats = compute_parameter_recovery_stats(
+                                df,
+                                p_true,
+                                recovery_threshold,
+                            )
                             best_recovery = max(best_recovery, stats["num_recoveries"])
                             best_min_dist = min(best_min_dist, stats["min_distance"])
                         end
@@ -912,15 +1039,18 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
                 end
             end
 
-            push!(all_stats, (
-                name = exp_name,
-                final_l2 = final_l2,
-                dimension = dimension,
-                quality = l2_quality,
-                has_p_true = has_p_true,
-                best_recovery = best_recovery,
-                best_min_dist = best_min_dist
-            ))
+            push!(
+                all_stats,
+                (
+                    name = exp_name,
+                    final_l2 = final_l2,
+                    dimension = dimension,
+                    quality = l2_quality,
+                    has_p_true = has_p_true,
+                    best_recovery = best_recovery,
+                    best_min_dist = best_min_dist,
+                ),
+            )
         catch e
             println("$(YELLOW)⚠ Skipping $(basename(exp_path)): $e$(RESET)")
         end
@@ -934,14 +1064,19 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
     # Display campaign summary table
     println("$(BOLD)$(GREEN)═══ Campaign Summary ═══$(RESET)\n")
     println("  " * "="^100)
-    @printf("  %-40s | %-15s | %-10s | %-15s\n",
-            "Experiment", "Final L2", "Quality", "Recovery")
+    @printf(
+        "  %-40s | %-15s | %-10s | %-15s\n",
+        "Experiment",
+        "Final L2",
+        "Quality",
+        "Recovery"
+    )
     println("  " * "="^100)
 
     for stat in all_stats
-        quality_color = stat.quality == :excellent ? GREEN :
-                       stat.quality == :good ? CYAN :
-                       stat.quality == :fair ? YELLOW : RED
+        quality_color =
+            stat.quality == :excellent ? GREEN :
+            stat.quality == :good ? CYAN : stat.quality == :fair ? YELLOW : RED
 
         recovery_str = if stat.has_p_true
             if stat.best_recovery > 0
@@ -953,10 +1088,15 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
             "N/A"
         end
 
-        @printf("  %-40s | %-15.6g | %s%-10s%s | %s\n",
-                stat.name[1:min(40, end)], stat.final_l2,
-                quality_color, uppercase(String(stat.quality)), RESET,
-                recovery_str)
+        @printf(
+            "  %-40s | %-15.6g | %s%-10s%s | %s\n",
+            stat.name[1:min(40, end)],
+            stat.final_l2,
+            quality_color,
+            uppercase(String(stat.quality)),
+            RESET,
+            recovery_str
+        )
     end
     println("  " * "="^100)
 
@@ -974,14 +1114,26 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
     end
 
     println("\n  Quality Distribution:")
-    @printf("    Excellent: %d (%.1f%%)\n", quality_counts[:excellent],
-            quality_counts[:excellent] / length(all_stats) * 100)
-    @printf("    Good:      %d (%.1f%%)\n", quality_counts[:good],
-            quality_counts[:good] / length(all_stats) * 100)
-    @printf("    Fair:      %d (%.1f%%)\n", quality_counts[:fair],
-            quality_counts[:fair] / length(all_stats) * 100)
-    @printf("    Poor:      %d (%.1f%%)\n", quality_counts[:poor],
-            quality_counts[:poor] / length(all_stats) * 100)
+    @printf(
+        "    Excellent: %d (%.1f%%)\n",
+        quality_counts[:excellent],
+        quality_counts[:excellent] / length(all_stats) * 100
+    )
+    @printf(
+        "    Good:      %d (%.1f%%)\n",
+        quality_counts[:good],
+        quality_counts[:good] / length(all_stats) * 100
+    )
+    @printf(
+        "    Fair:      %d (%.1f%%)\n",
+        quality_counts[:fair],
+        quality_counts[:fair] / length(all_stats) * 100
+    )
+    @printf(
+        "    Poor:      %d (%.1f%%)\n",
+        quality_counts[:poor],
+        quality_counts[:poor] / length(all_stats) * 100
+    )
 
     # Parameter recovery summary
     with_p_true = filter(s -> s.has_p_true, all_stats)
@@ -989,9 +1141,15 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
         println("\n  Parameter Recovery Summary:")
         successful_recovery = count(s -> s.best_recovery > 0, with_p_true)
         @printf("    Experiments with p_true: %d\n", length(with_p_true))
-        @printf("    Successful recoveries: %d (%.1f%%)\n",
-                successful_recovery, successful_recovery / length(with_p_true) * 100)
-        @printf("    Best minimum distance: %.6g\n", minimum(s.best_min_dist for s in with_p_true))
+        @printf(
+            "    Successful recoveries: %d (%.1f%%)\n",
+            successful_recovery,
+            successful_recovery / length(with_p_true) * 100
+        )
+        @printf(
+            "    Best minimum distance: %.6g\n",
+            minimum(s.best_min_dist for s in with_p_true)
+        )
     end
 end
 
@@ -1057,17 +1215,21 @@ function main()
         if haskey(ENV, "GLOBTIM_RESULTS_ROOT")
             results_root = ENV["GLOBTIM_RESULTS_ROOT"]
             if !isdir(results_root)
-                error("GLOBTIM_RESULTS_ROOT is set but directory does not exist: '$results_root'")
+                error(
+                    "GLOBTIM_RESULTS_ROOT is set but directory does not exist: '$results_root'",
+                )
             end
             results_root
         else
-            error("""
-                GLOBTIM_RESULTS_ROOT environment variable is not set.
+            error(
+                """
+              GLOBTIM_RESULTS_ROOT environment variable is not set.
 
-                Solutions:
-                1. Set GLOBTIM_RESULTS_ROOT: export GLOBTIM_RESULTS_ROOT=/path/to/globtim_results
-                2. Use --path: julia analyze_experiments.jl --path /path/to/results
-                """)
+              Solutions:
+              1. Set GLOBTIM_RESULTS_ROOT: export GLOBTIM_RESULTS_ROOT=/path/to/globtim_results
+              2. Use --path: julia analyze_experiments.jl --path /path/to/results
+              """,
+            )
         end
     end
 
@@ -1090,7 +1252,8 @@ function main()
     display_objective_directories(objective_dirs)
 
     # Step 2: Select ONE objective directory
-    dir_choice = get_user_choice("Select objective function directory", length(objective_dirs))
+    dir_choice =
+        get_user_choice("Select objective function directory", length(objective_dirs))
     selected_dir = objective_dirs[dir_choice]
 
     println("\n$(BOLD)Selected:$(RESET) $(BLUE)$(basename(selected_dir))$(RESET)")
@@ -1101,7 +1264,9 @@ function main()
 
     if isempty(experiments)
         println("\n$(RED)No experiments found in $selected_dir$(RESET)")
-        println("$(YELLOW)Make sure experiment directories contain results_summary.json$(RESET)")
+        println(
+            "$(YELLOW)Make sure experiment directories contain results_summary.json$(RESET)",
+        )
         exit(1)
     end
 

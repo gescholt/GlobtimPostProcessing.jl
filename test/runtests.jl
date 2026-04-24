@@ -31,13 +31,13 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         # Test ExperimentResult construction
         exp_result = ExperimentResult(
             "test_experiment",
-            Dict{String, Any}("test" => "value"),
+            Dict{String,Any}("test" => "value"),
             ["label1", "label2"],
             ["label1", "label2", "label3"],
             nothing,
             nothing,
             nothing,
-            "/tmp/test"
+            "/tmp/test",
         )
 
         @test exp_result.experiment_id == "test_experiment"

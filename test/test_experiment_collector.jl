@@ -12,21 +12,27 @@ Related Issues:
 using Test
 using GlobtimPostProcessing
 using GlobtimPostProcessing.ExperimentCollector
-using GlobtimPostProcessing.ExperimentCollector: StructureType, Flat, Hierarchical, Unknown,
-                                                  detect_directory_structure,
-                                                  discover_experiments_hierarchical,
-                                                  load_experiment_config,
-                                                  group_by_config_param,
-                                                  group_by_degree_range,
-                                                  count_experiments
+using GlobtimPostProcessing.ExperimentCollector:
+    StructureType,
+    Flat,
+    Hierarchical,
+    Unknown,
+    detect_directory_structure,
+    discover_experiments_hierarchical,
+    load_experiment_config,
+    group_by_config_param,
+    group_by_degree_range,
+    count_experiments
 using JSON3
 
 # Helper function to create mock experiment directory
-function create_mock_experiment(path::String;
-                                 has_csv::Bool=true,
-                                 has_config::Bool=true,
-                                 has_results::Bool=true,
-                                 config_content::Union{Dict, Nothing}=nothing)
+function create_mock_experiment(
+    path::String;
+    has_csv::Bool = true,
+    has_config::Bool = true,
+    has_results::Bool = true,
+    config_content::Union{Dict,Nothing} = nothing,
+)
     mkpath(path)
 
     if has_csv
@@ -34,13 +40,15 @@ function create_mock_experiment(path::String;
     end
 
     if has_config
-        config = isnothing(config_content) ? Dict(
-            "objective_name" => "test_objective",
-            "grid_nodes" => 8,
-            "domain_size_param" => 0.1,
-            "min_degree" => 4,
-            "max_degree" => 12
-        ) : config_content
+        config =
+            isnothing(config_content) ?
+            Dict(
+                "objective_name" => "test_objective",
+                "grid_nodes" => 8,
+                "domain_size_param" => 0.1,
+                "min_degree" => 4,
+                "max_degree" => 12,
+            ) : config_content
 
         open(joinpath(path, "experiment_config.json"), "w") do io
             JSON3.write(io, config)
@@ -56,7 +64,6 @@ function create_mock_experiment(path::String;
 end
 
 @testset "ExperimentCollector" begin
-
     @testset "validate_experiment" begin
         @testset "Valid experiment with CSV files" begin
             # Create temporary experiment directory
@@ -124,8 +131,14 @@ end
                     exp_dir = joinpath(tmpdir, "exp_$i")
                     mkdir(exp_dir)
                     touch(joinpath(exp_dir, "critical_points_deg_4.csv"))
-                    write(joinpath(exp_dir, "experiment_config.json"), """{"dimension": 4}""")
-                    write(joinpath(exp_dir, "results_summary.json"), """{"success": true}""")
+                    write(
+                        joinpath(exp_dir, "experiment_config.json"),
+                        """{"dimension": 4}""",
+                    )
+                    write(
+                        joinpath(exp_dir, "results_summary.json"),
+                        """{"success": true}""",
+                    )
                 end
 
                 experiments = discover_experiments(tmpdir)
@@ -179,8 +192,14 @@ end
                     exp_dir = joinpath(hpc_results, "exp_$i")
                     mkdir(exp_dir)
                     touch(joinpath(exp_dir, "critical_points_deg_4.csv"))
-                    write(joinpath(exp_dir, "experiment_config.json"), """{"dimension": 4}""")
-                    write(joinpath(exp_dir, "results_summary.json"), """{"success": true}""")
+                    write(
+                        joinpath(exp_dir, "experiment_config.json"),
+                        """{"dimension": 4}""",
+                    )
+                    write(
+                        joinpath(exp_dir, "results_summary.json"),
+                        """{"success": true}""",
+                    )
                 end
 
                 campaigns = discover_campaigns(tmpdir)
@@ -203,8 +222,14 @@ end
                         exp_dir = joinpath(hpc_results, "exp_$(j)_$i")
                         mkdir(exp_dir)
                         touch(joinpath(exp_dir, "critical_points_deg_4.csv"))
-                        write(joinpath(exp_dir, "experiment_config.json"), """{"dimension": 4}""")
-                        write(joinpath(exp_dir, "results_summary.json"), """{"success": true}""")
+                        write(
+                            joinpath(exp_dir, "experiment_config.json"),
+                            """{"dimension": 4}""",
+                        )
+                        write(
+                            joinpath(exp_dir, "results_summary.json"),
+                            """{"success": true}""",
+                        )
                     end
                 end
 
@@ -244,8 +269,14 @@ end
                         exp_dir = joinpath(hpc_results, "exp_$i")
                         mkdir(exp_dir)
                         touch(joinpath(exp_dir, "critical_points_deg_4.csv"))
-                        write(joinpath(exp_dir, "experiment_config.json"), """{"dimension": 4}""")
-                        write(joinpath(exp_dir, "results_summary.json"), """{"success": true}""")
+                        write(
+                            joinpath(exp_dir, "experiment_config.json"),
+                            """{"dimension": 4}""",
+                        )
+                        write(
+                            joinpath(exp_dir, "results_summary.json"),
+                            """{"success": true}""",
+                        )
                     end
 
                     sleep(delay)  # Ensure different modification times
@@ -274,8 +305,14 @@ end
                 exp_dir = joinpath(hpc_results, "lv4d_exp_$i")
                 mkdir(exp_dir)
                 touch(joinpath(exp_dir, "critical_points_deg_6.csv"))
-                write(joinpath(exp_dir, "experiment_config.json"), """{"dimension": 4, "function": "lotka_volterra_4d"}""")
-                write(joinpath(exp_dir, "results_summary.json"), """{"success": true, "total_cp": 10}""")
+                write(
+                    joinpath(exp_dir, "experiment_config.json"),
+                    """{"dimension": 4, "function": "lotka_volterra_4d"}""",
+                )
+                write(
+                    joinpath(exp_dir, "results_summary.json"),
+                    """{"success": true, "total_cp": 10}""",
+                )
             end
 
             campaigns = discover_campaigns(tmpdir)
@@ -328,21 +365,30 @@ end
                 # Create hierarchical structure
                 lv4d_path = joinpath(tmpdir, "lotka_volterra_4d")
                 mkpath(lv4d_path)
-                create_mock_experiment(joinpath(lv4d_path, "exp_20251014_100000"), config_content=Dict(
-                    "objective_name" => "lotka_volterra_4d",
-                    "grid_nodes" => 8
-                ))
-                create_mock_experiment(joinpath(lv4d_path, "exp_20251014_110000"), config_content=Dict(
-                    "objective_name" => "lotka_volterra_4d",
-                    "grid_nodes" => 16
-                ))
+                create_mock_experiment(
+                    joinpath(lv4d_path, "exp_20251014_100000"),
+                    config_content = Dict(
+                        "objective_name" => "lotka_volterra_4d",
+                        "grid_nodes" => 8,
+                    ),
+                )
+                create_mock_experiment(
+                    joinpath(lv4d_path, "exp_20251014_110000"),
+                    config_content = Dict(
+                        "objective_name" => "lotka_volterra_4d",
+                        "grid_nodes" => 16,
+                    ),
+                )
 
                 bruss_path = joinpath(tmpdir, "extended_brusselator")
                 mkpath(bruss_path)
-                create_mock_experiment(joinpath(bruss_path, "exp_20251014_120000"), config_content=Dict(
-                    "objective_name" => "extended_brusselator",
-                    "grid_nodes" => 8
-                ))
+                create_mock_experiment(
+                    joinpath(bruss_path, "exp_20251014_120000"),
+                    config_content = Dict(
+                        "objective_name" => "extended_brusselator",
+                        "grid_nodes" => 8,
+                    ),
+                )
 
                 experiments_by_obj = discover_experiments_hierarchical(tmpdir)
 
@@ -403,7 +449,7 @@ end
                 create_mock_experiment(joinpath(obj_path, "exp_20251014_110000"))
 
                 result = discover_experiments(tmpdir)
-                @test result isa Dict{String, Vector{ExperimentInfo}}
+                @test result isa Dict{String,Vector{ExperimentInfo}}
                 @test haskey(result, "test_obj")
                 @test length(result["test_obj"]) == 2
             end
@@ -415,12 +461,12 @@ end
                 create_mock_experiment(joinpath(tmpdir, "exp1"))
 
                 # Force flat
-                result_flat = discover_experiments(tmpdir, structure=Flat)
+                result_flat = discover_experiments(tmpdir, structure = Flat)
                 @test result_flat isa Vector{ExperimentInfo}
 
                 # Force hierarchical
-                result_hier = discover_experiments(tmpdir, structure=Hierarchical)
-                @test result_hier isa Dict{String, Vector{ExperimentInfo}}
+                result_hier = discover_experiments(tmpdir, structure = Hierarchical)
+                @test result_hier isa Dict{String,Vector{ExperimentInfo}}
             end
         end
     end
@@ -435,18 +481,15 @@ end
                 config = Dict(
                     "objective_name" => "test",
                     "grid_nodes" => gn,
-                    "domain_size_param" => i <= 2 ? 0.1 : 0.4
+                    "domain_size_param" => i <= 2 ? 0.1 : 0.4,
                 )
-                create_mock_experiment(exp_path, config_content=config)
+                create_mock_experiment(exp_path, config_content = config)
                 validation = validate_experiment(exp_path)
                 loaded_config = load_experiment_config(exp_path)
-                push!(experiments, ExperimentInfo(
-                    exp_path,
-                    "exp_$i",
-                    nothing,
-                    loaded_config,
-                    validation
-                ))
+                push!(
+                    experiments,
+                    ExperimentInfo(exp_path, "exp_$i", nothing, loaded_config, validation),
+                )
             end
 
             # Group by grid_nodes
@@ -469,30 +512,23 @@ end
         mktempdir() do tmpdir
             experiments = ExperimentInfo[]
 
-            configs_data = [
-                (4, 12, "test1"),
-                (4, 12, "test2"),
-                (4, 18, "test3"),
-                (18, 18, "test4")
-            ]
+            configs_data =
+                [(4, 12, "test1"), (4, 12, "test2"), (4, 18, "test3"), (18, 18, "test4")]
 
             for (i, (min_deg, max_deg, name)) in enumerate(configs_data)
                 exp_path = joinpath(tmpdir, "degree_test_$i")
                 config = Dict(
                     "objective_name" => "test",
                     "min_degree" => min_deg,
-                    "max_degree" => max_deg
+                    "max_degree" => max_deg,
                 )
-                create_mock_experiment(exp_path, config_content=config)
+                create_mock_experiment(exp_path, config_content = config)
                 validation = validate_experiment(exp_path)
                 loaded_config = load_experiment_config(exp_path)
-                push!(experiments, ExperimentInfo(
-                    exp_path,
-                    name,
-                    nothing,
-                    loaded_config,
-                    validation
-                ))
+                push!(
+                    experiments,
+                    ExperimentInfo(exp_path, name, nothing, loaded_config, validation),
+                )
             end
 
             groups = group_by_degree_range(experiments)
@@ -506,20 +542,12 @@ end
 
             # Test degree_range array format
             exp_path = joinpath(tmpdir, "degree_array_test")
-            config = Dict(
-                "objective_name" => "test",
-                "degree_range" => [10, 20]
-            )
-            create_mock_experiment(exp_path, config_content=config)
+            config = Dict("objective_name" => "test", "degree_range" => [10, 20])
+            create_mock_experiment(exp_path, config_content = config)
             validation = validate_experiment(exp_path)
             loaded_config = load_experiment_config(exp_path)
-            exp_with_array = ExperimentInfo(
-                exp_path,
-                "array_test",
-                nothing,
-                loaded_config,
-                validation
-            )
+            exp_with_array =
+                ExperimentInfo(exp_path, "array_test", nothing, loaded_config, validation)
 
             groups2 = group_by_degree_range([exp_with_array])
             @test haskey(groups2, (10, 20))
@@ -533,9 +561,9 @@ end
             config_content = Dict(
                 "objective_name" => "test_load",
                 "grid_nodes" => 32,
-                "custom_param" => "value"
+                "custom_param" => "value",
             )
-            create_mock_experiment(exp_path, config_content=config_content)
+            create_mock_experiment(exp_path, config_content = config_content)
 
             loaded = load_experiment_config(exp_path)
             @test !isnothing(loaded)
@@ -602,7 +630,7 @@ end
             for (obj_name, num_exps) in [
                 ("lotka_volterra_4d", 5),
                 ("extended_brusselator", 3),
-                ("degn_harrison", 2)
+                ("degn_harrison", 2),
             ]
                 obj_path = joinpath(test_results, obj_name)
                 mkpath(obj_path)
@@ -610,13 +638,16 @@ end
                 for i in 1:num_exps
                     timestamp = "2025101$(4+i÷2)_$(100000 + i*10000)"
                     exp_path = joinpath(obj_path, "exp_$timestamp")
-                    create_mock_experiment(exp_path, config_content=Dict(
-                        "objective_name" => obj_name,
-                        "grid_nodes" => 8 + (i-1)*8,
-                        "domain_size_param" => 0.1 * i,
-                        "min_degree" => 4,
-                        "max_degree" => 12 + i*2
-                    ))
+                    create_mock_experiment(
+                        exp_path,
+                        config_content = Dict(
+                            "objective_name" => obj_name,
+                            "grid_nodes" => 8 + (i-1)*8,
+                            "domain_size_param" => 0.1 * i,
+                            "min_degree" => 4,
+                            "max_degree" => 12 + i*2,
+                        ),
+                    )
                 end
             end
 

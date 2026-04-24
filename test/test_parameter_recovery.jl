@@ -5,7 +5,6 @@ using LinearAlgebra
 using JSON3
 
 @testset "Parameter Recovery Analysis" begin
-
     @testset "Compute parameter distance" begin
         p_true = [0.2, 0.3, 0.5, 0.6]
 
@@ -117,7 +116,12 @@ using JSON3
         recovery_threshold = 1.0  # Larger threshold for raw fixture data
 
         # Generate recovery table
-        table = generate_parameter_recovery_table(fixtures_dir, p_true, degrees, recovery_threshold)
+        table = generate_parameter_recovery_table(
+            fixtures_dir,
+            p_true,
+            degrees,
+            recovery_threshold,
+        )
 
         @test isa(table, DataFrame)
         @test nrow(table) == length(degrees)
@@ -178,5 +182,4 @@ using JSON3
         p_nested = extract_true_parameters(config_nested)
         @test p_nested == [0.2, 0.3, 0.5, 0.6]
     end
-
 end

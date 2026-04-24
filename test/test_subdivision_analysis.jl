@@ -15,11 +15,9 @@ using GlobtimPostProcessing:
     compare_subdivision_trees,
     print_tree_comparison_table,
     SubdivisionResult,
-    load_subdivision_result
+    load_subdivision_result#==============================================================================##==============================================================================#
 
-#==============================================================================#
 #                    MOCK OBJECTS (DUCK TYPING)                                #
-#==============================================================================#
 
 """
 Mock Subdomain - matches interface expected by SubdivisionTreeAnalysis.
@@ -68,11 +66,9 @@ function create_4d_test_tree()
         MockSubdomain([0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], 1, 1e-5),
     ]
     return MockTree(subdomains, [1, 2], Int[])
-end
+end#==============================================================================##==============================================================================#
 
-#==============================================================================#
 #                    TEST SUITES                                               #
-#==============================================================================#
 
 @testset "analyze_subdivision_tree" begin
     tree = create_simple_test_tree()
@@ -173,7 +169,7 @@ end
 
     # Capture output to buffer
     io = IOBuffer()
-    print_subdivision_tree_report(tree; io=io)
+    print_subdivision_tree_report(tree; io = io)
     output = String(take!(io))
 
     # Check key sections present
@@ -192,7 +188,7 @@ end
     tree1 = create_simple_test_tree()
     tree2 = create_4d_test_tree()
 
-    df = compare_subdivision_trees([tree1, tree2]; labels=["SimpleTree", "4DTree"])
+    df = compare_subdivision_trees([tree1, tree2]; labels = ["SimpleTree", "4DTree"])
 
     @test df isa DataFrame
     @test nrow(df) == 2
@@ -227,7 +223,7 @@ end
 
     # Capture output to buffer
     io = IOBuffer()
-    print_tree_comparison_table([tree1, tree2]; labels=["Tree1", "Tree2"], io=io)
+    print_tree_comparison_table([tree1, tree2]; labels = ["Tree1", "Tree2"], io = io)
     output = String(take!(io))
 
     # Check comparison section present
@@ -236,11 +232,9 @@ end
     # Check labels appear
     @test occursin("Tree1", output)
     @test occursin("Tree2", output)
-end
+end#==============================================================================##==============================================================================#
 
-#==============================================================================#
 #                    JSON RESULT LOADING TESTS                                 #
-#==============================================================================#
 
 const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
 
@@ -356,16 +350,24 @@ end
     @test_throws ErrorException load_subdivision_result("/nonexistent/file.json")
 
     # Not a .json file
-    @test_throws ErrorException load_subdivision_result(joinpath(FIXTURES_DIR, "experiment_config.json")[1:end-5] * ".txt")
+    @test_throws ErrorException load_subdivision_result(
+        joinpath(FIXTURES_DIR, "experiment_config.json")[1:(end-5)] * ".txt",
+    )
 
     # Create a temporary JSON missing required sections
     tmpdir = mktempdir()
     missing_params = joinpath(tmpdir, "bad.json")
-    write(missing_params, """{"problem": "test", "tree": {"n_total_leaves": 1, "n_converged": 0}}""")
+    write(
+        missing_params,
+        """{"problem": "test", "tree": {"n_total_leaves": 1, "n_converged": 0}}""",
+    )
     @test_throws ErrorException load_subdivision_result(missing_params)
 
     missing_tree = joinpath(tmpdir, "bad2.json")
-    write(missing_tree, """{"problem": "test", "parameters": {"degree": 4, "max_depth": 3, "l2_tolerance": 0.01}}""")
+    write(
+        missing_tree,
+        """{"problem": "test", "parameters": {"degree": 4, "max_depth": 3, "l2_tolerance": 0.01}}""",
+    )
     @test_throws ErrorException load_subdivision_result(missing_tree)
 end
 

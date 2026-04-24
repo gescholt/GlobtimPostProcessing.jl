@@ -46,36 +46,40 @@ function parse_args_refine()
     s = ArgParseSettings()
     @add_arg_table! s begin
         "--experiment-dir"
-            help = "Path to experiment results directory"
-            arg_type = String
-            default = nothing
+        help = "Path to experiment results directory"
+        arg_type = String
+        default = nothing
         "--seed"
-            help = "Seed to match (if experiment-dir not specified)"
-            arg_type = Int
-            default = 1
+        help = "Seed to match (if experiment-dir not specified)"
+        arg_type = Int
+        default = 1
         "--domain"
-            help = "Domain to match (if experiment-dir not specified)"
-            arg_type = Float64
-            default = 0.08
+        help = "Domain to match (if experiment-dir not specified)"
+        arg_type = Float64
+        default = 0.08
         "--max-time"
-            help = "Maximum time per point in seconds"
-            arg_type = Float64
-            default = 60.0
+        help = "Maximum time per point in seconds"
+        arg_type = Float64
+        default = 60.0
     end
     return parse_args(s)
 end
 
 function find_experiment_dir(results_root, seed, domain)
-    dirs = filter(isdir, readdir(results_root, join=true))
-    matching = filter(d -> occursin("domain$(domain)", basename(d)) &&
-                          occursin("seed$(seed)", basename(d)), dirs)
+    dirs = filter(isdir, readdir(results_root, join = true))
+    matching = filter(
+        d ->
+            occursin("domain$(domain)", basename(d)) &&
+            occursin("seed$(seed)", basename(d)),
+        dirs,
+    )
 
     if isempty(matching)
         error("No experiments found matching seed=$seed, domain=$domain in $results_root")
     end
 
     # Return most recent
-    return sort(matching, by=mtime, rev=true)[1]
+    return sort(matching, by = mtime, rev = true)[1]
 end
 
 function run_refinement(args)
@@ -85,8 +89,10 @@ function run_refinement(args)
     else
         results_root = get(ENV, "GLOBTIM_RESULTS_ROOT", nothing)
         if results_root === nothing
-            error("No --experiment-dir provided and GLOBTIM_RESULTS_ROOT environment variable is not set. " *
-                  "Either pass --experiment-dir /path/to/experiment or set GLOBTIM_RESULTS_ROOT.")
+            error(
+                "No --experiment-dir provided and GLOBTIM_RESULTS_ROOT environment variable is not set. " *
+                "Either pass --experiment-dir /path/to/experiment or set GLOBTIM_RESULTS_ROOT.",
+            )
         end
         lv4d_root = joinpath(results_root, "lotka_volterra_4d")
         if !isdir(lv4d_root)
@@ -124,16 +130,17 @@ function run_refinement(args)
     # Load raw critical points using globtimpostprocessing API
     println("Loading raw critical points...")
     raw_data = load_raw_critical_points(experiment_dir)
-    println("Found $(raw_data.n_points) polynomial critical points (degree $(raw_data.degree))")
+    println(
+        "Found $(raw_data.n_points) polynomial critical points (degree $(raw_data.degree))",
+    )
     println()
 
     # Recreate error function
     println("Recreating error function...")
     model, _params, _states, outputs = define_daisy_ex3_model_4D()
 
-    error_func = make_error_distance(
-        model, outputs, IC, p_true, TIME_INTERVAL, NUM_POINTS, L2_norm
-    )
+    error_func =
+        make_error_distance(model, outputs, IC, p_true, TIME_INTERVAL, NUM_POINTS, L2_norm)
 
     # Recovery BEFORE refinement
     println()
@@ -147,24 +154,26 @@ function run_refinement(args)
 
     println("Best polynomial critical point: #$best_raw_idx")
     println("  f(p) = $(round(best_raw_value, digits=2))")
-    println("  ||p - p_true|| = $(round(best_recovery_before, digits=4)) ($(round(best_recovery_before*100, digits=1))%)")
+    println(
+        "  ||p - p_true|| = $(round(best_recovery_before, digits=4)) ($(round(best_recovery_before*100, digits=1))%)",
+    )
 
     # Configure refinement for ODE objectives
     println()
     println("--- RUNNING LOCAL REFINEMENT (NelderMead, max $(args["max-time"])s/point) ---")
 
-    config = ode_refinement_config(max_time_per_point=args["max-time"])
+    config = ode_refinement_config(max_time_per_point = args["max-time"])
 
     # Use batch refinement
     results = refine_critical_points_batch(
         error_func,
         raw_data.points;
-        method=config.method,
-        max_time=config.max_time_per_point,
-        max_iterations=config.max_iterations,
-        f_abstol=config.f_abstol,
-        x_abstol=config.x_abstol,
-        show_progress=true
+        method = config.method,
+        max_time = config.max_time_per_point,
+        max_iterations = config.max_iterations,
+        f_abstol = config.f_abstol,
+        x_abstol = config.x_abstol,
+        show_progress = true,
     )
 
     # Extract refined data
@@ -177,8 +186,10 @@ function run_refinement(args)
     println()
     for (i, r) in enumerate(results)
         status = r.converged ? "✓" : (r.timed_out ? "⏱" : "✗")
-        println("Point $i: f=$(round(raw_values[i], digits=1)) → $(round(r.value_refined, sigdigits=4)) " *
-                "($status, $(round(r.time_elapsed, digits=1))s, $(r.f_calls) f-calls)")
+        println(
+            "Point $i: f=$(round(raw_values[i], digits=1)) → $(round(r.value_refined, sigdigits=4)) " *
+            "($status, $(round(r.time_elapsed, digits=1))s, $(r.f_calls) f-calls)",
+        )
     end
 
     # Recovery AFTER refinement
@@ -190,7 +201,9 @@ function run_refinement(args)
 
     println("Best refined point: #$best_refined_idx")
     println("  f(p) = $(round(best_refined_value, sigdigits=4))")
-    println("  ||p - p_true|| = $(round(best_recovery_after, digits=4)) ($(round(best_recovery_after*100, digits=1))%)")
+    println(
+        "  ||p - p_true|| = $(round(best_recovery_after, digits=4)) ($(round(best_recovery_after*100, digits=1))%)",
+    )
 
     # Parameter recovery comparison table
     println()
@@ -198,11 +211,13 @@ function run_refinement(args)
     println("| Point | Before (saddle) | After (minimum) | Change |")
     println("|-------|-----------------|-----------------|--------|")
     for i in 1:length(raw_data.points)
-        before_pct = round(recovery_before[i] * 100, digits=1)
-        after_pct = round(recovery_after[i] * 100, digits=1)
-        change_pct = round((recovery_before[i] - recovery_after[i]) * 100, digits=1)
+        before_pct = round(recovery_before[i] * 100, digits = 1)
+        after_pct = round(recovery_after[i] * 100, digits = 1)
+        change_pct = round((recovery_before[i] - recovery_after[i]) * 100, digits = 1)
         sign = change_pct >= 0 ? "-" : "+"
-        println("| $i     | $(before_pct)%          | $(after_pct)%            | $(sign)$(abs(change_pct))% |")
+        println(
+            "| $i     | $(before_pct)%          | $(after_pct)%            | $(sign)$(abs(change_pct))% |",
+        )
     end
 
     # Summary comparison
@@ -214,17 +229,23 @@ function run_refinement(args)
 
     println("| Metric | Before | After | Change |")
     println("|--------|--------|-------|--------|")
-    println("| Best f(p) | $(round(best_raw_value, digits=2)) | $(round(best_refined_value, sigdigits=4)) | $(round(best_raw_value - best_refined_value, sigdigits=3)) |")
-    println("| Best recovery | $(round(best_recovery_before*100, digits=1))% | $(round(best_recovery_after*100, digits=1))% | $(round((best_recovery_before - best_recovery_after)*100, digits=1))% |")
+    println(
+        "| Best f(p) | $(round(best_raw_value, digits=2)) | $(round(best_refined_value, sigdigits=4)) | $(round(best_raw_value - best_refined_value, sigdigits=3)) |",
+    )
+    println(
+        "| Best recovery | $(round(best_recovery_before*100, digits=1))% | $(round(best_recovery_after*100, digits=1))% | $(round((best_recovery_before - best_recovery_after)*100, digits=1))% |",
+    )
     println("| Converged | N/A | $(sum(converged))/$(length(converged)) | - |")
     println()
 
     # Did refinement help?
     if best_recovery_after < best_recovery_before
-        improvement_pct = (best_recovery_before - best_recovery_after) / best_recovery_before * 100
+        improvement_pct =
+            (best_recovery_before - best_recovery_after) / best_recovery_before * 100
         println("✓ Refinement IMPROVED recovery by $(round(improvement_pct, digits=1))%")
     elseif best_recovery_after > best_recovery_before
-        degradation_pct = (best_recovery_after - best_recovery_before) / best_recovery_before * 100
+        degradation_pct =
+            (best_recovery_after - best_recovery_before) / best_recovery_before * 100
         println("✗ Refinement DEGRADED recovery by $(round(degradation_pct, digits=1))%")
     else
         println("→ Refinement had NO EFFECT on recovery")
@@ -244,7 +265,7 @@ function run_refinement(args)
         recovery_before = recovery_before,
         recovery_after = recovery_after,
         f_calls = [r.f_calls for r in results],
-        time_elapsed = [r.time_elapsed for r in results]
+        time_elapsed = [r.time_elapsed for r in results],
     )
 
     # Add raw and refined coordinates

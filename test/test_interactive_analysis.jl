@@ -15,15 +15,16 @@ using Dates
 include("../analyze_experiments.jl")
 
 @testset "Interactive Analysis Tests" begin
-
     @testset "Campaign Discovery" begin
         # Create temporary test structure
         test_root = mktempdir()
 
         try
             # Setup: Create mock campaign structure
-            campaign1_path = mkpath(joinpath(test_root, "study1", "configs_20251001", "hpc_results"))
-            campaign2_path = mkpath(joinpath(test_root, "study2", "configs_20251002", "hpc_results"))
+            campaign1_path =
+                mkpath(joinpath(test_root, "study1", "configs_20251001", "hpc_results"))
+            campaign2_path =
+                mkpath(joinpath(test_root, "study2", "configs_20251002", "hpc_results"))
 
             # Create mock experiment directories
             exp1_path = mkpath(joinpath(campaign1_path, "exp_1_test"))
@@ -39,9 +40,9 @@ include("../analyze_experiments.jl")
                         "2" => Dict(
                             "critical_points" => 5,
                             "best_objective" => 1.234,
-                            "total_computation_time" => 10.5
-                        )
-                    )
+                            "total_computation_time" => 10.5,
+                        ),
+                    ),
                 )
                 open(joinpath(exp_path, "results_summary.json"), "w") do io
                     JSON3.write(io, results)
@@ -49,7 +50,7 @@ include("../analyze_experiments.jl")
 
                 config = Dict(
                     "experiment_name" => basename(exp_path),
-                    "timestamp" => "2025-10-01T10:00:00"
+                    "timestamp" => "2025-10-01T10:00:00",
                 )
                 open(joinpath(exp_path, "experiment_config.json"), "w") do io
                     JSON3.write(io, config)
@@ -68,7 +69,7 @@ include("../analyze_experiments.jl")
             @test issorted(campaigns)
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -81,7 +82,7 @@ include("../analyze_experiments.jl")
             @test isempty(campaigns)
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -97,7 +98,7 @@ include("../analyze_experiments.jl")
             @test isempty(campaigns)
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -116,11 +117,8 @@ include("../analyze_experiments.jl")
                     "experiment_id" => name,
                     "success" => true,
                     "results_summary" => Dict(
-                        "2" => Dict(
-                            "critical_points" => 10,
-                            "best_objective" => 2.5
-                        )
-                    )
+                        "2" => Dict("critical_points" => 10, "best_objective" => 2.5),
+                    ),
                 )
                 open(joinpath(exp_path, "results_summary.json"), "w") do io
                     JSON3.write(io, results)
@@ -143,7 +141,7 @@ include("../analyze_experiments.jl")
             @test issorted(basename.(experiments))
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -158,20 +156,15 @@ include("../analyze_experiments.jl")
                 "experiment_id" => "test_exp",
                 "success" => true,
                 "results_summary" => Dict(
-                    "2" => Dict(
-                        "critical_points" => 5,
-                        "best_objective" => 1.234
-                    )
-                )
+                    "2" => Dict("critical_points" => 5, "best_objective" => 1.234),
+                ),
             )
             open(joinpath(exp_path, "results_summary.json"), "w") do io
                 JSON3.write(io, results)
             end
 
-            config = Dict(
-                "experiment_name" => "test_exp",
-                "timestamp" => "2025-10-01T10:00:00"
-            )
+            config =
+                Dict("experiment_name" => "test_exp", "timestamp" => "2025-10-01T10:00:00")
             open(joinpath(exp_path, "experiment_config.json"), "w") do io
                 JSON3.write(io, config)
             end
@@ -185,7 +178,7 @@ include("../analyze_experiments.jl")
             @test !isempty(stats)
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -205,11 +198,11 @@ include("../analyze_experiments.jl")
                     "results_summary" => Dict(
                         "2" => Dict(
                             "critical_points" => i * 10,
-                            "best_objective" => Float64(i)
-                        )
+                            "best_objective" => Float64(i),
+                        ),
                     ),
                     "experiment_type" => "lotka_volterra",
-                    "num_varying" => 2
+                    "num_varying" => 2,
                 )
                 open(joinpath(exp_path, "results_summary.json"), "w") do io
                     JSON3.write(io, results)
@@ -231,7 +224,7 @@ include("../analyze_experiments.jl")
             @test campaign_stats["campaign_summary"]["num_experiments"] == 3
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -251,7 +244,7 @@ include("../analyze_experiments.jl")
             @test_throws Exception load_experiment_results(exp_path)
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -270,7 +263,7 @@ include("../analyze_experiments.jl")
             @test_throws Exception load_experiment_results(exp_path)
 
         finally
-            rm(test_root, recursive=true, force=true)
+            rm(test_root, recursive = true, force = true)
         end
     end
 
@@ -278,7 +271,6 @@ include("../analyze_experiments.jl")
         # Test: Non-existent path should error
         @test_throws Exception discover_campaigns("/nonexistent/path/$(rand(Int))")
     end
-
 end
 
 println("\n✓ All interactive analysis tests defined")

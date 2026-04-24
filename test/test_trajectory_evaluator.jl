@@ -37,23 +37,23 @@ catch e
 end
 
 # Create test data (from typical experiment results)
-test_config = Dict{String, Any}(
+test_config = Dict{String,Any}(
     "model_func" => "define_daisy_ex3_model_4D",
     "p_true" => [0.2, 0.3, 0.5, 0.6],
     "p_center" => [0.224, 0.273, 0.473, 0.578],
     "ic" => [1.0, 2.0, 1.0, 1.0],
     "time_interval" => [0.0, 10.0],
     "num_points" => 25,
-    "dimension" => 4
+    "dimension" => 4,
 )
 
 # A critical point found by the optimizer (should be close to p_true)
-critical_point = Dict{String, Any}(
+critical_point = Dict{String,Any}(
     "x1" => 0.201,
     "x2" => 0.298,
     "x3" => 0.502,
     "x4" => 0.599,
-    "z" => 0.00234  # Objective function value at this point
+    "z" => 0.00234,  # Objective function value at this point
 )
 
 # Test suite begins (tests that will drive implementation)

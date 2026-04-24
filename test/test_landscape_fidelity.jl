@@ -11,11 +11,11 @@ using DataFrames
 # Functions are already loaded via GlobtimPostProcessing in runtests.jl
 
 @testset "Objective Proximity Check" begin
-    f(x) = sum((x .- 0.5).^2)
+    f(x) = sum((x .- 0.5) .^ 2)
     x_star = [0.48, 0.52, 0.49, 0.51]
     x_min = [0.50, 0.50, 0.50, 0.50]
 
-    result = check_objective_proximity(x_star, x_min, f, tolerance=0.05)
+    result = check_objective_proximity(x_star, x_min, f, tolerance = 0.05)
 
     @test result isa ObjectiveProximityResult
     @test result.is_same_basin == true
@@ -25,7 +25,7 @@ using DataFrames
 end
 
 @testset "Hessian Basin Check" begin
-    f(x) = sum((x .- 0.5).^2)
+    f(x) = sum((x .- 0.5) .^ 2)
     x_star = [0.48, 0.52, 0.49, 0.51]
     x_min = [0.50, 0.50, 0.50, 0.50]
 
@@ -42,23 +42,23 @@ end
 end
 
 @testset "Basin Radius Estimation" begin
-    f(x) = sum((x .- 0.5).^2)
+    f(x) = sum((x .- 0.5) .^ 2)
     x_min = [0.50, 0.50]
     H = [2.0 0.0; 0.0 2.0]
 
-    r = estimate_basin_radius(x_min, f, H, threshold_factor=0.1)
+    r = estimate_basin_radius(x_min, f, H, threshold_factor = 0.1)
 
     @test r > 0
     @test isfinite(r)
 end
 
 @testset "Composite Assessment" begin
-    f(x) = sum((x .- 0.5).^2)
+    f(x) = sum((x .- 0.5) .^ 2)
     x_star = [0.48, 0.52, 0.49, 0.51]
     x_min = [0.50, 0.50, 0.50, 0.50]
     H = 2.0 * I(4) |> Matrix
 
-    result = assess_landscape_fidelity(x_star, x_min, f, hessian_min=H)
+    result = assess_landscape_fidelity(x_star, x_min, f, hessian_min = H)
 
     @test result isa LandscapeFidelityResult
     @test result.is_same_basin == true
@@ -69,19 +69,19 @@ end
 end
 
 @testset "Batch Assessment" begin
-    f(x) = sum((x .- [0.5, 0.5]).^2)
+    f(x) = sum((x .- [0.5, 0.5]) .^ 2)
 
     df = DataFrame(
         x1 = [0.48, 0.21, 0.79],
         x2 = [0.52, 0.19, 0.81],
         z = [f([0.48, 0.52]), f([0.21, 0.19]), f([0.79, 0.81])],
-        point_classification = ["minimum", "minimum", "minimum"]
+        point_classification = ["minimum", "minimum", "minimum"],
     )
 
     refined = [[0.50, 0.50], [0.20, 0.20], [0.80, 0.80]]
     hessians = [[2.0 0.0; 0.0 2.0], [2.0 0.0; 0.0 2.0], [2.0 0.0; 0.0 2.0]]
 
-    result_df = batch_assess_fidelity(df, refined, f, hessian_min_list=hessians)
+    result_df = batch_assess_fidelity(df, refined, f, hessian_min_list = hessians)
 
     @test nrow(result_df) == 3
     @test :is_same_basin in propertynames(result_df)
@@ -103,7 +103,7 @@ end
     end
 
     @testset "Global Minimum (f ≈ 0)" begin
-        f_global(x) = sum(x.^2)
+        f_global(x) = sum(x .^ 2)
         x_star = [0.01, 0.02]
         x_min = [0.0, 0.0]
 
@@ -113,11 +113,11 @@ end
     end
 
     @testset "Distant Points" begin
-        f(x) = sum((x .- 0.5).^2)
+        f(x) = sum((x .- 0.5) .^ 2)
         x_far = [0.9, 0.9, 0.9, 0.9]
         x_min = [0.5, 0.5, 0.5, 0.5]
 
-        result = check_objective_proximity(x_far, x_min, f, tolerance=0.01)
+        result = check_objective_proximity(x_far, x_min, f, tolerance = 0.01)
 
         @test result.is_same_basin == false  # Far apart, different objective values
     end

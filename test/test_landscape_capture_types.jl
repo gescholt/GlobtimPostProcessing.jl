@@ -9,7 +9,7 @@ const FIXTURE_DIR = joinpath(@__DIR__, "fixtures")
 
 @testset "LandscapeRefinementDetails" begin
     @testset "parse_landscape_refinement" begin
-        d = Dict{String, Any}(
+        d = Dict{String,Any}(
             "raw_points" => [[0.1, 0.2], [0.3, 0.4]],
             "refined_points" => [[0.11, 0.21], [0.31, 0.41]],
             "converged" => [true, false],
@@ -35,7 +35,7 @@ const FIXTURE_DIR = joinpath(@__DIR__, "fixtures")
     end
 
     @testset "parse_landscape_refinement missing key" begin
-        d = Dict{String, Any}(
+        d = Dict{String,Any}(
             "raw_points" => [[0.1, 0.2]],
             "refined_points" => [[0.11, 0.21]],
             # Missing converged, cp_types, etc.
@@ -112,7 +112,9 @@ end
 
     @testset "validation errors" begin
         @test_throws ErrorException load_landscape_degree_sweep("nonexistent.json")
-        @test_throws ErrorException load_landscape_degree_sweep(joinpath(FIXTURE_DIR, "landscape_subdivision.json"))  # wrong structure (no 'degrees' key)
+        @test_throws ErrorException load_landscape_degree_sweep(
+            joinpath(FIXTURE_DIR, "landscape_subdivision.json"),
+        )  # wrong structure (no 'degrees' key)
     end
 end
 
@@ -197,8 +199,24 @@ end
 
 @testset "load real sandbox data" begin
     # Test against actual experiment data if available
-    sweep_path = joinpath(@__DIR__, "..", "..", "experiments", "sandbox", "results", "lv2d_sciml_degree_sweep.json")
-    subdiv_path = joinpath(@__DIR__, "..", "..", "experiments", "sandbox", "results", "lv2d_sciml_deg4to8_tol0.0001_d5_aniso.json")
+    sweep_path = joinpath(
+        @__DIR__,
+        "..",
+        "..",
+        "experiments",
+        "sandbox",
+        "results",
+        "lv2d_sciml_degree_sweep.json",
+    )
+    subdiv_path = joinpath(
+        @__DIR__,
+        "..",
+        "..",
+        "experiments",
+        "sandbox",
+        "results",
+        "lv2d_sciml_deg4to8_tol0.0001_d5_aniso.json",
+    )
 
     if isfile(sweep_path)
         @testset "real degree sweep" begin

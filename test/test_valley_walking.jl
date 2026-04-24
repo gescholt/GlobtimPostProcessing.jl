@@ -50,7 +50,7 @@ f_hyperbola(x) = (x[1] * x[2] - 2.0)^2
 # ─── detect_valley tests ────────────────────────────────────────────────────
 
 @testset "detect_valley" begin
-    config = ValleyWalkConfig(gradient_tolerance=1e-4, eigenvalue_threshold=1e-2)
+    config = ValleyWalkConfig(gradient_tolerance = 1e-4, eigenvalue_threshold = 1e-2)
 
     @testset "detects valley on unit circle" begin
         # Point on the unit circle: gradient is zero, one Hessian eigenvalue is zero
@@ -174,7 +174,7 @@ end
 # ─── get_valley_tangent tests ────────────────────────────────────────────────
 
 @testset "get_valley_tangent" begin
-    config = ValleyWalkConfig(eigenvalue_threshold=1e-2)
+    config = ValleyWalkConfig(eigenvalue_threshold = 1e-2)
 
     @testset "tangent at (1,0) is along y-axis" begin
         point = [1.0, 0.0]
@@ -211,13 +211,13 @@ end
 
 @testset "walk_newton_projection" begin
     config = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-2,
-        initial_step_size=0.05,
-        max_steps=100,
-        max_projection_iter=20,
-        projection_tol=1e-10,
-        method=:newton_projection
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 100,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
+        method = :newton_projection,
     )
 
     @testset "traces arc on unit circle" begin
@@ -336,13 +336,13 @@ end
 
 @testset "walk_predictor_corrector" begin
     config = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-2,
-        initial_step_size=0.05,
-        max_steps=100,
-        max_projection_iter=20,
-        projection_tol=1e-10,
-        method=:predictor_corrector
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 100,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
+        method = :predictor_corrector,
     )
 
     @testset "traces arc on unit circle" begin
@@ -362,13 +362,13 @@ end
 
 @testset "walk_tangent_projection" begin
     config = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-2,
-        initial_step_size=0.05,
-        max_steps=100,
-        max_projection_iter=20,
-        projection_tol=1e-10,
-        method=:tangent_projection
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 100,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
+        method = :tangent_projection,
     )
 
     @testset "traces arc on unit circle" begin
@@ -398,22 +398,22 @@ end
 
     @testset "more uniform spacing than newton_projection" begin
         config_np = ValleyWalkConfig(
-            gradient_tolerance=1e-4,
-            eigenvalue_threshold=1e-2,
-            initial_step_size=0.05,
-            max_steps=100,
-            max_projection_iter=20,
-            projection_tol=1e-10,
-            method=:newton_projection
+            gradient_tolerance = 1e-4,
+            eigenvalue_threshold = 1e-2,
+            initial_step_size = 0.05,
+            max_steps = 100,
+            max_projection_iter = 20,
+            projection_tol = 1e-10,
+            method = :newton_projection,
         )
         config_tp = ValleyWalkConfig(
-            gradient_tolerance=1e-4,
-            eigenvalue_threshold=1e-2,
-            initial_step_size=0.05,
-            max_steps=100,
-            max_projection_iter=20,
-            projection_tol=1e-10,
-            method=:tangent_projection
+            gradient_tolerance = 1e-4,
+            eigenvalue_threshold = 1e-2,
+            initial_step_size = 0.05,
+            max_steps = 100,
+            max_projection_iter = 20,
+            projection_tol = 1e-10,
+            method = :tangent_projection,
         )
 
         start = [1.0, 0.0]
@@ -428,7 +428,7 @@ end
 
         # Compute spacing variance for each (coefficient of variation)
         function spacing_cv(path)
-            spacings = [norm(path[i+1] - path[i]) for i in 1:length(path)-1]
+            spacings = [norm(path[i+1] - path[i]) for i in 1:(length(path)-1)]
             isempty(spacings) && return Inf
             μ = sum(spacings) / length(spacings)
             μ < 1e-12 && return Inf
@@ -461,12 +461,12 @@ end
 
 @testset "trace_valley" begin
     config = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-2,
-        initial_step_size=0.05,
-        max_steps=50,
-        max_projection_iter=20,
-        projection_tol=1e-10
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 50,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
     )
 
     @testset "bidirectional trace on unit circle" begin
@@ -503,13 +503,13 @@ end
 
     @testset "predictor_corrector method" begin
         config_pc = ValleyWalkConfig(
-            gradient_tolerance=1e-4,
-            eigenvalue_threshold=1e-2,
-            initial_step_size=0.05,
-            max_steps=50,
-            max_projection_iter=20,
-            projection_tol=1e-10,
-            method=:predictor_corrector
+            gradient_tolerance = 1e-4,
+            eigenvalue_threshold = 1e-2,
+            initial_step_size = 0.05,
+            max_steps = 50,
+            max_projection_iter = 20,
+            projection_tol = 1e-10,
+            method = :predictor_corrector,
         )
         start = [1.0, 0.0]
         result = trace_valley(f_circle, start, config_pc)
@@ -535,13 +535,13 @@ end
 
     @testset "tangent_projection method" begin
         config_tp = ValleyWalkConfig(
-            gradient_tolerance=1e-4,
-            eigenvalue_threshold=1e-2,
-            initial_step_size=0.05,
-            max_steps=50,
-            max_projection_iter=20,
-            projection_tol=1e-10,
-            method=:tangent_projection
+            gradient_tolerance = 1e-4,
+            eigenvalue_threshold = 1e-2,
+            initial_step_size = 0.05,
+            max_steps = 50,
+            max_projection_iter = 20,
+            projection_tol = 1e-10,
+            method = :tangent_projection,
         )
         start = [1.0, 0.0]
         result = trace_valley(f_circle, start, config_tp)
@@ -554,9 +554,9 @@ end
 
     @testset "unknown method raises error" begin
         config_bad = ValleyWalkConfig(
-            gradient_tolerance=1e-4,
-            eigenvalue_threshold=1e-2,
-            method=:bogus_method
+            gradient_tolerance = 1e-4,
+            eigenvalue_threshold = 1e-2,
+            method = :bogus_method,
         )
         start = [1.0, 0.0]
         @test_throws ErrorException trace_valley(f_circle, start, config_bad)
@@ -567,27 +567,24 @@ end
 
 @testset "trace_valleys_from_critical_points" begin
     config = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-2,
-        initial_step_size=0.05,
-        max_steps=20,
-        max_projection_iter=20,
-        projection_tol=1e-10
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 20,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
     )
 
     @testset "traces from DataFrame with valley and non-valley points" begin
         df = DataFrame(
             x1 = [1.0, 0.0, 0.0],   # circle point, origin of quadratic, origin of saddle
-            x2 = [0.0, 0.0, 0.0]
+            x2 = [0.0, 0.0, 0.0],
         )
         # Only the first point is on the circle valley — use f_circle for all
         # Origin of f_circle is NOT a valley point (gradient is zero but
         # eigenvalues are both 0 — actually it IS degenerate at origin for f_circle)
         # Let's use a mix: one point on circle, one far off
-        df2 = DataFrame(
-            x1 = [1.0,  0.5],
-            x2 = [0.0,  0.0]
-        )
+        df2 = DataFrame(x1 = [1.0, 0.5], x2 = [0.0, 0.0])
         results = trace_valleys_from_critical_points(f_circle, df2, config)
         # Only (1,0) is a valley point; (0.5, 0) is not critical
         @test length(results) >= 1
@@ -595,7 +592,7 @@ end
     end
 
     @testset "errors on missing coordinate columns" begin
-        df = DataFrame(a=[1.0], b=[2.0])
+        df = DataFrame(a = [1.0], b = [2.0])
         @test_throws ErrorException trace_valleys_from_critical_points(f_circle, df, config)
     end
 end
@@ -616,11 +613,11 @@ end
 
     @testset "custom values" begin
         config = ValleyWalkConfig(
-            gradient_tolerance=1e-6,
-            eigenvalue_threshold=1e-5,
-            initial_step_size=0.1,
-            max_steps=500,
-            method=:predictor_corrector
+            gradient_tolerance = 1e-6,
+            eigenvalue_threshold = 1e-5,
+            initial_step_size = 0.1,
+            max_steps = 500,
+            method = :predictor_corrector,
         )
         @test config.gradient_tolerance == 1e-6
         @test config.eigenvalue_threshold == 1e-5
@@ -642,7 +639,7 @@ end
             4,
             1,
             :newton_projection,
-            true
+            true,
         )
         @test result.start_point == [1.0, 0.0]
         @test result.converged == true
@@ -689,14 +686,24 @@ end
 
     @testset "handles no degenerate CPs" begin
         min_cp = CriticalPointRefinementResult(
-            point = [0.0, 0.0], gradient_norm = 0.0, objective_value = 0.0,
-            converged = true, iterations = 3, cp_type = :min,
-            eigenvalues = [2.0, 2.0], initial_gradient_norm = 0.5,
+            point = [0.0, 0.0],
+            gradient_norm = 0.0,
+            objective_value = 0.0,
+            converged = true,
+            iterations = 3,
+            cp_type = :min,
+            eigenvalues = [2.0, 2.0],
+            initial_gradient_norm = 0.5,
         )
         saddle_cp = CriticalPointRefinementResult(
-            point = [0.0, 0.0], gradient_norm = 0.0, objective_value = 0.0,
-            converged = true, iterations = 3, cp_type = :saddle,
-            eigenvalues = [2.0, -2.0], initial_gradient_norm = 0.5,
+            point = [0.0, 0.0],
+            gradient_norm = 0.0,
+            objective_value = 0.0,
+            converged = true,
+            iterations = 3,
+            cp_type = :saddle,
+            eigenvalues = [2.0, -2.0],
+            initial_gradient_norm = 0.5,
         )
 
         results = run_valley_analysis(f_circle, [min_cp, saddle_cp])
@@ -718,12 +725,12 @@ end
     # So transverse curvature increases as the path moves away from (1,2).
 
     config = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-3,
-        initial_step_size=0.05,
-        max_steps=100,
-        max_projection_iter=20,
-        projection_tol=1e-10,
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-3,
+        initial_step_size = 0.05,
+        max_steps = 100,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
     )
 
     @testset "detect_valley finds 1D valley on hyperbola" begin
@@ -780,8 +787,8 @@ end
         p_near = [1.1, 2.0]
         tangent = [-2.0, 1.0] / sqrt(5)
 
-        p_full  = project_to_valley(f_hyperbola, p_near)
-        p_tang  = project_to_valley_tangent(f_hyperbola, p_near, tangent)
+        p_full = project_to_valley(f_hyperbola, p_near)
+        p_tang = project_to_valley_tangent(f_hyperbola, p_near, tangent)
 
         # Both land on the valley
         @test abs(p_full[1] * p_full[2] - 2.0) < 1e-6
@@ -796,10 +803,15 @@ end
     @testset "all three walk methods trace the hyperbola" begin
         methods = [:newton_projection, :predictor_corrector, :tangent_projection]
         for m in methods
-            cfg = ValleyWalkConfig(; gradient_tolerance=1e-4, eigenvalue_threshold=1e-3,
-                                     initial_step_size=0.05, max_steps=50,
-                                     max_projection_iter=20, projection_tol=1e-10,
-                                     method=m)
+            cfg = ValleyWalkConfig(;
+                gradient_tolerance = 1e-4,
+                eigenvalue_threshold = 1e-3,
+                initial_step_size = 0.05,
+                max_steps = 50,
+                max_projection_iter = 20,
+                projection_tol = 1e-10,
+                method = m,
+            )
             result = trace_valley(f_hyperbola, [1.0, 2.0], cfg)
             @test result.converged == true
             @test result.valley_dimension == 1
@@ -836,18 +848,24 @@ end
     methods = [:newton_projection, :predictor_corrector, :tangent_projection]
 
     circle_config_base = (
-        gradient_tolerance=1e-4, eigenvalue_threshold=1e-2,
-        initial_step_size=0.05, max_steps=100,
-        max_projection_iter=20, projection_tol=1e-10,
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 100,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
     )
     hyperbola_config_base = (
-        gradient_tolerance=1e-4, eigenvalue_threshold=1e-3,
-        initial_step_size=0.05, max_steps=100,
-        max_projection_iter=20, projection_tol=1e-10,
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-3,
+        initial_step_size = 0.05,
+        max_steps = 100,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
     )
 
     function spacing_cv(path)
-        spacings = [norm(path[i+1] - path[i]) for i in 1:length(path)-1]
+        spacings = [norm(path[i+1] - path[i]) for i in 1:(length(path)-1)]
         length(spacings) < 2 && return Inf
         μ = mean(spacings)
         μ < 1e-12 && return Inf
@@ -856,9 +874,9 @@ end
 
     # ── Unit circle benchmark ────────────────────────────────────────────────
     @testset "unit circle" begin
-        circle_results = Dict{Symbol, ValleyTraceResult}()
+        circle_results = Dict{Symbol,ValleyTraceResult}()
         for m in methods
-            cfg = ValleyWalkConfig(; circle_config_base..., method=m)
+            cfg = ValleyWalkConfig(; circle_config_base..., method = m)
             circle_results[m] = trace_valley(f_circle, [1.0, 0.0], cfg)
         end
 
@@ -881,8 +899,8 @@ end
 
         @testset "criticality accuracy: max ‖∇f‖ < 1e-6" begin
             for m in methods
-                for p in vcat(circle_results[m].path_positive,
-                               circle_results[m].path_negative)
+                for p in
+                    vcat(circle_results[m].path_positive, circle_results[m].path_negative)
                     @test norm(ForwardDiff.gradient(f_circle, p)) < 1e-6
                 end
             end
@@ -890,8 +908,8 @@ end
 
         @testset "on-manifold accuracy: max |‖p‖-1| < 1e-6" begin
             for m in methods
-                for p in vcat(circle_results[m].path_positive,
-                               circle_results[m].path_negative)
+                for p in
+                    vcat(circle_results[m].path_positive, circle_results[m].path_negative)
                     @test abs(norm(p) - 1.0) < 1e-6
                 end
             end
@@ -915,19 +933,23 @@ end
         end
 
         @testset "tangent_projection spacing no worse than 1.5× newton" begin
-            cv_np = max(spacing_cv(circle_results[:newton_projection].path_positive),
-                        spacing_cv(circle_results[:newton_projection].path_negative))
-            cv_tp = max(spacing_cv(circle_results[:tangent_projection].path_positive),
-                        spacing_cv(circle_results[:tangent_projection].path_negative))
+            cv_np = max(
+                spacing_cv(circle_results[:newton_projection].path_positive),
+                spacing_cv(circle_results[:newton_projection].path_negative),
+            )
+            cv_tp = max(
+                spacing_cv(circle_results[:tangent_projection].path_positive),
+                spacing_cv(circle_results[:tangent_projection].path_negative),
+            )
             @test cv_tp < cv_np * 1.5
         end
     end
 
     # ── Hyperbola benchmark ──────────────────────────────────────────────────
     @testset "hyperbola (varying curvature)" begin
-        hyperbola_results = Dict{Symbol, ValleyTraceResult}()
+        hyperbola_results = Dict{Symbol,ValleyTraceResult}()
         for m in methods
-            cfg = ValleyWalkConfig(; hyperbola_config_base..., method=m)
+            cfg = ValleyWalkConfig(; hyperbola_config_base..., method = m)
             hyperbola_results[m] = trace_valley(f_hyperbola, [1.0, 2.0], cfg)
         end
 
@@ -950,8 +972,10 @@ end
 
         @testset "criticality accuracy: max ‖∇f‖ < 1e-6" begin
             for m in methods
-                for p in vcat(hyperbola_results[m].path_positive,
-                               hyperbola_results[m].path_negative)
+                for p in vcat(
+                    hyperbola_results[m].path_positive,
+                    hyperbola_results[m].path_negative,
+                )
                     @test norm(ForwardDiff.gradient(f_hyperbola, p)) < 1e-6
                 end
             end
@@ -959,8 +983,10 @@ end
 
         @testset "on-manifold accuracy: max |p₁p₂ - 2| < 1e-6" begin
             for m in methods
-                for p in vcat(hyperbola_results[m].path_positive,
-                               hyperbola_results[m].path_negative)
+                for p in vcat(
+                    hyperbola_results[m].path_positive,
+                    hyperbola_results[m].path_negative,
+                )
                     @test abs(p[1] * p[2] - 2.0) < 1e-6
                 end
             end
@@ -983,10 +1009,14 @@ end
         end
 
         @testset "tangent_projection spacing no worse than 1.5× newton" begin
-            cv_np = max(spacing_cv(hyperbola_results[:newton_projection].path_positive),
-                        spacing_cv(hyperbola_results[:newton_projection].path_negative))
-            cv_tp = max(spacing_cv(hyperbola_results[:tangent_projection].path_positive),
-                        spacing_cv(hyperbola_results[:tangent_projection].path_negative))
+            cv_np = max(
+                spacing_cv(hyperbola_results[:newton_projection].path_positive),
+                spacing_cv(hyperbola_results[:newton_projection].path_negative),
+            )
+            cv_tp = max(
+                spacing_cv(hyperbola_results[:tangent_projection].path_positive),
+                spacing_cv(hyperbola_results[:tangent_projection].path_negative),
+            )
             @test cv_tp < cv_np * 1.5
         end
     end
@@ -999,14 +1029,14 @@ end
 
 @testset "gradient_method=:finitediff" begin
     config_fd = ValleyWalkConfig(
-        gradient_tolerance=1e-4,
-        eigenvalue_threshold=1e-2,
-        gradient_method=:forwarddiff,
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        gradient_method = :forwarddiff,
     )
     config_nd = ValleyWalkConfig(
-        gradient_tolerance=1e-3,  # relaxed: FiniteDiff gradients are less precise
-        eigenvalue_threshold=1e-2,
-        gradient_method=:finitediff,
+        gradient_tolerance = 1e-3,  # relaxed: FiniteDiff gradients are less precise
+        eigenvalue_threshold = 1e-2,
+        gradient_method = :finitediff,
     )
 
     @testset "detect_valley with FiniteDiff" begin
@@ -1025,8 +1055,8 @@ end
 
     @testset "project_to_valley with FiniteDiff" begin
         point = [1.05, 0.0]
-        proj_fd = project_to_valley(f_circle, point; gradient_method=:forwarddiff)
-        proj_nd = project_to_valley(f_circle, point; gradient_method=:finitediff)
+        proj_fd = project_to_valley(f_circle, point; gradient_method = :forwarddiff)
+        proj_nd = project_to_valley(f_circle, point; gradient_method = :finitediff)
         # Both should land on the unit circle
         @test abs(norm(proj_fd) - 1.0) < 1e-6
         @test abs(norm(proj_nd) - 1.0) < 1e-4  # relaxed for FiniteDiff
@@ -1035,19 +1065,29 @@ end
     @testset "project_to_valley_tangent with FiniteDiff" begin
         point = [1.05, 0.0]
         tangent = [0.0, 1.0]
-        proj_fd = project_to_valley_tangent(f_circle, point, tangent; gradient_method=:forwarddiff)
-        proj_nd = project_to_valley_tangent(f_circle, point, tangent; gradient_method=:finitediff)
+        proj_fd = project_to_valley_tangent(
+            f_circle,
+            point,
+            tangent;
+            gradient_method = :forwarddiff,
+        )
+        proj_nd = project_to_valley_tangent(
+            f_circle,
+            point,
+            tangent;
+            gradient_method = :finitediff,
+        )
         @test abs(norm(proj_fd) - 1.0) < 1e-6
         @test abs(norm(proj_nd) - 1.0) < 1e-4
     end
 
     @testset "trace_valley with FiniteDiff" begin
         config_trace = ValleyWalkConfig(
-            gradient_tolerance=1e-3,
-            eigenvalue_threshold=1e-2,
-            initial_step_size=0.05,
-            max_steps=50,
-            gradient_method=:finitediff,
+            gradient_tolerance = 1e-3,
+            eigenvalue_threshold = 1e-2,
+            initial_step_size = 0.05,
+            max_steps = 50,
+            gradient_method = :finitediff,
         )
         result = trace_valley(f_circle, [1.0, 0.0], config_trace)
         @test result.converged == true
@@ -1061,7 +1101,7 @@ end
     end
 
     @testset "invalid gradient_method raises error" begin
-        bad_config = ValleyWalkConfig(gradient_method=:bogus)
+        bad_config = ValleyWalkConfig(gradient_method = :bogus)
         @test_throws ErrorException detect_valley(f_circle, [1.0, 0.0], bad_config)
     end
 end

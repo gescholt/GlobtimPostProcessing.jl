@@ -20,17 +20,17 @@ using GlobtimPostProcessing.LV4DAnalysis: UnifiedPipeline, ExperimentParams
 Create a mock LV4DExperimentData struct for testing.
 """
 function create_mock_experiment(;
-    GN::Int=12,
-    degree::Int=8,
-    domain::Float64=0.08,
-    seed::Int=1,
-    is_subdivision::Bool=false,
-    L2_norm::Float64=1e3,
-    critical_points::Int=10,
-    recovery_error::Float64=0.05,
-    gradient_valid_rate::Float64=0.8,
-    hessian_minima::Int=2,
-    computation_time::Float64=60.0
+    GN::Int = 12,
+    degree::Int = 8,
+    domain::Float64 = 0.08,
+    seed::Int = 1,
+    is_subdivision::Bool = false,
+    L2_norm::Float64 = 1e3,
+    critical_points::Int = 10,
+    recovery_error::Float64 = 0.05,
+    gradient_valid_rate::Float64 = 0.8,
+    hessian_minima::Int = 2,
+    computation_time::Float64 = 60.0,
 )
     # Build ExperimentParams
     params = ExperimentParams(GN, degree, degree, domain, seed, is_subdivision)
@@ -54,7 +54,7 @@ function create_mock_experiment(;
         hessian_saddle = [critical_points - hessian_minima],
         hessian_degenerate = [0],
         computation_time = [computation_time],
-        experiment_dir = ["mock_experiment"]
+        experiment_dir = ["mock_experiment"],
     )
 
     # Build BaseExperimentData
@@ -68,10 +68,10 @@ function create_mock_experiment(;
         Dict{String,Any}(
             "p_true" => [0.2, 0.3, 0.5, 0.6],
             "p_center" => [0.2, 0.3, 0.5, 0.6],
-            "sample_range" => domain
+            "sample_range" => domain,
         ),
         degree_results,
-        nothing  # critical_points
+        nothing,  # critical_points
     )
 
     return LV4DExperimentData(
@@ -80,7 +80,7 @@ function create_mock_experiment(;
         [0.2, 0.3, 0.5, 0.6],  # p_true
         [0.2, 0.3, 0.5, 0.6],  # p_center
         domain,
-        4  # dim
+        4,  # dim
     )
 end
 
@@ -89,24 +89,81 @@ end
 # ============================================================================
 
 @testset "Subdivision Comparison Tests" begin
-
     @testset "find_matched_subdivision_pairs" begin
         # Create a set of experiments with some matching pairs
         experiments = LV4DExperimentData[]
 
         # Matched pair 1: GN=12, deg=8, dom=0.08, seed=1
-        push!(experiments, create_mock_experiment(GN=12, degree=8, domain=0.08, seed=1, is_subdivision=false, L2_norm=1000.0))
-        push!(experiments, create_mock_experiment(GN=12, degree=8, domain=0.08, seed=1, is_subdivision=true, L2_norm=800.0))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = false,
+                L2_norm = 1000.0,
+            ),
+        )
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = true,
+                L2_norm = 800.0,
+            ),
+        )
 
         # Matched pair 2: GN=12, deg=8, dom=0.08, seed=2
-        push!(experiments, create_mock_experiment(GN=12, degree=8, domain=0.08, seed=2, is_subdivision=false, L2_norm=1100.0))
-        push!(experiments, create_mock_experiment(GN=12, degree=8, domain=0.08, seed=2, is_subdivision=true, L2_norm=900.0))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 2,
+                is_subdivision = false,
+                L2_norm = 1100.0,
+            ),
+        )
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 2,
+                is_subdivision = true,
+                L2_norm = 900.0,
+            ),
+        )
 
         # Unmatched single (no subdivision counterpart)
-        push!(experiments, create_mock_experiment(GN=12, degree=10, domain=0.08, seed=1, is_subdivision=false))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 10,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = false,
+            ),
+        )
 
         # Unmatched subdivision (no single counterpart)
-        push!(experiments, create_mock_experiment(GN=16, degree=8, domain=0.08, seed=1, is_subdivision=true))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 16,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = true,
+            ),
+        )
 
         matched = find_matched_subdivision_pairs(experiments)
 
@@ -126,14 +183,34 @@ end
         experiments = LV4DExperimentData[]
 
         # Create matched pair with known values
-        push!(experiments, create_mock_experiment(
-            GN=12, degree=8, domain=0.08, seed=1, is_subdivision=false,
-            L2_norm=1000.0, recovery_error=0.05, critical_points=10, hessian_minima=3
-        ))
-        push!(experiments, create_mock_experiment(
-            GN=12, degree=8, domain=0.08, seed=1, is_subdivision=true,
-            L2_norm=800.0, recovery_error=0.03, critical_points=15, hessian_minima=5
-        ))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = false,
+                L2_norm = 1000.0,
+                recovery_error = 0.05,
+                critical_points = 10,
+                hessian_minima = 3,
+            ),
+        )
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = true,
+                L2_norm = 800.0,
+                recovery_error = 0.03,
+                critical_points = 15,
+                hessian_minima = 5,
+            ),
+        )
 
         matched = find_matched_subdivision_pairs(experiments)
         df = prepare_subdivision_comparison_df(matched)
@@ -156,16 +233,26 @@ end
 
     @testset "prepare_subdivision_comparison_df schema" begin
         experiments = LV4DExperimentData[]
-        push!(experiments, create_mock_experiment(is_subdivision=false))
-        push!(experiments, create_mock_experiment(is_subdivision=true))
+        push!(experiments, create_mock_experiment(is_subdivision = false))
+        push!(experiments, create_mock_experiment(is_subdivision = true))
 
         matched = find_matched_subdivision_pairs(experiments)
         df = prepare_subdivision_comparison_df(matched)
 
         # Verify expected columns exist
-        expected_cols = [:GN, :degree, :domain, :seed, :method,
-                        :L2_norm, :critical_points, :recovery_error,
-                        :gradient_valid_rate, :hessian_minima, :computation_time]
+        expected_cols = [
+            :GN,
+            :degree,
+            :domain,
+            :seed,
+            :method,
+            :L2_norm,
+            :critical_points,
+            :recovery_error,
+            :gradient_valid_rate,
+            :hessian_minima,
+            :computation_time,
+        ]
 
         for col in expected_cols
             @test hasproperty(df, col)
@@ -177,14 +264,24 @@ end
 
         # Multiple seeds to test aggregation
         for seed in 1:3
-            push!(experiments, create_mock_experiment(
-                seed=seed, is_subdivision=false,
-                L2_norm=1000.0 + seed * 100, recovery_error=0.05 + seed * 0.01
-            ))
-            push!(experiments, create_mock_experiment(
-                seed=seed, is_subdivision=true,
-                L2_norm=800.0 + seed * 50, recovery_error=0.03 + seed * 0.005
-            ))
+            push!(
+                experiments,
+                create_mock_experiment(
+                    seed = seed,
+                    is_subdivision = false,
+                    L2_norm = 1000.0 + seed * 100,
+                    recovery_error = 0.05 + seed * 0.01,
+                ),
+            )
+            push!(
+                experiments,
+                create_mock_experiment(
+                    seed = seed,
+                    is_subdivision = true,
+                    L2_norm = 800.0 + seed * 50,
+                    recovery_error = 0.03 + seed * 0.005,
+                ),
+            )
         end
 
         matched = find_matched_subdivision_pairs(experiments)
@@ -192,7 +289,7 @@ end
 
         # Capture output to IOBuffer
         buf = IOBuffer()
-        print_subdivision_comparison(df; io=buf, show_aggregated=true)
+        print_subdivision_comparison(df; io = buf, show_aggregated = true)
         output = String(take!(buf))
 
         # Verify key elements are present
@@ -209,12 +306,48 @@ end
         experiments = LV4DExperimentData[]
 
         # GN=12 experiments
-        push!(experiments, create_mock_experiment(GN=12, degree=8, domain=0.08, seed=1, is_subdivision=false))
-        push!(experiments, create_mock_experiment(GN=12, degree=8, domain=0.08, seed=1, is_subdivision=true))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = false,
+            ),
+        )
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 12,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = true,
+            ),
+        )
 
         # GN=16 experiments
-        push!(experiments, create_mock_experiment(GN=16, degree=8, domain=0.08, seed=1, is_subdivision=false))
-        push!(experiments, create_mock_experiment(GN=16, degree=8, domain=0.08, seed=1, is_subdivision=true))
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 16,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = false,
+            ),
+        )
+        push!(
+            experiments,
+            create_mock_experiment(
+                GN = 16,
+                degree = 8,
+                domain = 0.08,
+                seed = 1,
+                is_subdivision = true,
+            ),
+        )
 
         # Test GN filter
         gn12_exps = filter(e -> e.params.GN == 12, experiments)
@@ -236,15 +369,15 @@ end
 
         # Print should handle empty gracefully
         buf = IOBuffer()
-        print_subdivision_comparison(df; io=buf)
+        print_subdivision_comparison(df; io = buf)
         output = String(take!(buf))
         @test occursin("No matched pairs", output)
     end
 
     @testset "single-only experiments (no matches)" begin
         experiments = LV4DExperimentData[]
-        push!(experiments, create_mock_experiment(GN=12, is_subdivision=false))
-        push!(experiments, create_mock_experiment(GN=16, is_subdivision=false))
+        push!(experiments, create_mock_experiment(GN = 12, is_subdivision = false))
+        push!(experiments, create_mock_experiment(GN = 16, is_subdivision = false))
 
         matched = find_matched_subdivision_pairs(experiments)
         @test isempty(matched)
@@ -252,13 +385,12 @@ end
 
     @testset "subdivision-only experiments (no matches)" begin
         experiments = LV4DExperimentData[]
-        push!(experiments, create_mock_experiment(GN=12, is_subdivision=true))
-        push!(experiments, create_mock_experiment(GN=16, is_subdivision=true))
+        push!(experiments, create_mock_experiment(GN = 12, is_subdivision = true))
+        push!(experiments, create_mock_experiment(GN = 16, is_subdivision = true))
 
         matched = find_matched_subdivision_pairs(experiments)
         @test isempty(matched)
     end
-
 end
 
 # Run tests when executed directly

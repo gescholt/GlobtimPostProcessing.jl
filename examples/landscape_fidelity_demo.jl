@@ -37,7 +37,9 @@ try
 catch e
     @debug "ForwardDiff not available" exception=(e, catch_backtrace())
     global HAS_FORWARDDIFF = false
-    println("✗ ForwardDiff not available - install with: using Pkg; Pkg.add(\"ForwardDiff\")")
+    println(
+        "✗ ForwardDiff not available - install with: using Pkg; Pkg.add(\"ForwardDiff\")",
+    )
 end
 
 """
@@ -53,7 +55,7 @@ function demo_1_simple_quadratic()
     println("="^70)
 
     # Define objective: minimum at [0.5, 0.5, 0.5, 0.5]
-    f(x) = sum((x .- 0.5).^2)
+    f(x) = sum((x .- 0.5) .^ 2)
 
     # Polynomial found a minimum at (close to true minimum)
     x_star = [0.48, 0.52, 0.49, 0.51]
@@ -67,11 +69,14 @@ function demo_1_simple_quadratic()
 
     # Check 1: Objective proximity
     println("\n--- Check 1: Objective Proximity ---")
-    result_obj = check_objective_proximity(x_star, x_min, f, tolerance=0.05)
+    result_obj = check_objective_proximity(x_star, x_min, f, tolerance = 0.05)
     println("Same basin? ", result_obj.is_same_basin)
     println("Relative difference: ", @sprintf("%.6f", result_obj.metric))
-    println("Interpretation: ", result_obj.metric < 0.01 ? "✓ Excellent match" :
-                                result_obj.metric < 0.05 ? "✓ Good match" : "⚠ Poor match")
+    println(
+        "Interpretation: ",
+        result_obj.metric < 0.01 ? "✓ Excellent match" :
+        result_obj.metric < 0.05 ? "✓ Good match" : "⚠ Poor match",
+    )
 
     # Check 2: Hessian basin (if ForwardDiff available)
     if HAS_FORWARDDIFF
@@ -82,12 +87,15 @@ function demo_1_simple_quadratic()
         println("Distance: ", @sprintf("%.6f", result_hess.distance))
         println("Basin radius: ", @sprintf("%.6f", result_hess.basin_radius))
         println("Relative distance: ", @sprintf("%.6f", result_hess.metric))
-        println("Interpretation: ", result_hess.metric < 0.5 ? "✓ Well inside basin" :
-                                    result_hess.metric < 1.0 ? "✓ Inside basin" : "⚠ Outside basin")
+        println(
+            "Interpretation: ",
+            result_hess.metric < 0.5 ? "✓ Well inside basin" :
+            result_hess.metric < 1.0 ? "✓ Inside basin" : "⚠ Outside basin",
+        )
 
         # Composite assessment
         println("\n--- Composite Assessment ---")
-        result = assess_landscape_fidelity(x_star, x_min, f, hessian_min=H)
+        result = assess_landscape_fidelity(x_star, x_min, f, hessian_min = H)
         println("Overall: ", result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT BASINS")
         println("Confidence: ", @sprintf("%.1f%%", 100 * result.confidence))
         println("\nCriteria breakdown:")
@@ -123,8 +131,8 @@ function demo_2_multiple_minima()
     # Minimum 2 at [0.8, 0.8]
     function f(x)
         # Two quadratic wells
-        d1 = sum((x .- [0.2, 0.2]).^2)
-        d2 = sum((x .- [0.8, 0.8]).^2)
+        d1 = sum((x .- [0.2, 0.2]) .^ 2)
+        d2 = sum((x .- [0.8, 0.8]) .^ 2)
         return min(100*d1, 100*d2)  # Two wells of equal depth
     end
 
@@ -133,26 +141,41 @@ function demo_2_multiple_minima()
         ("Good match - Basin 1", [0.21, 0.19], [0.20, 0.20]),
         ("Good match - Basin 2", [0.79, 0.81], [0.80, 0.80]),
         ("Bad match - Wrong basin", [0.21, 0.19], [0.80, 0.80]),
-        ("Bad match - Spurious minimum", [0.50, 0.50], [0.20, 0.20])
+        ("Bad match - Spurious minimum", [0.50, 0.50], [0.20, 0.20]),
     ]
 
     for (name, x_star, x_min) in test_cases
         println("\n--- $name ---")
         println("x* = $x_star, x_min = $x_min")
 
-        result_obj = check_objective_proximity(x_star, x_min, f, tolerance=0.05)
-        println("Objective proximity: ", result_obj.is_same_basin ? "✓ PASS" : "✗ FAIL",
-                " (rel_diff = ", @sprintf("%.6f", result_obj.metric), ")")
+        result_obj = check_objective_proximity(x_star, x_min, f, tolerance = 0.05)
+        println(
+            "Objective proximity: ",
+            result_obj.is_same_basin ? "✓ PASS" : "✗ FAIL",
+            " (rel_diff = ",
+            @sprintf("%.6f", result_obj.metric),
+            ")",
+        )
 
         if HAS_FORWARDDIFF
             H = ForwardDiff.hessian(f, x_min)
             result_hess = check_hessian_basin(x_star, x_min, f, H)
-            println("Hessian basin: ", result_hess.is_same_basin ? "✓ PASS" : "✗ FAIL",
-                    " (rel_dist = ", @sprintf("%.6f", result_hess.metric), ")")
+            println(
+                "Hessian basin: ",
+                result_hess.is_same_basin ? "✓ PASS" : "✗ FAIL",
+                " (rel_dist = ",
+                @sprintf("%.6f", result_hess.metric),
+                ")",
+            )
 
-            result = assess_landscape_fidelity(x_star, x_min, f, hessian_min=H)
-            println("Overall: ", result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT BASINS",
-                    " (confidence = ", @sprintf("%.0f%%", 100*result.confidence), ")")
+            result = assess_landscape_fidelity(x_star, x_min, f, hessian_min = H)
+            println(
+                "Overall: ",
+                result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT BASINS",
+                " (confidence = ",
+                @sprintf("%.0f%%", 100*result.confidence),
+                ")",
+            )
         end
     end
 
@@ -188,8 +211,7 @@ If you don't provide the objective, we'll use a mock function for demonstration:
 demo_3_real_experiment("/path/to/experiment")
 ```
 """
-function demo_3_real_experiment(experiment_path::String;
-                                objective_function=nothing)
+function demo_3_real_experiment(experiment_path::String; objective_function = nothing)
     println("\n" * "="^70)
     println("DEMO 3: Real Experiment Analysis")
     println("="^70)
@@ -233,7 +255,7 @@ function demo_3_real_experiment(experiment_path::String;
             println("  For real analysis, provide: objective_function=your_function")
 
             # Mock objective based on z values
-            f_mock(x) = sum(x.^2) * 1000.0  # Placeholder
+            f_mock(x) = sum(x .^ 2) * 1000.0  # Placeholder
             f = f_mock
         else
             f = objective_function
@@ -249,8 +271,9 @@ function demo_3_real_experiment(experiment_path::String;
         first_minimum = first(eachrow(minima_df))
 
         # Extract coordinates
-        param_cols = filter(n -> occursin(r"^x\d+$", string(n)), propertynames(first_minimum))
-        sorted_cols = sort(param_cols, by=x -> parse(Int, match(r"\d+", string(x)).match))
+        param_cols =
+            filter(n -> occursin(r"^x\d+$", string(n)), propertynames(first_minimum))
+        sorted_cols = sort(param_cols, by = x -> parse(Int, match(r"\d+", string(x)).match))
         x_star = Float64[first_minimum[col] for col in sorted_cols]
 
         println("\nPolynomial minimum location: ", x_star)
@@ -281,8 +304,11 @@ function demo_3_real_experiment(experiment_path::String;
                 println("Hessian basin: ", result_hess.is_same_basin ? "✓" : "✗")
                 println("  Relative distance: ", @sprintf("%.6f", result_hess.metric))
 
-                result = assess_landscape_fidelity(x_star, x_min, f, hessian_min=H)
-                println("\nOverall fidelity: ", result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT")
+                result = assess_landscape_fidelity(x_star, x_min, f, hessian_min = H)
+                println(
+                    "\nOverall fidelity: ",
+                    result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT",
+                )
                 println("Confidence: ", @sprintf("%.0f%%", 100*result.confidence))
             catch e
                 println("⚠ Could not compute Hessian: $e")
@@ -321,7 +347,7 @@ function demo_4_batch_processing()
     println("\nCreating synthetic critical points...")
 
     # Objective with minimum at origin
-    f(x) = sum(x.^2)
+    f(x) = sum(x .^ 2)
 
     # Synthetic critical points (some good, some bad)
     df = DataFrame(
@@ -329,7 +355,13 @@ function demo_4_batch_processing()
         x2 = [0.02, -0.01, 0.60, 0.01, -0.02],
         hessian_eigenvalue_1 = [2.0, 2.0, 2.0, 2.0, 2.0],
         hessian_eigenvalue_2 = [2.0, 2.0, 2.0, 2.0, 2.0],
-        z = [f([0.01, 0.02]), f([0.02, -0.01]), f([0.50, 0.60]), f([-0.01, 0.01]), f([0.03, -0.02])]
+        z = [
+            f([0.01, 0.02]),
+            f([0.02, -0.01]),
+            f([0.50, 0.60]),
+            f([-0.01, 0.01]),
+            f([0.03, -0.02]),
+        ],
     )
 
     # Classify
@@ -342,7 +374,7 @@ function demo_4_batch_processing()
         [0.00, 0.00],  # Good - near origin
         [0.00, 0.00],  # Bad - polynomial minimum was far away
         [0.00, 0.00],  # Good - near origin
-        [0.00, 0.00]   # Good - near origin
+        [0.00, 0.00],   # Good - near origin
     ]
 
     println("\nRunning batch assessment...")
@@ -353,7 +385,11 @@ function demo_4_batch_processing()
     println("-"^70)
     for (i, row) in enumerate(eachrow(result_df))
         status = row.is_same_basin ? "✓" : "✗"
-        println("Point $i: $status (confidence = ", @sprintf("%.0f%%", 100*row.fidelity_confidence), ")")
+        println(
+            "Point $i: $status (confidence = ",
+            @sprintf("%.0f%%", 100*row.fidelity_confidence),
+            ")",
+        )
         println("  x* = [", @sprintf("%.3f", row.x1), ", ", @sprintf("%.3f", row.x2), "]")
         println("  Obj proximity: ", @sprintf("%.6f", row.objective_proximity_metric))
     end

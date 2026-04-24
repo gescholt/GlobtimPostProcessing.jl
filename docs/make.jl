@@ -18,12 +18,12 @@ makedocs(
             "Quality Diagnostics" => "quality_diagnostics.md",
             "Parameter Recovery" => "parameter_recovery.md",
             "Landscape Fidelity" => "landscape_fidelity.md",
-            "Campaign Analysis" => "campaign_analysis.md"
+            "Campaign Analysis" => "campaign_analysis.md",
         ],
         "Examples" => "workflow_examples.md",
-        "API Reference" => "api_reference.md"
+        "API Reference" => "api_reference.md",
     ],
-    checkdocs = :none
+    checkdocs = :none,
 )
 
 # deploydocs not used - GitLab repo

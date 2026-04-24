@@ -99,7 +99,7 @@ try
         P_TRUE,
         TIME_INTERVAL,
         NUM_POINTS,
-        Main.DynamicalSystems.L2_norm
+        Main.DynamicalSystems.L2_norm,
     )
 
     @assert !isnothing(error_func) "Error function is nothing"
@@ -130,7 +130,7 @@ try
         P_TRUE,
         TIME_INTERVAL,
         NUM_POINTS,
-        Main.DynamicalSystems.L2_norm
+        Main.DynamicalSystems.L2_norm,
     )
 
     error_at_true = error_func(P_TRUE)
@@ -165,7 +165,7 @@ try
         P_TRUE,
         TIME_INTERVAL,
         NUM_POINTS,
-        Main.DynamicalSystems.L2_norm
+        Main.DynamicalSystems.L2_norm,
     )
 
     error_at_true = error_func(P_TRUE)

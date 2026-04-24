@@ -16,11 +16,14 @@ using JSON3
 using Dates
 
 # Test data paths
-TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_083530",
-                              "campaign_lotka_volterra_4d_extended_degrees")
+TEST_CAMPAIGN_PATH = joinpath(
+    @__DIR__,
+    "..",
+    "collected_experiments_20251013_083530",
+    "campaign_lotka_volterra_4d_extended_degrees",
+)
 
 @testset "Phase 3: Error Categorization Integration" begin
-
     @testset "1. ErrorCategorization Module Access" begin
         @testset "1.1 Load ErrorCategorization from globtim" begin
             # Test that we can access globtim's ErrorCategorization
@@ -171,8 +174,8 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             success, result = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                include_errors=true
+                silent = true,
+                include_errors = true,
             )
 
             @test success == true
@@ -183,7 +186,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             @test occursin("Error Analysis", content) || occursin("Error", content)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "4.2 Error section contains category breakdown" begin
@@ -192,8 +195,8 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                include_errors=true
+                silent = true,
+                include_errors = true,
             )
 
             content = read(output_file, String)
@@ -203,7 +206,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             @test occursin("Error", content) || occursin("Success", content)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "4.3 Error section contains recommendations" begin
@@ -212,8 +215,8 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                include_errors=true
+                silent = true,
+                include_errors = true,
             )
 
             content = read(output_file, String)
@@ -223,7 +226,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             @test length(content) > 100
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "4.4 JSON format includes error analysis" begin
@@ -232,10 +235,10 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             success, result, stats = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                return_stats=true,
-                format="json",
-                include_errors=true
+                silent = true,
+                return_stats = true,
+                format = "json",
+                include_errors = true,
             )
 
             @test success == true
@@ -250,11 +253,12 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             # Check for error analysis in JSON
             if haskey(parsed, :error_analysis)
                 error_section = parsed.error_analysis
-                @test haskey(error_section, :total_errors) || haskey(error_section, :error_rate)
+                @test haskey(error_section, :total_errors) ||
+                      haskey(error_section, :error_rate)
             end
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
     end
 
@@ -271,7 +275,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
         end
 
         @testset "5.2 Error summary with priority sorting" begin
-            summary = generate_error_summary(campaign, sort_by_priority=true)
+            summary = generate_error_summary(campaign, sort_by_priority = true)
 
             @test haskey(summary, "high_priority_errors")
             high_priority = summary["high_priority_errors"]
@@ -279,13 +283,14 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             # Verify sorted by priority (descending)
             if length(high_priority) > 1
                 for i in 1:(length(high_priority)-1)
-                    @test high_priority[i]["priority_score"] >= high_priority[i+1]["priority_score"]
+                    @test high_priority[i]["priority_score"] >=
+                          high_priority[i+1]["priority_score"]
                 end
             end
         end
 
         @testset "5.3 Error summary includes experiment details" begin
-            summary = generate_error_summary(campaign, include_details=true)
+            summary = generate_error_summary(campaign, include_details = true)
 
             @test haskey(summary, "detailed_errors")
             details = summary["detailed_errors"]
@@ -335,14 +340,15 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
         end
 
         @testset "6.3 Get top N priority errors" begin
-            top_errors = get_top_priority_errors(campaign, n=5)
+            top_errors = get_top_priority_errors(campaign, n = 5)
             @test top_errors isa Vector
             @test length(top_errors) <= 5
 
             # Should be sorted by priority (descending)
             if length(top_errors) > 1
                 for i in 1:(length(top_errors)-1)
-                    @test top_errors[i]["priority_score"] >= top_errors[i+1]["priority_score"]
+                    @test top_errors[i]["priority_score"] >=
+                          top_errors[i+1]["priority_score"]
                 end
             end
         end
@@ -374,11 +380,16 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
         @testset "7.2 Most common error category" begin
             most_common = get_most_common_error_category(campaign)
             # Should return category name or nothing if no errors
-            @test most_common isa Union{String, Nothing}
+            @test most_common isa Union{String,Nothing}
 
             if !isnothing(most_common)
-                categories = ["INTERFACE_BUG", "MATHEMATICAL_FAILURE",
-                             "INFRASTRUCTURE_ISSUE", "CONFIGURATION_ERROR", "UNKNOWN_ERROR"]
+                categories = [
+                    "INTERFACE_BUG",
+                    "MATHEMATICAL_FAILURE",
+                    "INFRASTRUCTURE_ISSUE",
+                    "CONFIGURATION_ERROR",
+                    "UNKNOWN_ERROR",
+                ]
                 @test most_common in categories
             end
         end
@@ -409,9 +420,9 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             success, result, stats = batch_analyze_campaign(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                silent=true,
-                return_stats=true,
-                include_errors=true
+                silent = true,
+                return_stats = true,
+                include_errors = true,
             )
 
             @test success == true
@@ -419,7 +430,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             @test haskey(stats, "error_analysis") || haskey(stats, "campaign_summary")
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "8.2 batch_analyze_campaign_with_progress includes errors" begin
@@ -428,16 +439,16 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             success, result, stats = batch_analyze_campaign_with_progress(
                 TEST_CAMPAIGN_PATH,
                 output_file,
-                show_progress=false,
-                silent=true,
-                include_errors=true
+                show_progress = false,
+                silent = true,
+                include_errors = true,
             )
 
             @test success == true
             @test isfile(output_file)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
 
         @testset "8.3 CLI with error reporting flag" begin
@@ -445,7 +456,9 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             output_file = tempname() * ".md"
 
             exit_code = try
-                run(`julia $CLI_SCRIPT --input $TEST_CAMPAIGN_PATH --output $output_file --silent --include-errors`)
+                run(
+                    `julia $CLI_SCRIPT --input $TEST_CAMPAIGN_PATH --output $output_file --silent --include-errors`,
+                )
                 0
             catch e
                 if e isa ProcessFailedException
@@ -459,7 +472,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
             @test isfile(output_file)
 
             # Cleanup
-            rm(output_file, force=true)
+            rm(output_file, force = true)
         end
     end
 
@@ -467,17 +480,19 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
         campaign = load_campaign_results(TEST_CAMPAIGN_PATH)
 
         @testset "9.1 Markdown error report generation" begin
-            error_report_md = format_error_report(campaign, format="markdown")
+            error_report_md = format_error_report(campaign, format = "markdown")
             @test error_report_md isa String
             @test length(error_report_md) > 0
 
             # Should contain markdown formatting
-            @test occursin("#", error_report_md) || occursin("*", error_report_md) ||
-                  occursin("Error", error_report_md) || occursin("No errors", error_report_md)
+            @test occursin("#", error_report_md) ||
+                  occursin("*", error_report_md) ||
+                  occursin("Error", error_report_md) ||
+                  occursin("No errors", error_report_md)
         end
 
         @testset "9.2 JSON error report generation" begin
-            error_report_json = format_error_report(campaign, format="json")
+            error_report_json = format_error_report(campaign, format = "json")
             @test error_report_json isa String
 
             # Should be valid JSON
@@ -497,7 +512,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
     @testset "10. Edge Cases" begin
         @testset "10.1 Campaign with no errors" begin
             # Create mock campaign with all successful experiments
-            mock_campaign = create_mock_campaign(all_successful=true)
+            mock_campaign = create_mock_campaign(all_successful = true)
 
             error_analysis = categorize_campaign_errors(mock_campaign)
             @test error_analysis["total_errors"] == 0
@@ -507,7 +522,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
 
         @testset "10.2 Campaign with all failed experiments" begin
             # Create mock campaign with all failed experiments
-            mock_campaign = create_mock_campaign(all_failed=true)
+            mock_campaign = create_mock_campaign(all_failed = true)
 
             error_analysis = categorize_campaign_errors(mock_campaign)
             @test error_analysis["total_errors"] > 0
@@ -517,7 +532,7 @@ TEST_CAMPAIGN_PATH = joinpath(@__DIR__, "..", "collected_experiments_20251013_08
 
         @testset "10.3 Empty campaign" begin
             # Create empty campaign
-            mock_campaign = create_mock_campaign(empty=true)
+            mock_campaign = create_mock_campaign(empty = true)
 
             error_analysis = categorize_campaign_errors(mock_campaign)
             @test error_analysis["total_errors"] == 0

@@ -40,7 +40,7 @@ println("✓ All modules loaded successfully")
 println()
 
 # Test configuration (Daisy Ex3 4D model)
-test_config = Dict{String, Any}(
+test_config = Dict{String,Any}(
     "model_func" => "define_daisy_ex3_model_4D",
     "p_true" => [0.2, 0.3, 0.5, 0.6],
     "p_center" => [0.224, 0.273, 0.473, 0.578],
@@ -48,11 +48,10 @@ test_config = Dict{String, Any}(
     "time_interval" => [0.0, 10.0],
     "num_points" => 25,
     "dimension" => 4,
-    "experiment_id" => "test_e2e_daisy"
+    "experiment_id" => "test_e2e_daisy",
 )
 
 @testset "End-to-End Trajectory Analysis" begin
-
     @testset "1. ObjectiveFunctionRegistry Integration" begin
         println("\n[Test 1] ObjectiveFunctionRegistry Integration")
 
@@ -126,7 +125,7 @@ test_config = Dict{String, Any}(
             x2 = p_found[2],
             x3 = p_found[3],
             x4 = p_found[4],
-            z = 0.00234
+            z = 0.00234,
         )
 
         metrics = evaluate_critical_point(test_config, critical_point)
@@ -174,7 +173,7 @@ test_config = Dict{String, Any}(
                     x3 = [0.502, 0.49, 0.505],
                     x4 = [0.599, 0.61, 0.595],
                     z = [0.00234, 0.00156, 0.00289],
-                    gradient_norm = [1e-6, 1e-6, 1e-6]
+                    gradient_norm = [1e-6, 1e-6, 1e-6],
                 )
 
                 csv_file = joinpath(temp_exp_dir, "critical_points_deg_$(deg).csv")
@@ -225,8 +224,10 @@ test_config = Dict{String, Any}(
             println("  ✓ Analyzed degrees: ", convergence.degrees)
 
             for deg in convergence.degrees
-                println("    - Degree $deg: $(convergence.num_critical_points_by_degree[deg]) points, " *
-                       "$(convergence.num_recoveries_by_degree[deg]) recoveries")
+                println(
+                    "    - Degree $deg: $(convergence.num_critical_points_by_degree[deg]) points, " *
+                    "$(convergence.num_recoveries_by_degree[deg]) recoveries",
+                )
             end
 
             # Test generate_comparison_report (text format)
@@ -251,14 +252,18 @@ test_config = Dict{String, Any}(
             @test comparison.deg2_metrics.degree == 8
 
             println("  ✓ Degree comparison:")
-            println("    - Degree 4: $(comparison.deg1_metrics.num_critical_points) points, " *
-                   "best dist = $(comparison.deg1_metrics.best_param_distance)")
-            println("    - Degree 8: $(comparison.deg2_metrics.num_critical_points) points, " *
-                   "best dist = $(comparison.deg2_metrics.best_param_distance)")
+            println(
+                "    - Degree 4: $(comparison.deg1_metrics.num_critical_points) points, " *
+                "best dist = $(comparison.deg1_metrics.best_param_distance)",
+            )
+            println(
+                "    - Degree 8: $(comparison.deg2_metrics.num_critical_points) points, " *
+                "best dist = $(comparison.deg2_metrics.best_param_distance)",
+            )
 
         finally
             # Cleanup
-            rm(temp_exp_dir, recursive=true, force=true)
+            rm(temp_exp_dir, recursive = true, force = true)
         end
     end
 
@@ -292,7 +297,7 @@ test_config = Dict{String, Any}(
                         x3 = [0.50],
                         x4 = [0.60],
                         z = [0.001 * exp_id],
-                        gradient_norm = [1e-6]
+                        gradient_norm = [1e-6],
                     )
 
                     csv_file = joinpath(exp_dir, "critical_points_deg_$(deg).csv")
@@ -311,13 +316,15 @@ test_config = Dict{String, Any}(
             println("  ✓ Analyzed $(nrow(campaign_df)) experiments")
 
             for row in eachrow(campaign_df)
-                println("    - Exp $(row.experiment_id): $(row.total_critical_points) points, " *
-                       "best dist = $(row.best_param_distance)")
+                println(
+                    "    - Exp $(row.experiment_id): $(row.total_critical_points) points, " *
+                    "best dist = $(row.best_param_distance)",
+                )
             end
 
         finally
             # Cleanup
-            rm(temp_campaign_dir, recursive=true, force=true)
+            rm(temp_campaign_dir, recursive = true, force = true)
         end
     end
 
@@ -325,7 +332,10 @@ test_config = Dict{String, Any}(
         println("\n[Test 5] Error Handling")
 
         # Test unknown model function
-        @test_throws ErrorException resolve_model_function("unknown_model", load_dynamical_systems_module())
+        @test_throws ErrorException resolve_model_function(
+            "unknown_model",
+            load_dynamical_systems_module(),
+        )
 
         # Test invalid config
         invalid_config = Dict("model_func" => "define_daisy_ex3_model_4D")
@@ -341,7 +351,6 @@ test_config = Dict{String, Any}(
 
         println("  ✓ All error cases handled correctly")
     end
-
 end
 
 println()

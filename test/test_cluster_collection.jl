@@ -40,15 +40,15 @@ function setup_cluster_collection_fixtures()
                 "session_name" => "minimal_4d_lv_test_GN=8_domain_size_param=0.15_max_time=45.0_20251006_115101",
                 "status" => "launching",
                 "launch_time" => "2025-10-06T11:51:01",
-                "experiment_id" => "exp_001"
+                "experiment_id" => "exp_001",
             ),
             Dict(
                 "session_name" => "minimal_4d_lv_test_GN=5_domain_size_param=0.1_max_time=45.0_20251006_115045",
                 "status" => "launching",
                 "launch_time" => "2025-10-06T11:50:45",
-                "experiment_id" => "exp_002"
-            )
-        ]
+                "experiment_id" => "exp_002",
+            ),
+        ],
     )
 
     tracking_file = joinpath(tracking_dir, "batch_20251006_115044.json")
@@ -75,18 +75,14 @@ function setup_cluster_collection_fixtures()
         results = Dict(
             "status" => "success",
             "total_critical_points" => 42,
-            "total_time" => 123.45
+            "total_time" => 123.45,
         )
         open(joinpath(exp_dir, "results_summary.json"), "w") do f
             JSON3.pretty(f, results)
         end
 
         # Create mock experiment_params.json
-        params = Dict(
-            "GN" => 8,
-            "domain_size_param" => 0.15,
-            "max_time" => 45.0
-        )
+        params = Dict("GN" => 8, "domain_size_param" => 0.15, "max_time" => 45.0)
         open(joinpath(exp_dir, "experiment_params.json"), "w") do f
             JSON3.pretty(f, params)
         end
@@ -100,7 +96,7 @@ Cleanup test fixtures
 """
 function cleanup_cluster_collection_fixtures()
     if isdir(TEST_FIXTURES_DIR)
-        rm(TEST_FIXTURES_DIR, recursive=true, force=true)
+        rm(TEST_FIXTURES_DIR, recursive = true, force = true)
     end
 end
 
@@ -125,8 +121,11 @@ end
         end
 
         @testset "Experiment Completion Detection" begin
-            exp_dir = joinpath(fixtures_dir, "hpc_results",
-                              "minimal_4d_lv_test_GN=8_domain_size_param=0.15_max_time=45.0_20251006_115101")
+            exp_dir = joinpath(
+                fixtures_dir,
+                "hpc_results",
+                "minimal_4d_lv_test_GN=8_domain_size_param=0.15_max_time=45.0_20251006_115101",
+            )
 
             @test isdir(exp_dir)
 
@@ -142,7 +141,8 @@ end
                 write(f, "Running...\n")
             end
 
-            is_complete_incomplete = ClusterCollection.check_experiment_complete(incomplete_dir)
+            is_complete_incomplete =
+                ClusterCollection.check_experiment_complete(incomplete_dir)
             @test is_complete_incomplete == false
 
             # Test with results_summary.json as alternative marker
@@ -152,7 +152,8 @@ end
                 JSON3.pretty(f, Dict("status" => "success"))
             end
 
-            is_complete_results = ClusterCollection.check_experiment_complete(results_only_dir)
+            is_complete_results =
+                ClusterCollection.check_experiment_complete(results_only_dir)
             @test is_complete_results == true
         end
 
@@ -162,7 +163,8 @@ end
             sessions = ClusterCollection.get_batch_sessions(tracking_file)
 
             @test length(sessions) == 2
-            @test sessions[1]["session_name"] == "minimal_4d_lv_test_GN=8_domain_size_param=0.15_max_time=45.0_20251006_115101"
+            @test sessions[1]["session_name"] ==
+                  "minimal_4d_lv_test_GN=8_domain_size_param=0.15_max_time=45.0_20251006_115101"
             @test sessions[1]["status"] == "launching"
         end
 
@@ -176,7 +178,8 @@ end
             @test isfile(tracking_file)
 
             # Test by issue number
-            tracking_file_by_issue = ClusterCollection.find_tracking_file(tracking_dir, "139")
+            tracking_file_by_issue =
+                ClusterCollection.find_tracking_file(tracking_dir, "139")
             @test tracking_file_by_issue !== nothing
             @test tracking_file_by_issue == tracking_file
 
@@ -203,7 +206,7 @@ end
         @testset "Collection Summary Generation" begin
             sessions = [
                 Dict("session_name" => "exp_001", "status" => "launching"),
-                Dict("session_name" => "exp_002", "status" => "launching")
+                Dict("session_name" => "exp_002", "status" => "launching"),
             ]
 
             output_dir = joinpath(fixtures_dir, "test_output")
@@ -213,7 +216,7 @@ end
                 sessions,
                 output_dir,
                 "batch_20251006_115044",
-                139
+                139,
             )
 
             @test haskey(summary, "batch_id")
@@ -260,7 +263,9 @@ end
 
         @testset "Error Handling" begin
             # Test with nonexistent tracking file
-            @test_throws Exception ClusterCollection.read_tracking_json("/nonexistent/file.json")
+            @test_throws Exception ClusterCollection.read_tracking_json(
+                "/nonexistent/file.json",
+            )
 
             # Test with invalid JSON
             invalid_json = joinpath(fixtures_dir, "invalid.json")
@@ -326,7 +331,7 @@ end
             completed_sessions,
             output_dir,
             batch_id,
-            tracking_data["issue_number"]
+            tracking_data["issue_number"],
         )
 
         @test summary["total_experiments"] == 2

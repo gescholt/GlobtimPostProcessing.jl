@@ -17,7 +17,7 @@ const SCRIPT_DIR = @__DIR__
 const PROJECT_ROOT = abspath(joinpath(SCRIPT_DIR, ".."))
 
 using Pkg
-Pkg.activate(PROJECT_ROOT; io=devnull)
+Pkg.activate(PROJECT_ROOT; io = devnull)
 
 using DataFrames
 using CSV
@@ -38,7 +38,10 @@ function parse_experiment_name(dirname::String)
     # Pattern with seed - handles both old (domain) and new (dom) prefixes
     # Handles both deg4-8 (range) and deg8 (single) formats
     # Handles both decimal (0.001) and scientific (1.0e-3) domain values
-    m = match(r"lv4d_GN(\d+)_deg(\d+)(?:-(\d+))?_dom(?:ain)?([\d.eE+-]+)_seed(\d+)_", dirname)
+    m = match(
+        r"lv4d_GN(\d+)_deg(\d+)(?:-(\d+))?_dom(?:ain)?([\d.eE+-]+)_seed(\d+)_",
+        dirname,
+    )
     if m !== nothing
         deg_min = parse(Int, m.captures[2])
         deg_max = m.captures[3] !== nothing ? parse(Int, m.captures[3]) : deg_min
@@ -48,7 +51,7 @@ function parse_experiment_name(dirname::String)
             degree_max = deg_max,
             domain = parse(Float64, m.captures[4]),
             seed = parse(Int, m.captures[5]),
-            is_subdivision = endswith(dirname, "_subdiv")
+            is_subdivision = endswith(dirname, "_subdiv"),
         )
     end
 
@@ -63,7 +66,7 @@ function parse_experiment_name(dirname::String)
             degree_max = deg_max,
             domain = parse(Float64, m.captures[4]),
             seed = nothing,
-            is_subdivision = endswith(dirname, "_subdiv")
+            is_subdivision = endswith(dirname, "_subdiv"),
         )
     end
 
@@ -90,8 +93,10 @@ function load_critical_point_metrics(exp_dir::String)
     end
 
     # Find all critical_points_deg_*.csv files
-    csv_files = filter(f -> startswith(f, "critical_points_deg_") && endswith(f, ".csv"),
-                       readdir(exp_dir))
+    csv_files = filter(
+        f -> startswith(f, "critical_points_deg_") && endswith(f, ".csv"),
+        readdir(exp_dir),
+    )
 
     if isempty(csv_files)
         return nothing
@@ -113,13 +118,16 @@ function load_critical_point_metrics(exp_dir::String)
 
             if has_grad || has_z
                 for i in 1:nrow(df)
-                    push!(rows, DataFrame(
-                        domain = params.domain,
-                        degree = degree,
-                        GN = params.GN,
-                        gradient_norm = has_grad ? Float64(df.gradient_norm[i]) : NaN,
-                        z = has_z ? Float64(df.z[i]) : NaN
-                    ))
+                    push!(
+                        rows,
+                        DataFrame(
+                            domain = params.domain,
+                            degree = degree,
+                            GN = params.GN,
+                            gradient_norm = has_grad ? Float64(df.gradient_norm[i]) : NaN,
+                            z = has_z ? Float64(df.z[i]) : NaN,
+                        ),
+                    )
                 end
             end
         catch e
@@ -131,7 +139,7 @@ function load_critical_point_metrics(exp_dir::String)
 end
 
 # Create adaptive log-scale bins for histogram
-function make_log_bins(values; n_bins=8)
+function make_log_bins(values; n_bins = 8)
     valid = filter(x -> x > 0 && isfinite(x), values)
     if isempty(valid)
         return [1e-6, 1e-4, 1e-2, 1e0, 1e2, 1e4, 1e6]
@@ -143,7 +151,7 @@ function make_log_bins(values; n_bins=8)
         log_max = log_min + 1
     end
     step = max(1.0, (log_max - log_min) / n_bins)
-    bins = [10.0^i for i in log_min:step:(log_max + step)]
+    bins = [10.0^i for i in log_min:step:(log_max+step)]
     push!(bins, Inf)
     return bins
 end
@@ -192,9 +200,13 @@ function analyze_gradient_distribution(metrics_df::DataFrame)
         end
     end
 
-    return (min=p_min, median=p50, n=n_valid,
-            pass_1e6=sum(valid_grads .< 1e-6),
-            pass_1e3=sum(valid_grads .< 1e-3))
+    return (
+        min = p_min,
+        median = p50,
+        n = n_valid,
+        pass_1e6 = sum(valid_grads .< 1e-6),
+        pass_1e3 = sum(valid_grads .< 1e-3),
+    )
 end
 
 # Analyze objective value distribution (verbose mode only for histogram)
@@ -230,9 +242,13 @@ function analyze_objective_distribution(metrics_df::DataFrame)
         end
     end
 
-    return (min=p_min, median=p50, n=n_valid,
-            below_1=sum(valid_z .< 1.0),
-            below_10=sum(valid_z .< 10.0))
+    return (
+        min = p_min,
+        median = p50,
+        n = n_valid,
+        below_1 = sum(valid_z .< 1.0),
+        below_10 = sum(valid_z .< 10.0),
+    )
 end
 
 # Load results from a single experiment directory
@@ -301,7 +317,7 @@ function load_experiment_results(exp_dir::String)
                 hessian_saddle = get(r, "hessian_saddle", 0),
                 hessian_degenerate = get(r, "hessian_degenerate", 0),
                 computation_time = get(r, "total_computation_time", NaN),
-                experiment_dir = dirname
+                experiment_dir = dirname,
             )
             push!(rows, row)
         end
@@ -315,7 +331,8 @@ end
 
 # Check if a directory is a single experiment (vs parent containing experiments)
 function is_single_experiment(path::String)
-    return startswith(basename(path), "lv4d_") && isfile(joinpath(path, "results_summary.json"))
+    return startswith(basename(path), "lv4d_") &&
+           isfile(joinpath(path, "results_summary.json"))
 end
 
 # Main analysis function
@@ -328,8 +345,10 @@ function analyze_sweep(results_dir::String)
     exp_dirs = if is_single_experiment(results_dir)
         [results_dir]
     else
-        filter(d -> startswith(basename(d), "lv4d_") && isdir(d),
-               [joinpath(results_dir, d) for d in readdir(results_dir)])
+        filter(
+            d -> startswith(basename(d), "lv4d_") && isdir(d),
+            [joinpath(results_dir, d) for d in readdir(results_dir)],
+        )
     end
 
     # Load results
@@ -367,7 +386,7 @@ function analyze_sweep(results_dir::String)
         :recovery_error => mean => :mean_recovery,
         :recovery_error => (x -> mean(x .< 0.05)) => :success_rate,
         :critical_points => mean => :mean_crit_pts,
-        nrow => :n_seeds
+        nrow => :n_seeds,
     )
     sort!(summary, [:GN, :domain, :degree])
 
@@ -378,18 +397,20 @@ function analyze_sweep(results_dir::String)
         data[i, 1] = row.GN
         data[i, 2] = row.domain
         data[i, 3] = row.degree
-        data[i, 4] = isnan(row.mean_L2) ? "-" : round(row.mean_L2, digits=1)
+        data[i, 4] = isnan(row.mean_L2) ? "-" : round(row.mean_L2, digits = 1)
         data[i, 5] = @sprintf("%.0f%%", row.mean_grad_valid * 100)
-        data[i, 6] = isnan(row.mean_recovery) ? "-" : @sprintf("%.2f%%", row.mean_recovery * 100)
+        data[i, 6] =
+            isnan(row.mean_recovery) ? "-" : @sprintf("%.2f%%", row.mean_recovery * 100)
         data[i, 7] = @sprintf("%.0f%%", row.success_rate * 100)
         data[i, 8] = Int(round(row.mean_crit_pts))
     end
 
-    pretty_table(data,
+    pretty_table(
+        data,
         header = ["GN", "Domain", "Deg", "L2", "Grad", "RecErr", "Succ", "CPs"],
         alignment = [:r, :r, :r, :r, :r, :r, :r, :r],
         tf = tf_unicode_rounded,
-        crop = :none
+        crop = :none,
     )
 
     # Save files silently
@@ -419,14 +440,24 @@ function analyze_sweep(results_dir::String)
         best_idx = argmax(summary.success_rate)
         best = summary[best_idx, :]
         println()
-        @printf("Best: GN=%d dom=%.1e deg=%d → L2=%.1f RecErr=%.2f%% Succ=%.0f%%\n",
-                best.GN, best.domain, best.degree, best.mean_L2,
-                best.mean_recovery * 100, best.success_rate * 100)
+        @printf(
+            "Best: GN=%d dom=%.1e deg=%d → L2=%.1f RecErr=%.2f%% Succ=%.0f%%\n",
+            best.GN,
+            best.domain,
+            best.degree,
+            best.mean_L2,
+            best.mean_recovery * 100,
+            best.success_rate * 100
+        )
 
         # Show grad/obj stats on one line if available
         if grad_stats !== nothing && obj_stats !== nothing
-            @printf("CPs: n=%d  ‖∇f‖_min=%.1e  f_min=%.3f\n",
-                    grad_stats.n, grad_stats.min, obj_stats.min)
+            @printf(
+                "CPs: n=%d  ‖∇f‖_min=%.1e  f_min=%.3f\n",
+                grad_stats.n,
+                grad_stats.min,
+                obj_stats.min
+            )
         end
     end
 
@@ -459,7 +490,11 @@ function main()
         args[1]
     else
         globoptim_root = abspath(joinpath(PROJECT_ROOT, ".."))
-        results_root = get(ENV, "GLOBTIM_RESULTS_ROOT", joinpath(globoptim_root, "globtim_results"))
+        results_root = get(
+            ENV,
+            "GLOBTIM_RESULTS_ROOT",
+            joinpath(globoptim_root, "globtim_results"),
+        )
         joinpath(results_root, "lotka_volterra_4d")
     end
 

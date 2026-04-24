@@ -35,7 +35,7 @@ catch e
 end
 
 # Create test config (simulating real experiment config)
-test_config = Dict{String, Any}(
+test_config = Dict{String,Any}(
     "model_func" => "define_daisy_ex3_model_4D",
     "p_true" => [0.2, 0.3, 0.5, 0.6],
     "p_center" => [0.224, 0.273, 0.473, 0.578],
@@ -43,7 +43,7 @@ test_config = Dict{String, Any}(
     "time_interval" => [0.0, 10.0],
     "num_points" => 25,
     "dimension" => 4,
-    "experiment_id" => 1
+    "experiment_id" => 1,
 )
 
 println("\n[Test 2] Validating experiment config...")
@@ -82,7 +82,9 @@ println("  - ERROR if Globtim not available")
 println("  - ERROR if DynamicalSystems.jl not found")
 
 # Test Spec 2: Resolve model function string
-println("\n[Spec 2] resolve_model_function(\"define_daisy_ex3_model_4D\", ds_module) should:")
+println(
+    "\n[Spec 2] resolve_model_function(\"define_daisy_ex3_model_4D\", ds_module) should:",
+)
 println("  - Return the actual Julia function")
 println("  - Be callable: model_func() returns (model, params, states, outputs)")
 println("  - ERROR if model_func string not found in module")

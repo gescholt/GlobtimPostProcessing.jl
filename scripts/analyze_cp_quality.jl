@@ -31,45 +31,48 @@ using LinearAlgebra
 import REPL
 using REPL.TerminalMenus
 
-function degree_summary(df::DataFrame)::Union{DataFrame, Nothing}
+function degree_summary(df::DataFrame)::Union{DataFrame,Nothing}
     hasproperty(df, :gradient_norm) || return nothing
     hasproperty(df, :eval_error) || return nothing
 
     gdf = groupby(df, :degree)
-    summary = combine(gdf,
+    summary = combine(
+        gdf,
         nrow => :count,
         :gradient_norm => (x -> minimum(filter(!isnan, x))) => :grad_min,
         :gradient_norm => (x -> median(filter(!isnan, x))) => :grad_med,
         :gradient_norm => (x -> maximum(filter(!isnan, x))) => :grad_max,
         :eval_error => (x -> minimum(filter(!isnan, x))) => :err_min,
-        :eval_error => (x -> maximum(filter(!isnan, x))) => :err_max
+        :eval_error => (x -> maximum(filter(!isnan, x))) => :err_max,
     )
     sort!(summary, :degree)
     return summary
 end
 
-function list_experiments(results_root::String; limit::Int=15)::Vector{String}
+function list_experiments(results_root::String; limit::Int = 15)::Vector{String}
     isdir(results_root) || return String[]
-    dirs = filter(isdir, readdir(results_root, join=true))
-    sorted = sort(dirs, by=mtime, rev=true)
+    dirs = filter(isdir, readdir(results_root, join = true))
+    sorted = sort(dirs, by = mtime, rev = true)
     return sorted[1:min(limit, length(sorted))]
 end
 
 function select_experiment()::String
-    results_root::String = joinpath(dirname(PROJECT_ROOT), "globtim_results", "lotka_volterra_4d")
+    results_root::String =
+        joinpath(dirname(PROJECT_ROOT), "globtim_results", "lotka_volterra_4d")
     experiments = list_experiments(results_root)
     isempty(experiments) && error("No experiments found in: $results_root")
 
     options = map(experiments) do exp
         name = basename(exp)
         age = time() - mtime(exp)
-        age_str = age < 60 ? "$(round(Int, age))s" :
-                  age < 3600 ? "$(round(Int, age/60))m" :
-                  age < 86400 ? "$(round(Int, age/3600))h" : "$(round(Int, age/86400))d"
+        age_str =
+            age < 60 ? "$(round(Int, age))s" :
+            age < 3600 ? "$(round(Int, age/60))m" :
+            age < 86400 ? "$(round(Int, age/3600))h" : "$(round(Int, age/86400))d"
         "$name ($age_str ago)"
     end
 
-    menu = RadioMenu(options, pagesize=15)
+    menu = RadioMenu(options, pagesize = 15)
     println("\nSelect experiment (most recent first):")
     choice = request(menu)
     choice == -1 && error("Selection cancelled")
@@ -78,8 +81,11 @@ end
 
 function analyze_results(results_dir::String)::Nothing
     # Find critical point CSV files
-    all_files::Vector{String} = readdir(results_dir, join=true)
-    csv_files = filter(f -> startswith(basename(f), "critical_points_deg_") && endswith(f, ".csv"), all_files)
+    all_files::Vector{String} = readdir(results_dir, join = true)
+    csv_files = filter(
+        f -> startswith(basename(f), "critical_points_deg_") && endswith(f, ".csv"),
+        all_files,
+    )
     isempty(csv_files) && error("No critical_points_deg_*.csv files found in: $results_dir")
 
     # Load p_true from experiment config
@@ -103,7 +109,8 @@ function analyze_results(results_dir::String)::Nothing
     x_cols::Vector{Symbol} = [Symbol("x$i") for i in 1:dim]
     all_cols_exist::Bool = all(c -> hasproperty(df, c), x_cols)
     if all_cols_exist
-        distances::Vector{Float64} = [norm([row[c] for c in x_cols] .- p_true) for row in eachrow(df)]
+        distances::Vector{Float64} =
+            [norm([row[c] for c in x_cols] .- p_true) for row in eachrow(df)]
         df[!, :dist_to_true] = distances
     end
 
@@ -122,7 +129,15 @@ function analyze_results(results_dir::String)::Nothing
             println("Degree Summary")
             println("-"^70)
 
-            headers = ["deg", "#CPs", "min ‖∇f‖", "med ‖∇f‖", "max ‖∇f‖", "min |f-w|", "max |f-w|"]
+            headers = [
+                "deg",
+                "#CPs",
+                "min ‖∇f‖",
+                "med ‖∇f‖",
+                "max ‖∇f‖",
+                "min |f-w|",
+                "max |f-w|",
+            ]
             ft_summary = (v, _, j) -> begin
                 if j >= 3 && v isa Number && !isnan(v)
                     @sprintf("%.2e", v)
@@ -130,8 +145,14 @@ function analyze_results(results_dir::String)::Nothing
                     string(v)
                 end
             end
-            pretty_table(summary, header=headers, formatters=(ft_summary,),
-                        alignment=:r, crop=:none, tf=tf_unicode_rounded)
+            pretty_table(
+                summary,
+                header = headers,
+                formatters = (ft_summary,),
+                alignment = :r,
+                crop = :none,
+                tf = tf_unicode_rounded,
+            )
         end
     end
 
@@ -144,12 +165,24 @@ function analyze_results(results_dir::String)::Nothing
             println("-"^70)
             log_dists = log10.(max.(dists, 1e-16))
             nbins = max(5, min(15, length(log_dists) ÷ 3 + 1))
-            plt = histogram(log_dists, nbins=nbins, vertical=true, height=10, width=60,
-                           xlabel="log₁₀(||x-p*||)", title="")
+            plt = histogram(
+                log_dists,
+                nbins = nbins,
+                vertical = true,
+                height = 10,
+                width = 60,
+                xlabel = "log₁₀(||x-p*||)",
+                title = "",
+            )
             println(plt)
             best_recovery = minimum(dists)
-            @printf("  n=%d | best=%.2e | [%.2e, %.2e]\n",
-                    length(dists), best_recovery, minimum(dists), maximum(dists))
+            @printf(
+                "  n=%d | best=%.2e | [%.2e, %.2e]\n",
+                length(dists),
+                best_recovery,
+                minimum(dists),
+                maximum(dists)
+            )
         end
     end
 
@@ -163,12 +196,24 @@ function analyze_results(results_dir::String)::Nothing
             println("-"^70)
             log_grads = log10.(max.(grads, 1e-16))
             nbins = max(5, min(15, length(log_grads) ÷ 3 + 1))
-            plt = histogram(log_grads, nbins=nbins, vertical=true, height=10, width=60,
-                           xlabel="log₁₀(||∇f||)", title="")
+            plt = histogram(
+                log_grads,
+                nbins = nbins,
+                vertical = true,
+                height = 10,
+                width = 60,
+                xlabel = "log₁₀(||∇f||)",
+                title = "",
+            )
             println(plt)
             valid_count = count(g -> g < GRADIENT_TOL, grads)
-            @printf("  n=%d | [%.2e, %.2e] | %d valid (||∇f||<1e-6)\n",
-                    length(grads), minimum(grads), maximum(grads), valid_count)
+            @printf(
+                "  n=%d | [%.2e, %.2e] | %d valid (||∇f||<1e-6)\n",
+                length(grads),
+                minimum(grads),
+                maximum(grads),
+                valid_count
+            )
         end
     end
 
@@ -181,11 +226,17 @@ function analyze_results(results_dir::String)::Nothing
             println("-"^70)
             log_errs = log10.(max.(errs, 1e-16))
             nbins = max(5, min(15, length(log_errs) ÷ 3 + 1))
-            plt = histogram(log_errs, nbins=nbins, vertical=true, height=10, width=60,
-                           xlabel="log₁₀(|f-w|)", title="")
+            plt = histogram(
+                log_errs,
+                nbins = nbins,
+                vertical = true,
+                height = 10,
+                width = 60,
+                xlabel = "log₁₀(|f-w|)",
+                title = "",
+            )
             println(plt)
-            @printf("  n=%d | [%.2e, %.2e]\n",
-                    length(errs), minimum(errs), maximum(errs))
+            @printf("  n=%d | [%.2e, %.2e]\n", length(errs), minimum(errs), maximum(errs))
         end
     end
 
@@ -214,22 +265,31 @@ function analyze_results(results_dir::String)::Nothing
         :dist_to_true => "||x-p*||",
         :gradient_norm => "||∇f||",
         :eval_error => "|f-w|",
-        :critical_type => "type"
+        :critical_type => "type",
     )
     headers = [get(header_map, c, string(c)) for c in cols_to_show]
 
     # Formatter for scientific notation
-    ft_sci = (v, _, j) -> begin
-        col = cols_to_show[j]
-        if col in [:z, :dist_to_true, :gradient_norm, :eval_error] && v isa Number && !isnan(v)
-            @sprintf("%.2e", v)
-        else
-            string(v)
+    ft_sci =
+        (v, _, j) -> begin
+            col = cols_to_show[j]
+            if col in [:z, :dist_to_true, :gradient_norm, :eval_error] &&
+               v isa Number &&
+               !isnan(v)
+                @sprintf("%.2e", v)
+            else
+                string(v)
+            end
         end
-    end
 
-    pretty_table(table_df, header=headers, formatters=(ft_sci,),
-                 alignment=:r, crop=:none, tf=tf_unicode_rounded)
+    pretty_table(
+        table_df,
+        header = headers,
+        formatters = (ft_sci,),
+        alignment = :r,
+        crop = :none,
+        tf = tf_unicode_rounded,
+    )
 
     println()
 end

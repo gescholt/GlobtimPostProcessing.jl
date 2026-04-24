@@ -44,17 +44,17 @@ function parse_args_refine()
     s = ArgParseSettings()
     @add_arg_table! s begin
         "--experiment-dir"
-            help = "Path to subdivision experiment results directory"
-            arg_type = String
-            required = true
+        help = "Path to subdivision experiment results directory"
+        arg_type = String
+        required = true
         "--max-time"
-            help = "Maximum time per point in seconds"
-            arg_type = Float64
-            default = 60.0
+        help = "Maximum time per point in seconds"
+        arg_type = Float64
+        default = 60.0
         "--degree"
-            help = "Polynomial degree to analyze"
-            arg_type = Int
-            default = 8
+        help = "Polynomial degree to analyze"
+        arg_type = Int
+        default = 8
     end
     return parse_args(s)
 end
@@ -143,9 +143,8 @@ function run_multistart_refinement(args)
 
     model, _params, _states, outputs = define_daisy_ex3_model_4D()
 
-    error_func = make_error_distance(
-        model, outputs, IC, p_true, TIME_INTERVAL, NUM_POINTS, L2_norm
-    )
+    error_func =
+        make_error_distance(model, outputs, IC, p_true, TIME_INTERVAL, NUM_POINTS, L2_norm)
 
     # Extract starting points as vectors
     start_points = [[row.x1, row.x2, row.x3, row.x4] for row in eachrow(starts)]
@@ -159,18 +158,18 @@ function run_multistart_refinement(args)
     println()
     println("--- RUNNING LOCAL REFINEMENT (NelderMead, max $(max_time)s/point) ---")
 
-    config = ode_refinement_config(max_time_per_point=max_time)
+    config = ode_refinement_config(max_time_per_point = max_time)
 
     # Run batch refinement
     results = refine_critical_points_batch(
         error_func,
         start_points;
-        method=config.method,
-        max_time=config.max_time_per_point,
-        max_iterations=config.max_iterations,
-        f_abstol=config.f_abstol,
-        x_abstol=config.x_abstol,
-        show_progress=true
+        method = config.method,
+        max_time = config.max_time_per_point,
+        max_iterations = config.max_iterations,
+        f_abstol = config.f_abstol,
+        x_abstol = config.x_abstol,
+        show_progress = true,
     )
 
     # Extract refined data
@@ -185,16 +184,33 @@ function run_multistart_refinement(args)
     # Results table
     println()
     println("-"^70)
-    println(@sprintf("%-8s %-12s %-14s %-10s %-10s %-8s",
-        "Orthant", "Start f(p)", "Refined f(p)", "Recovery", "Time", "Status"))
+    println(
+        @sprintf(
+            "%-8s %-12s %-14s %-10s %-10s %-8s",
+            "Orthant",
+            "Start f(p)",
+            "Refined f(p)",
+            "Recovery",
+            "Time",
+            "Status"
+        )
+    )
     println("-"^70)
 
     for i in 1:n_orthants
         status = converged[i] ? "OK" : (timed_out[i] ? "TIMEOUT" : "FAIL")
         recovery_pct = @sprintf("%.1f%%", recovery_after[i] * 100)
-        println(@sprintf("%-8d %-12.2f %-14.4f %-10s %-10.1fs %-8s",
-            orthant_ids[i], start_values[i], refined_values[i],
-            recovery_pct, time_elapsed[i], status))
+        println(
+            @sprintf(
+                "%-8d %-12.2f %-14.4f %-10s %-10.1fs %-8s",
+                orthant_ids[i],
+                start_values[i],
+                refined_values[i],
+                recovery_pct,
+                time_elapsed[i],
+                status
+            )
+        )
     end
     println("-"^70)
 
@@ -246,9 +262,12 @@ function run_multistart_refinement(args)
     if best_orthant == global_poly_min_orthant
         println("MATCH: Multi-start agrees with global polynomial min selection")
     else
-        improvement = (global_poly_min_recovery - best_recovery) / global_poly_min_recovery * 100
+        improvement =
+            (global_poly_min_recovery - best_recovery) / global_poly_min_recovery * 100
         println("MISMATCH: Multi-start found better recovery in different orthant!")
-        println("  Improvement: $(round(improvement, digits=1))% better than global-min selection")
+        println(
+            "  Improvement: $(round(improvement, digits=1))% better than global-min selection",
+        )
     end
     println()
 
@@ -267,7 +286,7 @@ function run_multistart_refinement(args)
         converged = converged,
         timed_out = timed_out,
         f_calls = f_calls,
-        time_elapsed = time_elapsed
+        time_elapsed = time_elapsed,
     )
 
     # Add coordinates
@@ -291,7 +310,7 @@ function run_multistart_refinement(args)
         "best_recovery" => best_recovery,
         "target_met" => target_met,
         "total_f_calls" => sum(f_calls),
-        "total_time" => sum(time_elapsed)
+        "total_time" => sum(time_elapsed),
     )
     summary_path = joinpath(experiment_dir, "multistart_summary_deg_$(degree).json")
     open(summary_path, "w") do io

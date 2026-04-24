@@ -21,7 +21,7 @@ using Tidier
             degree = [2, 3, 4],
             l2_error = [1e-2, 1e-3, 1e-4],
             domain_size = [0.5, 0.5, 0.5],
-            GN = [16, 16, 16]
+            GN = [16, 16, 16],
         )
 
         df_conv = compute_convergence_analysis(df)
@@ -38,7 +38,7 @@ using Tidier
             degree = [2, 2],
             l2_error = [1e-2, 2e-2],
             param_recovery_error = [1e-3, 2e-3],
-            domain_size = [0.5, 0.5]
+            domain_size = [0.5, 0.5],
         )
 
         df_sens = compute_parameter_sensitivity(df)
@@ -55,7 +55,7 @@ using Tidier
             GN = [16, 16],
             degree = [2, 3],
             l2_error = [1e-2, 1e-3],
-            param_recovery_error = [1e-3, 1e-4]
+            param_recovery_error = [1e-3, 1e-4],
         )
 
         df_long = pivot_metrics_longer(df)
@@ -70,10 +70,10 @@ using Tidier
         df = DataFrame(
             experiment_id = ["exp$i" for i in 1:20],
             degree = fill(2, 20),
-            l2_error = [fill(1e-3, 18); 1e-1; 1e-2]  # Two potential outliers
+            l2_error = [fill(1e-3, 18); 1e-1; 1e-2],  # Two potential outliers
         )
 
-        df_outliers = annotate_outliers(df, :l2_error, threshold=2.0)
+        df_outliers = annotate_outliers(df, :l2_error, threshold = 2.0)
 
         @test "is_outlier" in names(df_outliers)
         @test "z_score" in names(df_outliers)
@@ -85,7 +85,7 @@ using Tidier
             experiment_id = ["exp1", "exp1", "exp2", "exp2"],
             degree = [2, 3, 2, 3],
             l2_error = [1e-2, 1e-3, 2e-2, 2e-3],
-            param_recovery_error = [1e-3, 1e-4, 2e-3, 2e-4]
+            param_recovery_error = [1e-3, 1e-4, 2e-3, 2e-4],
         )
 
         df_compared = add_comparison_baseline(df, "exp1")

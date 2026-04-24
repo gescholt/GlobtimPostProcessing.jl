@@ -19,7 +19,11 @@ config = Dict("p_true" => [0.2, 0.3, 0.5, 0.6])
 empty_df = DataFrame()
 
 try
-    result = TrajectoryComparison.evaluate_all_critical_points(config, empty_df; recovery_threshold=0.05)
+    result = TrajectoryComparison.evaluate_all_critical_points(
+        config,
+        empty_df;
+        recovery_threshold = 0.05,
+    )
     println("✓ SUCCESS: Function accepts recovery_threshold keyword")
     println("Result columns: ", names(result))
 catch e

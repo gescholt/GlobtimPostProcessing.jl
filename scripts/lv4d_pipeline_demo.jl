@@ -34,7 +34,10 @@ function main(exp_path::String = DEFAULT_EXP)
 
     @printf("Directory: %s\n", basename(experiment_path(data)))
     @printf("True params: [%s]\n", join([@sprintf("%.4f", p) for p in data.p_true], ", "))
-    @printf("Domain center: [%s]\n", join([@sprintf("%.4f", p) for p in data.p_center], ", "))
+    @printf(
+        "Domain center: [%s]\n",
+        join([@sprintf("%.4f", p) for p in data.p_center], ", ")
+    )
     @printf("Domain size: %.2e\n", data.domain_size)
     @printf("Dimension: %d\n", data.dim)
     @printf("Degrees analyzed: %s\n", join(sort(unique(degree_results(data).degree)), ", "))
@@ -56,14 +59,15 @@ function main(exp_path::String = DEFAULT_EXP)
 
     # Build summary table from degree_results
     df = data.degree_results
-    display_df = select(df,
+    display_df = select(
+        df,
         :degree,
         :L2_norm,
         :critical_points,
         :recovery_error,
         :hessian_minima,
         :hessian_saddle,
-        :computation_time
+        :computation_time,
     )
 
     # Format for display
@@ -84,11 +88,12 @@ function main(exp_path::String = DEFAULT_EXP)
         end
     end
 
-    pretty_table(display_df;
+    pretty_table(
+        display_df;
         header = headers,
         formatters = (ft,),
         alignment = [:r, :r, :r, :r, :r, :r, :r],
-        tf = tf_unicode_rounded
+        tf = tf_unicode_rounded,
     )
     println()
 
@@ -113,11 +118,12 @@ function main(exp_path::String = DEFAULT_EXP)
         end
     end
 
-    pretty_table(recovery_table;
+    pretty_table(
+        recovery_table;
         header = headers,
         formatters = (ft_recovery,),
         alignment = [:r, :r, :r, :r, :r],
-        tf = tf_unicode_rounded
+        tf = tf_unicode_rounded,
     )
     println()
 
@@ -163,7 +169,10 @@ function main(exp_path::String = DEFAULT_EXP)
     summary = get_quality_summary(data)
     if summary.total_cps > 0
         @printf("Best recovery at degree %d:\n", summary.best_degree)
-        @printf("  Point: [%s]\n", join([@sprintf("%.6f", x) for x in summary.best_point], ", "))
+        @printf(
+            "  Point: [%s]\n",
+            join([@sprintf("%.6f", x) for x in summary.best_point], ", ")
+        )
         @printf("  Distance to p_true: %.6e\n", summary.best_recovery_distance)
         @printf("  Relative error: %.2f%%\n", summary.best_recovery_error)
         @printf("  Success: %s\n", summary.success ? "✓" : "✗")

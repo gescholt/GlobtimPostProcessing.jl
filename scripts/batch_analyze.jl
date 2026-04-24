@@ -36,13 +36,13 @@ using GlobtimPostProcessing
 
 # Parse command line arguments
 function parse_args(args::Vector{String})
-    parsed = Dict{String, Any}(
+    parsed = Dict{String,Any}(
         "input" => nothing,
         "output" => nothing,
         "format" => "markdown",
         "silent" => false,
         "include_errors" => false,
-        "help" => false
+        "help" => false,
     )
 
     i = 1
@@ -57,21 +57,21 @@ function parse_args(args::Vector{String})
             if i + 1 > length(args)
                 error("--input requires a path argument")
             end
-            parsed["input"] = args[i + 1]
+            parsed["input"] = args[i+1]
             i += 2
 
         elseif arg == "--output"
             if i + 1 > length(args)
                 error("--output requires a path argument")
             end
-            parsed["output"] = args[i + 1]
+            parsed["output"] = args[i+1]
             i += 2
 
         elseif arg == "--format"
             if i + 1 > length(args)
                 error("--format requires a format argument (markdown or json)")
             end
-            format_arg = args[i + 1]
+            format_arg = args[i+1]
             if !(format_arg in ["markdown", "json"])
                 error("--format must be 'markdown' or 'json', got: $format_arg")
             end
@@ -95,37 +95,39 @@ function parse_args(args::Vector{String})
 end
 
 function show_help()
-    println("""
-    batch_analyze.jl - Batch Campaign Analysis CLI
+    println(
+        """
+batch_analyze.jl - Batch Campaign Analysis CLI
 
-    Usage:
-        julia scripts/batch_analyze.jl --input <campaign_path> --output <report_path> [OPTIONS]
+Usage:
+    julia scripts/batch_analyze.jl --input <campaign_path> --output <report_path> [OPTIONS]
 
-    Arguments:
-        --input PATH      Path to campaign directory (required)
-        --output PATH     Path for output report (required)
-        --format FORMAT   Output format: markdown or json (default: markdown)
-        --silent          Suppress all output except errors (optional)
-        --include-errors  Include error categorization analysis in report (optional)
-        --help, -h        Show this help message
+Arguments:
+    --input PATH      Path to campaign directory (required)
+    --output PATH     Path for output report (required)
+    --format FORMAT   Output format: markdown or json (default: markdown)
+    --silent          Suppress all output except errors (optional)
+    --include-errors  Include error categorization analysis in report (optional)
+    --help, -h        Show this help message
 
-    Exit codes:
-        0   Success
-        1   Error (invalid arguments, campaign not found, processing error)
+Exit codes:
+    0   Success
+    1   Error (invalid arguments, campaign not found, processing error)
 
-    Examples:
-        # Basic batch analysis (markdown)
-        julia scripts/batch_analyze.jl --input collected_experiments_20251004 --output report.md
+Examples:
+    # Basic batch analysis (markdown)
+    julia scripts/batch_analyze.jl --input collected_experiments_20251004 --output report.md
 
-        # JSON format
-        julia scripts/batch_analyze.jl --input campaign_dir --output report.json --format json
+    # JSON format
+    julia scripts/batch_analyze.jl --input campaign_dir --output report.json --format json
 
-        # Silent mode (no output)
-        julia scripts/batch_analyze.jl --input campaign_dir --output report.md --silent
+    # Silent mode (no output)
+    julia scripts/batch_analyze.jl --input campaign_dir --output report.md --silent
 
-        # With nested output directory (auto-created)
-        julia scripts/batch_analyze.jl --input campaign_dir --output reports/2025/campaign.md
-    """)
+    # With nested output directory (auto-created)
+    julia scripts/batch_analyze.jl --input campaign_dir --output reports/2025/campaign.md
+""",
+    )
 end
 
 function main()
@@ -162,10 +164,10 @@ function main()
         success, result = batch_analyze_campaign(
             campaign_path,
             output_file,
-            silent=silent,
-            return_stats=false,
-            format=format_arg,
-            include_errors=include_errors
+            silent = silent,
+            return_stats = false,
+            format = format_arg,
+            include_errors = include_errors,
         )
 
         if success

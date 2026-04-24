@@ -48,7 +48,12 @@ function load_ground_truth(name::String, dim::Int)
     # Verify expected columns
     x_cols = [Symbol("x$i") for i in 1:dim]
     ev_cols = [Symbol("eigenvalue_$i") for i in 1:dim]
-    required = vcat(x_cols, [:value, :grad_norm, :classification], ev_cols, [:neighborhood_confirmed])
+    required = vcat(
+        x_cols,
+        [:value, :grad_norm, :classification],
+        ev_cols,
+        [:neighborhood_confirmed],
+    )
 
     for col in required
         @test col in propertynames(df)
@@ -72,7 +77,6 @@ end
 # ============================================================================
 
 @testset "Level 1: Ground Truth Reference Data" begin
-
     @testset "CSV files exist" begin
         for bf in BENCHMARK_FUNCTIONS
             filepath = joinpath(GT_DIR, "$(bf.name)_critical_points.csv")
@@ -150,10 +154,7 @@ end
         @test nrow(minima_df) >= 2
 
         # Global minima near (±0.0898, ∓0.7126) with f ≈ -1.0316
-        global_mins = [
-            [0.0898, -0.7126],
-            [-0.0898, 0.7126],
-        ]
+        global_mins = [[0.0898, -0.7126], [-0.0898, 0.7126]]
         points = df_to_points(minima_df, 2)
 
         for gm in global_mins
@@ -200,7 +201,11 @@ end
         # Verify each CP independently using the oracle
         for row in eachrow(df)
             x = [row[:x1], row[:x2]]
-            @test verify_critical_point(GroundTruthFunctions.deuflhard_2d, x; grad_tol=1e-5)
+            @test verify_critical_point(
+                GroundTruthFunctions.deuflhard_2d,
+                x;
+                grad_tol = 1e-5,
+            )
         end
     end
 

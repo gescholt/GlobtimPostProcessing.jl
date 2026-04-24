@@ -32,11 +32,19 @@ using DataFrames
 using JSON3
 
 # Test configuration — assumes monorepo layout (globtimpostprocessing/ and globtim/ are siblings)
-const TEST_CAMPAIGN = joinpath(@__DIR__, "..", "..", "globtim", "experiments", "lotka_volterra_4d_study", "configs_20251006_160051", "hpc_results")
+const TEST_CAMPAIGN = joinpath(
+    @__DIR__,
+    "..",
+    "..",
+    "globtim",
+    "experiments",
+    "lotka_volterra_4d_study",
+    "configs_20251006_160051",
+    "hpc_results",
+)
 const TEST_EXPERIMENT = "lotka_volterra_4d_exp1_range0.4_20251006_160126"
 
 @testset "CSV Data Loading Tests" begin
-
     @testset "1. Basic File Discovery" begin
         @testset "Can find hpc_results directory" begin
             @test isdir(TEST_CAMPAIGN)
@@ -57,7 +65,8 @@ const TEST_EXPERIMENT = "lotka_volterra_4d_exp1_range0.4_20251006_160126"
         @testset "CSV files follow naming pattern" begin
             exp_dir = joinpath(TEST_CAMPAIGN, TEST_EXPERIMENT)
             csv_files = filter(f -> endswith(f, ".csv"), readdir(exp_dir))
-            pattern_files = filter(f -> occursin(r"critical_points_deg_\d+\.csv", f), csv_files)
+            pattern_files =
+                filter(f -> occursin(r"critical_points_deg_\d+\.csv", f), csv_files)
             @test length(pattern_files) == length(csv_files)
             println("  All CSV files match naming pattern")
         end
@@ -114,13 +123,15 @@ const TEST_EXPERIMENT = "lotka_volterra_4d_exp1_range0.4_20251006_160126"
             df = CSV.read(csv_path, DataFrame)
 
             best_idx = argmin(df.z)
-            best_point = [df[best_idx, :x1], df[best_idx, :x2],
-                         df[best_idx, :x3], df[best_idx, :x4]]
+            best_point =
+                [df[best_idx, :x1], df[best_idx, :x2], df[best_idx, :x3], df[best_idx, :x4]]
             best_value = df[best_idx, :z]
 
             @test length(best_point) == 4
             @test best_value == minimum(df.z)
-            println("  Best point: $(round.(best_point, digits=4)), value: $(round(best_value, digits=2))")
+            println(
+                "  Best point: $(round.(best_point, digits=4)), value: $(round(best_value, digits=2))",
+            )
         end
     end
 
@@ -160,10 +171,10 @@ const TEST_EXPERIMENT = "lotka_volterra_4d_exp1_range0.4_20251006_160126"
     @testset "4. Multi-Degree Data Loading" begin
         @testset "Can load all degrees for one experiment" begin
             exp_dir = joinpath(TEST_CAMPAIGN, TEST_EXPERIMENT)
-            csv_files = filter(f -> occursin(r"critical_points_deg_\d+\.csv", f),
-                             readdir(exp_dir))
+            csv_files =
+                filter(f -> occursin(r"critical_points_deg_\d+\.csv", f), readdir(exp_dir))
 
-            degree_data = Dict{Int, DataFrame}()
+            degree_data = Dict{Int,DataFrame}()
             for csv_file in csv_files
                 m = match(r"critical_points_deg_(\d+)\.csv", csv_file)
                 degree = parse(Int, m.captures[1])
@@ -182,8 +193,8 @@ const TEST_EXPERIMENT = "lotka_volterra_4d_exp1_range0.4_20251006_160126"
             config_path = joinpath(exp_dir, "experiment_config.json")
             config = JSON3.read(read(config_path, String))
 
-            csv_files = filter(f -> occursin(r"critical_points_deg_\d+\.csv", f),
-                             readdir(exp_dir))
+            csv_files =
+                filter(f -> occursin(r"critical_points_deg_\d+\.csv", f), readdir(exp_dir))
 
             l2_data = []
             for csv_file in csv_files
@@ -193,11 +204,11 @@ const TEST_EXPERIMENT = "lotka_volterra_4d_exp1_range0.4_20251006_160126"
                 df = CSV.read(csv_path, DataFrame)
 
                 best_value = minimum(df.z)
-                push!(l2_data, (degree=degree, best_value=best_value))
+                push!(l2_data, (degree = degree, best_value = best_value))
             end
 
             @test length(l2_data) >= 4
-            sort!(l2_data, by=x -> x.degree)
+            sort!(l2_data, by = x -> x.degree)
 
             println("  L2 convergence:")
             for d in l2_data

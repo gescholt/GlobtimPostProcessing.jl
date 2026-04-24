@@ -29,7 +29,7 @@ Setup test fixtures for auto-collector tests
 function setup_auto_collector_fixtures()
     # Clean up any existing fixtures
     if isdir(TEST_FIXTURES_DIR)
-        rm(TEST_FIXTURES_DIR, recursive=true, force=true)
+        rm(TEST_FIXTURES_DIR, recursive = true, force = true)
     end
 
     mkpath(TEST_FIXTURES_DIR)
@@ -48,15 +48,15 @@ function setup_auto_collector_fixtures()
                 "session_name" => "exp_complete_001",
                 "status" => "launching",
                 "launch_time" => "2025-10-13T10:01:00",
-                "experiment_id" => "exp_001"
+                "experiment_id" => "exp_001",
             ),
             Dict(
                 "session_name" => "exp_incomplete_002",
                 "status" => "launching",
                 "launch_time" => "2025-10-13T10:02:00",
-                "experiment_id" => "exp_002"
-            )
-        ]
+                "experiment_id" => "exp_002",
+            ),
+        ],
     )
 
     open(joinpath(tracking_dir, "batch_test_001.json"), "w") do f
@@ -73,9 +73,9 @@ function setup_auto_collector_fixtures()
                 "session_name" => "exp_already_collected",
                 "status" => "collected",
                 "launch_time" => "2025-10-13T11:01:00",
-                "experiment_id" => "exp_003"
-            )
-        ]
+                "experiment_id" => "exp_003",
+            ),
+        ],
     )
 
     open(joinpath(tracking_dir, "batch_test_002.json"), "w") do f
@@ -149,17 +149,16 @@ function mock_rsync_collect(session_name::String, src_dir::String, dest_dir::Str
 
     # Copy all files
     for file in readdir(src_path)
-        cp(joinpath(src_path, file), joinpath(dest_path, file), force=true)
+        cp(joinpath(src_path, file), joinpath(dest_path, file), force = true)
     end
 
     return true
 end
 
 @testset "AutoCollector Tests" begin
-
     @testset "CollectorState - Initialization" begin
         state_file = joinpath(TEST_FIXTURES_DIR, "test_state_init.json")
-        rm(state_file, force=true)
+        rm(state_file, force = true)
 
         # Create new state
         state = AutoCollector.CollectorState(state_file)
@@ -172,7 +171,7 @@ end
 
     @testset "CollectorState - Save and Load" begin
         state_file = joinpath(TEST_FIXTURES_DIR, "test_state_save_load.json")
-        rm(state_file, force=true)
+        rm(state_file, force = true)
 
         # Create state with data
         state = AutoCollector.CollectorState(state_file)
@@ -183,7 +182,7 @@ end
             "session_name" => "exp_001",
             "batch_id" => "batch_test",
             "collected_at" => "2025-10-13T12:00:00",
-            "status" => "success"
+            "status" => "success",
         )
         push!(state.collection_history, record)
 
@@ -200,15 +199,16 @@ end
         @test state2.collected_experiments == state.collected_experiments
         @test length(state2.collection_history) == 1
         @test state2.collection_history[1]["session_name"] == "exp_001"
-        @test Dates.format(state2.last_check_time, "yyyy-mm-ddTHH:MM:SS") == "2025-10-13T12:00:00"
+        @test Dates.format(state2.last_check_time, "yyyy-mm-ddTHH:MM:SS") ==
+              "2025-10-13T12:00:00"
     end
 
     @testset "CollectorConfig - Defaults" begin
         config = AutoCollector.CollectorConfig(
-            tracking_dir="/test/tracking",
-            cluster_host="test@host",
-            cluster_results_dir="/test/results",
-            output_base="/test/output"
+            tracking_dir = "/test/tracking",
+            cluster_host = "test@host",
+            cluster_results_dir = "/test/results",
+            output_base = "/test/output",
         )
 
         @test config.tracking_dir == "/test/tracking"
@@ -220,13 +220,13 @@ end
 
     @testset "CollectorConfig - Custom values" begin
         config = AutoCollector.CollectorConfig(
-            tracking_dir="/test/tracking",
-            cluster_host="test@host",
-            cluster_results_dir="/test/results",
-            output_base="/test/output",
-            cleanup_tmux=false,
-            check_interval=60,
-            collect_immediately=false
+            tracking_dir = "/test/tracking",
+            cluster_host = "test@host",
+            cluster_results_dir = "/test/results",
+            output_base = "/test/output",
+            cleanup_tmux = false,
+            check_interval = 60,
+            collect_immediately = false,
         )
 
         @test config.cleanup_tmux == false
@@ -239,7 +239,11 @@ end
         tracking_file = joinpath(tracking_dir, "batch_test_001.json")
 
         # Update status
-        success = AutoCollector.update_tracking_status!(tracking_file, "exp_complete_001", "collected")
+        success = AutoCollector.update_tracking_status!(
+            tracking_file,
+            "exp_complete_001",
+            "collected",
+        )
 
         @test success == true
 
@@ -257,7 +261,11 @@ end
         tracking_file = joinpath(tracking_dir, "batch_test_001.json")
 
         # Try to update nonexistent session
-        success = AutoCollector.update_tracking_status!(tracking_file, "nonexistent_session", "collected")
+        success = AutoCollector.update_tracking_status!(
+            tracking_file,
+            "nonexistent_session",
+            "collected",
+        )
 
         @test success == false
     end
@@ -280,7 +288,7 @@ end
     @testset "Single Experiment Collection - Integration" begin
         tracking_dir, hpc_results_dir = setup_auto_collector_fixtures()
         state_file = joinpath(TEST_FIXTURES_DIR, "test_collection_state.json")
-        rm(state_file, force=true)
+        rm(state_file, force = true)
 
         state = AutoCollector.CollectorState(state_file)
         tracking_file = joinpath(tracking_dir, "batch_test_001.json")
@@ -299,7 +307,9 @@ end
         @test success == true
         @test isdir(joinpath(output_dir, "hpc_results", session_name))
         @test isfile(joinpath(output_dir, "hpc_results", session_name, "experiment.log"))
-        @test isfile(joinpath(output_dir, "hpc_results", session_name, "results_summary.json"))
+        @test isfile(
+            joinpath(output_dir, "hpc_results", session_name, "results_summary.json"),
+        )
 
         # Update state manually (as collect_single_experiment! would)
         push!(state.collected_experiments, session_name)
@@ -313,7 +323,7 @@ end
     @testset "Prevent Duplicate Collection" begin
         tracking_dir, _ = setup_auto_collector_fixtures()
         state_file = joinpath(TEST_FIXTURES_DIR, "test_duplicate_prevention.json")
-        rm(state_file, force=true)
+        rm(state_file, force = true)
 
         state = AutoCollector.CollectorState(state_file)
 
@@ -333,7 +343,7 @@ end
 
     @testset "Collection History Tracking" begin
         state_file = joinpath(TEST_FIXTURES_DIR, "test_history.json")
-        rm(state_file, force=true)
+        rm(state_file, force = true)
 
         state = AutoCollector.CollectorState(state_file)
 
@@ -344,7 +354,7 @@ end
             "issue_number" => 101,
             "collected_at" => Dates.format(now(), "yyyy-mm-ddTHH:MM:SS"),
             "output_directory" => "/test/output/exp_001",
-            "status" => "success"
+            "status" => "success",
         )
 
         record2 = Dict(
@@ -352,7 +362,7 @@ end
             "batch_id" => "batch_test",
             "issue_number" => 101,
             "collected_at" => Dates.format(now(), "yyyy-mm-ddTHH:MM:SS"),
-            "status" => "failed"
+            "status" => "failed",
         )
 
         push!(state.collection_history, record1)
@@ -393,13 +403,12 @@ end
         @test "batch_test_001.json" in tracking_files
         @test "batch_test_002.json" in tracking_files
     end
-
 end # main testset
 
 # Cleanup after all tests
 @testset "Cleanup Test Fixtures" begin
     if isdir(TEST_FIXTURES_DIR)
-        rm(TEST_FIXTURES_DIR, recursive=true, force=true)
+        rm(TEST_FIXTURES_DIR, recursive = true, force = true)
     end
     @test !isdir(TEST_FIXTURES_DIR)
 end

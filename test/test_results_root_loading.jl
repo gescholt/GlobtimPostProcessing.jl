@@ -17,10 +17,13 @@ using Test
             test_results_path = joinpath(tmpdir, "test_results")
             mkpath(test_results_path)
 
-            write(fake_zshrc, """
+            write(
+                fake_zshrc,
+                """
 export GLOBTIM_RESULTS_ROOT="$test_results_path"
 export OTHER_VAR="something"
-""")
+""",
+            )
 
             # Test the parsing logic
             found_path = nothing
