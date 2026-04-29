@@ -410,6 +410,35 @@ function save_refined_results(
             nothing
         end
 
+    # Refinement displacement — accuracy of polynomial CPs vs true objective CPs.
+    # Once L2 is small, displacement quantifies whether polynomial CPs *are* CPs of f.
+    displacement_stats = if result.n_converged > 0
+        dist_result = compute_refinement_distances(result)
+        d = dist_result.distances
+        stats = Dict{String,Any}(
+            "n_converged" => result.n_converged,
+            "median" => Statistics.median(d),
+            "mean" => dist_result.mean_distance,
+            "max" => dist_result.max_distance,
+            "min" => minimum(d),
+            "best_point" => dist_result.best_point_distance,
+        )
+        if hessian_classifications !== nothing &&
+           length(hessian_classifications) == length(d)
+            for type_sym in (:minimum, :saddle, :maximum, :degenerate)
+                mask = hessian_classifications .== type_sym
+                if any(mask)
+                    stats["$(type_sym)_n"] = count(mask)
+                    stats["$(type_sym)_median"] = Statistics.median(d[mask])
+                    stats["$(type_sym)_max"] = maximum(d[mask])
+                end
+            end
+        end
+        stats
+    else
+        nothing
+    end
+
     summary = Dict(
         "degree" => degree,
         "n_raw_points" => result.n_raw,
@@ -431,6 +460,8 @@ function save_refined_results(
         "gradient_validation" => gradient_stats,
         # Hessian classification
         "hessian_classification" => hessian_stats,
+        # Refinement displacement (||x_raw - x_refined||): how far refinement moved each polynomial CP
+        "displacement" => displacement_stats,
         "config" => Dict(
             "method" => string(typeof(result.refinement_config.method)),
             "max_time_per_point" => result.refinement_config.max_time_per_point,
