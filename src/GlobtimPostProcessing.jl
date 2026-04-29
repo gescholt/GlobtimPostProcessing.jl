@@ -139,6 +139,9 @@ export RefinementDistanceResult, compute_refinement_distances
 export compute_gradient_norms, compute_gradient_norm
 export validate_critical_points, add_gradient_validation!
 export GradientValidationResult
+# Newton-step-norm validation (62qv): ‖H⁻¹ ∇f‖ < step_tol — scale-invariant
+export validate_newton_steps, compute_newton_step_norms
+export StepNormValidationResult
 
 # Newton-based critical point refinement exports
 export CriticalPointRefinementResult

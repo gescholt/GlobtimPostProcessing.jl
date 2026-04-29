@@ -86,6 +86,7 @@ struct RefinementConfig
     show_progress::Bool
     gradient_method::Symbol
     gradient_tolerance::Float64
+    step_tolerance::Float64
     bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}}
 end
 
@@ -133,6 +134,7 @@ function RefinementConfig(;
     show_progress::Bool = true,
     gradient_method::Symbol = :forwarddiff,
     gradient_tolerance::Float64 = 1e-8,
+    step_tolerance::Float64 = 1e-4,
     bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
 )
     return RefinementConfig(
@@ -146,6 +148,7 @@ function RefinementConfig(;
         show_progress,
         gradient_method,
         gradient_tolerance,
+        step_tolerance,
         bounds,
     )
 end

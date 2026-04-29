@@ -201,6 +201,7 @@ function save_refined_results(
     degree::Int,
     refinement_results::Vector{RefinementResult};
     gradient_validation::Union{GradientValidationResult,Nothing} = nothing,
+    step_validation::Union{StepNormValidationResult,Nothing} = nothing,
     raw_gradient_norms::Union{Vector{Float64},Nothing} = nothing,
     hessian_classifications::Union{Vector{Symbol},Nothing} = nothing,
 )
@@ -396,6 +397,26 @@ function save_refined_results(
         nothing
     end
 
+    # Newton-step-norm validation — ‖H⁻¹ ∇f‖ < step_tol. Invariant to ‖H‖ scale,
+    # so this is the right "is this a critical point?" criterion for ODE-error
+    # objectives where ‖∇f‖ is dominated by Hessian magnitude (bead 62qv).
+    step_stats = if step_validation !== nothing
+        Dict(
+            "n_step_valid" => step_validation.n_step_valid,
+            "n_step_invalid" => step_validation.n_step_invalid,
+            "step_tolerance" => step_validation.step_tolerance,
+            "eigenvalue_floor_relative" => step_validation.eigenvalue_floor_relative,
+            "mean_step_norm" => step_validation.mean_step_norm,
+            "median_step_norm" => step_validation.median_step_norm,
+            "max_step_norm" => step_validation.max_step_norm,
+            "min_step_norm" => step_validation.min_step_norm,
+            "step_validation_rate" =>
+                step_validation.n_step_valid / length(step_validation.step_norms),
+        )
+    else
+        nothing
+    end
+
     # Hessian classification counts
     hessian_stats =
         if hessian_classifications !== nothing && !isempty(hessian_classifications)
@@ -458,6 +479,8 @@ function save_refined_results(
         # Gradient validation
         "raw_gradient_validation" => raw_gradient_stats,
         "gradient_validation" => gradient_stats,
+        # Newton-step-norm validation (62qv) — ‖H⁻¹ ∇f‖ < step_tol; scale-invariant
+        "step_validation" => step_stats,
         # Hessian classification
         "hessian_classification" => hessian_stats,
         # Refinement displacement (||x_raw - x_refined||): how far refinement moved each polynomial CP

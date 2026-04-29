@@ -352,3 +352,172 @@ function add_gradient_validation!(
         min_norm,
     )
 end
+
+"""
+    StepNormValidationResult
+
+Result of Newton-step-norm validation for a set of refined critical points.
+
+Where `GradientValidationResult` checks `‖∇f(x)‖ < tol` (an absolute criterion that
+fails on stiff/ill-conditioned objectives because gradient magnitudes scale with
+‖H‖), this struct captures `‖H⁻¹ ∇f(x)‖ < step_tol` — the Newton-step length,
+which is invariant to the Hessian's spectral magnitude. A point is "near a critical
+point" iff a single Newton step would barely move it.
+
+# Fields
+- `step_norms::Vector{Float64}`: Newton-step norms ‖H⁻¹ ∇f(x)‖ per point. Inf if
+  the gradient or Hessian is non-finite, or if the Hessian is identically zero.
+- `step_valid::Vector{Bool}`: Whether each point passes (step_norm < step_tolerance).
+- `n_step_valid::Int`, `n_step_invalid::Int`: Count valid / invalid.
+- `step_tolerance::Float64`: Threshold used.
+- `eigenvalue_floor_relative::Float64`: Eigenvalues with `|λ| < this × max|λ|` are
+  treated as zero in the truncated pseudo-inverse (mirrors `newton_refinement.jl`'s
+  step computation; default 1e-10).
+- `mean_step_norm`, `median_step_norm`, `max_step_norm`, `min_step_norm::Float64`:
+  Distribution stats over finite values.
+"""
+struct StepNormValidationResult
+    step_norms::Vector{Float64}
+    step_valid::Vector{Bool}
+    n_step_valid::Int
+    n_step_invalid::Int
+    step_tolerance::Float64
+    eigenvalue_floor_relative::Float64
+    mean_step_norm::Float64
+    median_step_norm::Float64
+    max_step_norm::Float64
+    min_step_norm::Float64
+end
+
+"""
+    compute_newton_step_norms(points, objective; gradient_method, eigenvalue_floor_relative) -> Vector{Float64}
+
+Compute Newton-step norms `‖H⁻¹ ∇f(x)‖` at each point.
+
+The Hessian inverse uses the same truncated-eigenvalue pseudo-inverse as
+`refine_to_critical_point` in `newton_refinement.jl`: directions whose eigenvalue
+satisfies `|λ| < max(1e-12, eigenvalue_floor_relative × max|λ|)` are dropped from
+the inverse. Returns Inf if either the gradient or Hessian is non-finite, or if
+the Hessian is identically zero.
+"""
+function compute_newton_step_norms(
+    points::Vector{Vector{Float64}},
+    objective;
+    gradient_method::Symbol = :forwarddiff,
+    eigenvalue_floor_relative::Float64 = 1e-10,
+)::Vector{Float64}
+    compute_grad = if gradient_method == :forwarddiff
+        pt -> ForwardDiff.gradient(objective, pt)
+    elseif gradient_method == :finitediff
+        pt -> FiniteDiff.finite_difference_gradient(objective, pt)
+    else
+        error("Unknown gradient_method: $gradient_method. Use :forwarddiff or :finitediff")
+    end
+
+    compute_hess = if gradient_method == :forwarddiff
+        pt -> ForwardDiff.hessian(objective, pt)
+    elseif gradient_method == :finitediff
+        pt -> FiniteDiff.finite_difference_hessian(objective, pt)
+    else
+        error("unreachable")
+    end
+
+    norms = Vector{Float64}(undef, length(points))
+
+    for (i, pt) in enumerate(points)
+        try
+            grad = compute_grad(pt)
+            if !all(isfinite, grad)
+                norms[i] = Inf
+                continue
+            end
+
+            H = compute_hess(pt)
+            if !all(isfinite, H)
+                norms[i] = Inf
+                continue
+            end
+
+            H_sym = LinearAlgebra.Symmetric(H)
+            eig = LinearAlgebra.eigen(H_sym)
+            eigenvalues = eig.values
+            V = eig.vectors
+
+            abs_max_eig = maximum(abs, eigenvalues)
+            if !isfinite(abs_max_eig) || abs_max_eig <= 0
+                norms[i] = Inf
+                continue
+            end
+
+            reg_threshold = max(1e-12, eigenvalue_floor_relative * abs_max_eig)
+
+            Vt_grad = V' * grad
+            step = zeros(length(pt))
+            for j in eachindex(eigenvalues)
+                if abs(eigenvalues[j]) > reg_threshold
+                    step .+= (Vt_grad[j] / eigenvalues[j]) .* @view V[:, j]
+                end
+            end
+
+            norms[i] = LinearAlgebra.norm(step)
+        catch e
+            norms[i] = Inf
+        end
+    end
+
+    return norms
+end
+
+"""
+    validate_newton_steps(points, objective; step_tolerance, eigenvalue_floor_relative, gradient_method) -> StepNormValidationResult
+
+Validate refined critical points by Newton-step length: `‖H⁻¹ ∇f(x)‖ < step_tolerance`.
+
+Use this *instead of* (or alongside) the absolute-gradient `validate_critical_points`
+when the objective has a Hessian whose spectral magnitude varies with the problem
+scale (e.g. ODE-error objectives, where ‖H‖ at the optimum is often 10⁶–10⁸).
+"""
+function validate_newton_steps(
+    points::Vector{Vector{Float64}},
+    objective;
+    step_tolerance::Float64 = 1e-4,
+    eigenvalue_floor_relative::Float64 = 1e-10,
+    gradient_method::Symbol = :forwarddiff,
+)::StepNormValidationResult
+    step_norms = compute_newton_step_norms(
+        points,
+        objective;
+        gradient_method = gradient_method,
+        eigenvalue_floor_relative = eigenvalue_floor_relative,
+    )
+
+    step_valid = step_norms .< step_tolerance
+    n_step_valid = sum(step_valid)
+    n_step_invalid = length(points) - n_step_valid
+
+    finite_norms = filter(isfinite, step_norms)
+    if isempty(finite_norms)
+        mean_n = Inf
+        median_n = Inf
+        max_n = Inf
+        min_n = Inf
+    else
+        mean_n = Statistics.mean(finite_norms)
+        median_n = Statistics.median(finite_norms)
+        max_n = maximum(finite_norms)
+        min_n = minimum(finite_norms)
+    end
+
+    return StepNormValidationResult(
+        step_norms,
+        step_valid,
+        n_step_valid,
+        n_step_invalid,
+        step_tolerance,
+        eigenvalue_floor_relative,
+        mean_n,
+        median_n,
+        max_n,
+        min_n,
+    )
+end

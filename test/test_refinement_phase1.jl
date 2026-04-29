@@ -675,6 +675,79 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
     end
 end
 
+@testset "Newton-step-norm validation (bead 62qv)" begin
+    # ‖∇f‖ < tol fails on stiff/ill-conditioned objectives because gradient
+    # magnitudes scale with ‖H‖. ‖H⁻¹ ∇f‖ < step_tol is invariant under that
+    # rescaling. Goal of this testset: prove the new criterion succeeds where
+    # the old one fails on a high-condition Hessian.
+
+    @testset "compute_newton_step_norms on isotropic quadratic" begin
+        # f(x) = ½ ‖x‖². At any x: ∇f = x, H = I, Newton step = -H⁻¹ ∇f = -x.
+        # So ‖step‖ = ‖x‖. Tests that the basic identity holds.
+        f_iso(x) = 0.5 * sum(x .^ 2)
+
+        norms = compute_newton_step_norms([[0.0, 0.0], [0.1, 0.1], [1.0, 0.0]], f_iso)
+        @test norms[1] < 1e-10                # at the optimum
+        @test isapprox(norms[2], sqrt(0.02); atol = 1e-6)
+        @test isapprox(norms[3], 1.0; atol = 1e-6)
+    end
+
+    @testset "step-norm passes where ‖∇f‖ fails on ill-conditioned Hessian" begin
+        # f(x) = ½ (κ x₁² + x₂²) — quadratic with condition number κ.
+        # At x = [δ, δ]: ∇f = [κδ, δ], H = diag(κ, 1).
+        # ‖∇f‖ = √(κ²δ² + δ²) ≈ κδ for κ ≫ 1. Newton step = [-δ, -δ], ‖step‖ = √2 δ.
+        # With κ = 1e6 and δ = 1e-5: ‖∇f‖ ≈ 10, ‖step‖ ≈ 1.4e-5.
+        κ = 1e6
+        δ = 1e-5
+        f_ill(x) = 0.5 * (κ * x[1]^2 + x[2]^2)
+
+        # Absolute-gradient validation: fails (||∇f|| ≈ 10 ≫ 1e-4)
+        grad_result = validate_critical_points([[δ, δ]], f_ill; tolerance = 1e-4)
+        @test grad_result.n_valid == 0
+        @test grad_result.norms[1] > 1.0
+
+        # Step-norm validation: passes (‖step‖ ≈ 1.4e-5 < 1e-4)
+        step_result = validate_newton_steps([[δ, δ]], f_ill; step_tolerance = 1e-4)
+        @test step_result.n_step_valid == 1
+        @test step_result.step_norms[1] < 1e-4
+        @test isapprox(step_result.step_norms[1], sqrt(2) * δ; atol = 1e-9)
+    end
+
+    @testset "non-finite gradient/Hessian produce Inf step norms" begin
+        f_blowup(x) = x[1] >= 0.0 ? x[1] : NaN  # NaN gradient at x[1] < 0
+        norms = compute_newton_step_norms([[-1.0, 0.0]], f_blowup)
+        @test norms[1] == Inf
+    end
+
+    @testset "singular Hessian yields Inf step norm" begin
+        # f(x) = x[1] — gradient = [1, 0], Hessian = 0. No Newton step defined.
+        f_lin(x) = x[1]
+        norms = compute_newton_step_norms([[0.0, 0.0]], f_lin)
+        @test norms[1] == Inf
+    end
+
+    @testset "validate_newton_steps populates statistics" begin
+        f(x) = 0.5 * sum(x .^ 2)
+        result = validate_newton_steps(
+            [[0.0, 0.0], [0.1, 0.1], [1.0, 0.0]],
+            f;
+            step_tolerance = 0.5,
+        )
+        @test result.n_step_valid == 2  # first two pass; [1.0, 0.0] does not
+        @test isfinite(result.median_step_norm)
+        @test result.min_step_norm < result.max_step_norm
+        @test result.step_tolerance == 0.5
+    end
+
+    @testset "FiniteDiff path matches ForwardDiff path" begin
+        f(x) = 0.5 * (1e4 * x[1]^2 + x[2]^2)
+        pts = [[1e-4, 1e-4]]
+        n_fd = compute_newton_step_norms(pts, f; gradient_method = :finitediff)
+        n_ad = compute_newton_step_norms(pts, f; gradient_method = :forwarddiff)
+        @test isapprox(n_fd[1], n_ad[1]; rtol = 1e-3)  # FiniteDiff less precise
+    end
+end
+
 println(
     "✅ Phase 1, Phase 2 Tier 1, Phase 3 Box-Constrained, and Raw Gradient Validation tests passed!",
 )
