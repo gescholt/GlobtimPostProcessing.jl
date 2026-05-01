@@ -188,4 +188,4 @@ generate_campaign_report(campaign, campaign_stats)
 - Increase `max_iterations` in `RefinementConfig`
 - Check if critical points are far from true minima
 
-For more help, see the [troubleshooting guide](https://github.com/gescholt/globopt_merged/tree/main/pkg/globtimpostprocessing/-/issues) or open an issue.
+For more help, see the [troubleshooting guide](https://github.com/gescholt/Globtim.jlpostprocessing/-/issues) or open an issue.
