@@ -3,6 +3,7 @@ uuid = "b470b6bb-4443-493e-998d-c7c5e1aa9116"
 license = "GPL-3.0"
 version = "0.1.1"
 authors = ["Georgy Scholten <scholtengeorgy@gmail.com>"]
+repo = "https://github.com/gescholt/GlobtimPostProcessing.jl"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
