@@ -12,7 +12,7 @@ using JSON3
         p_found1 = [0.201, 0.299, 0.498, 0.602]
         dist1 = param_distance(p_found1, p_true)
         @test dist1 < 0.01
-        @test dist1 ≈ 0.00316 atol=1e-3
+        @test dist1 ≈ 0.00316 atol = 1e-3
 
         # Test case 2: Farther point
         p_found2 = [0.35, 0.45, 0.55, 0.65]
@@ -23,7 +23,7 @@ using JSON3
         # Test case 3: Exact match
         p_found3 = [0.2, 0.3, 0.5, 0.6]
         dist3 = param_distance(p_found3, p_true)
-        @test dist3 ≈ 0.0 atol=1e-10
+        @test dist3 ≈ 0.0 atol = 1e-10
     end
 
     @testset "Load experiment config with p_true" begin
@@ -154,13 +154,13 @@ using JSON3
         p_true_2d = [1.0, 2.0]
         p_found_2d = [1.1, 2.1]
         dist_2d = param_distance(p_found_2d, p_true_2d)
-        @test dist_2d ≈ sqrt(0.01 + 0.01) atol=1e-10
+        @test dist_2d ≈ sqrt(0.01 + 0.01) atol = 1e-10
 
         # 3D case
         p_true_3d = [1.0, 2.0, 3.0]
         p_found_3d = [1.1, 2.1, 3.1]
         dist_3d = param_distance(p_found_3d, p_true_3d)
-        @test dist_3d ≈ sqrt(0.01 + 0.01 + 0.01) atol=1e-10
+        @test dist_3d ≈ sqrt(0.01 + 0.01 + 0.01) atol = 1e-10
 
         # Dimension mismatch should error
         @test_throws DimensionMismatch param_distance([1.0, 2.0], [1.0, 2.0, 3.0])

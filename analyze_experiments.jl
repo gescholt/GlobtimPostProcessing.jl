@@ -78,7 +78,7 @@ function get_user_choice(prompt::String, max_value::Int)
                 println("$(RED)Please enter a number between 1 and $max_value$(RESET)")
             end
         catch e
-            @debug "Input parse failed" exception=(e, catch_backtrace())
+            @debug "Input parse failed" exception = (e, catch_backtrace())
             println("$(RED)Invalid input. Please enter a number or 'q' to quit$(RESET)")
         end
     end
@@ -250,7 +250,7 @@ function display_experiment_metadata(exp_path::String)
             println()
         end
     catch e
-        @debug "Could not display metadata" exception=(e, catch_backtrace())
+        @debug "Could not display metadata" exception = (e, catch_backtrace())
     end
 end
 
@@ -439,7 +439,7 @@ function display_validation_stats(exp_path::String)
         println("\n  $(BOLD)Hessian Classifications:$(RESET)")
         classifications = vstats["classifications"]
         total_classified = sum(values(classifications))
-        for (ctype, count) in sort(collect(classifications), by = x->x[2], rev = true)
+        for (ctype, count) in sort(collect(classifications), by = x -> x[2], rev = true)
             color = if ctype == "minimum"
                 GREEN
             elseif ctype == "saddle"
@@ -1033,7 +1033,7 @@ function analyze_campaign_wide(experiments::Vector{String}, campaign_path::Strin
                             best_min_dist = min(best_min_dist, stats["min_distance"])
                         end
                     catch e
-                        @debug "Failed to process CSV" exception=(e, catch_backtrace())
+                        @debug "Failed to process CSV" exception = (e, catch_backtrace())
                         continue
                     end
                 end

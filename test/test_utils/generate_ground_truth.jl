@@ -123,7 +123,8 @@ function generate_all()
                 status = found ? "✓" : "✗ MISSING"
                 println("    $status minimum $i at $(round.(known; digits=4))")
                 if !found
-                    @warn "Analytically known minimum NOT found!" func_name=bf.name point=known
+                    @warn "Analytically known minimum NOT found!" func_name = bf.name point =
+                        known
                 end
             end
         end

@@ -24,7 +24,7 @@ using DataFrames
 using JSON3
 
 println("Testing TrajectoryComparison module...")
-println("=" ^ 70)
+println("="^70)
 
 # Test 1: Load module
 println("\n[Test 1] Loading TrajectoryComparison module...")
@@ -39,9 +39,9 @@ catch e
 end
 
 # Test suite begins (tests that will drive implementation)
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("TDD TEST SPECIFICATION")
-println("=" ^ 70)
+println("="^70)
 
 println("""
 
@@ -155,9 +155,9 @@ println("    - total_critical_points")
 println("    - total_recoveries")
 println("  - Support campaign-level convergence analysis")
 
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("END OF TEST SPECIFICATION")
-println("=" ^ 70)
+println("="^70)
 
 println("""
 
@@ -267,4 +267,4 @@ Integration:
 """)
 
 println("\nTo run actual tests, implement the module then uncomment test blocks below.")
-println("=" ^ 70)
+println("="^70)

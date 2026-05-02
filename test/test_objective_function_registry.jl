@@ -20,7 +20,7 @@ using Test
 using JSON3
 
 println("Testing ObjectiveFunctionRegistry module...")
-println("=" ^ 70)
+println("="^70)
 
 # Test 1: Load module
 println("\n[Test 1] Loading ObjectiveFunctionRegistry module...")
@@ -58,9 +58,9 @@ for key in required_keys
 end
 
 # Test suite begins (tests that will drive implementation)
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("TDD TEST SPECIFICATION")
-println("=" ^ 70)
+println("="^70)
 
 println("""
 
@@ -122,9 +122,9 @@ println("\n[Spec 7] validate_config(incomplete_config) should:")
 println("  - ERROR listing missing keys")
 println("  - ERROR with clear message for each missing field")
 
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("END OF TEST SPECIFICATION")
-println("=" ^ 70)
+println("="^70)
 
 println("""
 
@@ -165,4 +165,4 @@ end # module
 """)
 
 println("\nTo run actual tests, implement the module then uncomment test blocks below.")
-println("=" ^ 70)
+println("="^70)

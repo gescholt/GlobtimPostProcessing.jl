@@ -22,7 +22,7 @@ using JSON3
 using LinearAlgebra
 
 println("Testing TrajectoryEvaluator module...")
-println("=" ^ 70)
+println("="^70)
 
 # Test 1: Load module
 println("\n[Test 1] Loading TrajectoryEvaluator module...")
@@ -57,9 +57,9 @@ critical_point = Dict{String,Any}(
 )
 
 # Test suite begins (tests that will drive implementation)
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("TDD TEST SPECIFICATION")
-println("=" ^ 70)
+println("="^70)
 
 println("""
 
@@ -136,9 +136,9 @@ println("  - Distance is symmetric: d(A,B) == d(B,A)")
 println("  - Distance > 0 for different trajectories")
 println("  - L2 norm <= L1 norm (triangle inequality)")
 
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("END OF TEST SPECIFICATION")
-println("=" ^ 70)
+println("="^70)
 
 println("""
 
@@ -199,4 +199,4 @@ Integration:
 """)
 
 println("\nTo run actual tests, implement the module then uncomment test blocks below.")
-println("=" ^ 70)
+println("="^70)

@@ -80,7 +80,7 @@ f_hyperbola(x) = (x[1] * x[2] - 2.0)^2
     end
 
     @testset "detects valley at 45-degree point" begin
-        point = [1/sqrt(2), 1/sqrt(2)]
+        point = [1 / sqrt(2), 1 / sqrt(2)]
         is_valley, directions, vdim = detect_valley(f_circle, point, config)
         @test is_valley == true
         @test vdim == 1

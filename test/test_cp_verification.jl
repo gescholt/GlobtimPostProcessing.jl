@@ -46,7 +46,8 @@ rosenbrock(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
 # Six-hump camel: well-known test function with 6 critical points in [-3,3]×[-2,2]
 # 2 global minima, 2 local minima, 2 local maxima (saddle points of the landscape)
-sixhump_camel(x) = (4 - 2.1*x[1]^2 + x[1]^4/3)*x[1]^2 + x[1]*x[2] + (-4 + 4*x[2]^2)*x[2]^2
+sixhump_camel(x) =
+    (4 - 2.1 * x[1]^2 + x[1]^4 / 3) * x[1]^2 + x[1] * x[2] + (-4 + 4 * x[2]^2) * x[2]^2
 
 # Himmelblau: f(x) = (x₁² + x₂ - 11)² + (x₁ + x₂² - 7)²
 # 4 identical minima, 1 local maximum, 4 saddle points
@@ -156,7 +157,7 @@ end
     @testset "Tolerance for degenerate" begin
         # With very tight tol, small eigenvalues should NOT be degenerate
         # f(x) = 0.001*x₁² + x₂² at origin: eigenvalues [0.002, 2]
-        weak_quadratic(x) = 0.001*x[1]^2 + x[2]^2
+        weak_quadratic(x) = 0.001 * x[1]^2 + x[2]^2
 
         # Default tol=1e-6: eigenvalue 0.002 >> 1e-6, so minimum
         @test classify_by_hessian(weak_quadratic, [0.0, 0.0]) == :minimum
@@ -223,7 +224,7 @@ end
         @test result.grad_norm < 1e-10
         @test all(result.eigenvalues .> 0)
         @test result.neighborhood_confirmed == true
-        @test result.value ≈ 0.0 atol=1e-15
+        @test result.value ≈ 0.0 atol = 1e-15
     end
 
     @testset "Complete maximum characterization" begin
@@ -259,7 +260,7 @@ end
         @test result.is_critical == true
         @test result.classification == :minimum
         @test result.neighborhood_confirmed == true
-        @test result.value ≈ 0.0 atol=1e-10
+        @test result.value ≈ 0.0 atol = 1e-10
     end
 
     @testset "Degenerate minimum" begin

@@ -70,7 +70,7 @@ function find_experiment_dir(results_root, seed, domain)
     matching = filter(
         d ->
             occursin("domain$(domain)", basename(d)) &&
-            occursin("seed$(seed)", basename(d)),
+                occursin("seed$(seed)", basename(d)),
         dirs,
     )
 

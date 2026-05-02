@@ -20,9 +20,9 @@ using DataFrames
 using CSV
 using LinearAlgebra
 
-println("=" ^ 80)
+println("="^80)
 println("END-TO-END TRAJECTORY ANALYSIS INTEGRATION TESTS")
-println("=" ^ 80)
+println("="^80)
 println()
 
 # Load all modules
@@ -108,7 +108,7 @@ test_config = Dict{String,Any}(
 
         # Distance to identical trajectory should be 0
         dist_self = compute_trajectory_distance(traj_true, traj_true, :L2)
-        @test dist_self ≈ 0.0 atol=1e-10
+        @test dist_self ≈ 0.0 atol = 1e-10
 
         # Test symmetry
         dist_AB = compute_trajectory_distance(traj_true, traj_found, :L2)
@@ -354,9 +354,9 @@ test_config = Dict{String,Any}(
 end
 
 println()
-println("=" ^ 80)
+println("="^80)
 println("✓ ALL END-TO-END INTEGRATION TESTS PASSED!")
-println("=" ^ 80)
+println("="^80)
 println()
 
 println("""

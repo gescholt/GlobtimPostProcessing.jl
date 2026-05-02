@@ -260,7 +260,7 @@ end
         @test sum(result.captured_at[3]) == 2  # [0,0] and [1,0] (0.95 < 0.990)
         @test sum(result.captured_at[4]) == 3  # all (1.95 < 2.121)
 
-        @test result.capture_rates[1] ≈ 1/3
+        @test result.capture_rates[1] ≈ 1 / 3
         @test result.capture_rates[4] ≈ 1.0
     end
 

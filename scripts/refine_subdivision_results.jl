@@ -225,7 +225,7 @@ function run_multistart_refinement(args)
     function point_to_orthant(point, center)
         signs = sign.(point .- center)
         bits = [(s > 0 ? 1 : 0) for s in signs]
-        return sum(bits[i] * 2^(i-1) for i in eachindex(bits)) + 1
+        return sum(bits[i] * 2^(i - 1) for i in eachindex(bits)) + 1
     end
     true_orthant = point_to_orthant(p_true, p_center)
 

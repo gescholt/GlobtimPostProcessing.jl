@@ -37,18 +37,14 @@ function GlobtimPostProcessing.classify_refined_points(
                 hessians[i] = finite_difference_hessian(objective_func, pt)
             catch e
                 push!(failed_points, i)
-                @debug "Point $i: finite-difference Hessian failed" exception=(
-                    e,
-                    catch_backtrace(),
-                )
+                @debug "Point $i: finite-difference Hessian failed" exception =
+                    (e, catch_backtrace())
                 hessians[i] = fill(NaN, n_dims, n_dims)
             end
         end
         if !isempty(failed_points)
-            @warn "Finite-difference Hessian failed for $(length(failed_points))/$(length(points)) points" failed_points=first(
-                failed_points,
-                5,
-            )
+            @warn "Finite-difference Hessian failed for $(length(failed_points))/$(length(points)) points" failed_points =
+                first(failed_points, 5)
         end
     else
         # ForwardDiff Hessians — fast and exact for analytical (non-ODE) objectives
@@ -267,7 +263,7 @@ function GlobtimPostProcessing.print_tree_summary_only(
     depth = get_max_depth(tree)
 
     println(io, "Tree Summary ($n_total leaves)")
-    println(io, "=" ^ 50)
+    println(io, "="^50)
     println(io, "Leaves: $n_conv converged, $n_act active")
     println(io, "Max depth: $depth")
 
@@ -282,7 +278,7 @@ function GlobtimPostProcessing.print_tree_summary_only(
 
     println(io)
     println(io, "Top $top_n leaves by error:")
-    println(io, "-" ^ 50)
+    println(io, "-"^50)
 
     all_leaves = vcat(collect(tree.converged_leaves), collect(tree.active_leaves))
     sort!(all_leaves, by = id -> -tree.subdomains[id].l2_error)

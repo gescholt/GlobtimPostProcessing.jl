@@ -99,8 +99,8 @@ using Optim  # Need Optim for type checks
 
         @test result.converged
         @test result.value_refined < result.value_raw
-        @test result.refined[1] ≈ 1.0 atol=1e-3
-        @test result.refined[2] ≈ 1.0 atol=1e-3
+        @test result.refined[1] ≈ 1.0 atol = 1e-3
+        @test result.refined[2] ≈ 1.0 atol = 1e-3
         @test result.value_refined < 1e-6
     end
 
@@ -353,7 +353,7 @@ using Optim  # Need Optim for type checks
             )
 
             # Initial should have been clamped: raw_value = sphere([1,1]) = 2.0
-            @test result.value_raw ≈ 2.0 atol=1e-10  # clamp([2,3], -1, 1) = [1,1]
+            @test result.value_raw ≈ 2.0 atol = 1e-10  # clamp([2,3], -1, 1) = [1,1]
             @test result.converged
         end
 
@@ -397,8 +397,8 @@ using Optim  # Need Optim for type checks
             # Unbounded: should find true minimum at [2, 2]
             result_unbounded =
                 refine_critical_point(offset_sphere, initial; max_iterations = 200)
-            @test result_unbounded.refined[1] ≈ 2.0 atol=0.1
-            @test result_unbounded.refined[2] ≈ 2.0 atol=0.1
+            @test result_unbounded.refined[1] ≈ 2.0 atol = 0.1
+            @test result_unbounded.refined[2] ≈ 2.0 atol = 0.1
 
             # Bounded: should stay near bound [1, 1]
             # Note: Fminbox moves boundary points inward, so we use looser tolerance
@@ -409,8 +409,8 @@ using Optim  # Need Optim for type checks
                 max_iterations = 200,
             )
             @test all(result_bounded.refined .<= ub)
-            @test result_bounded.refined[1] ≈ 1.0 atol=0.05
-            @test result_bounded.refined[2] ≈ 1.0 atol=0.05
+            @test result_bounded.refined[1] ≈ 1.0 atol = 0.05
+            @test result_bounded.refined[2] ≈ 1.0 atol = 0.05
         end
 
         @testset "Batch Refinement With Bounds" begin

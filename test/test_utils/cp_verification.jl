@@ -136,7 +136,7 @@ function verify_local_minimum(
         # Sample uniformly from the ball of given radius
         direction = randn(dim)
         direction ./= norm(direction)
-        r = radius * rand()^(1/dim)  # uniform in ball
+        r = radius * rand()^(1 / dim)  # uniform in ball
         y = x .+ r .* direction
         f_y = f(y)
 

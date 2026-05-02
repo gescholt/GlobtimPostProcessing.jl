@@ -224,7 +224,7 @@ using GlobtimPostProcessing
 
         # Check percentages sum to 100
         total_percentage = sum(values(summary["percentages"]))
-        @test total_percentage ≈ 100.0 atol=0.1
+        @test total_percentage ≈ 100.0 atol = 0.1
     end
 
     @testset "get_classification_summary - Empty DataFrame" begin

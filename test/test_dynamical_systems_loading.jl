@@ -24,7 +24,7 @@ using Pkg
 Pkg.activate(dirname(@__DIR__))
 
 println("Testing DynamicalSystems module loading from globtim...")
-println("=" ^ 70)
+println("="^70)
 
 # Test 1: Load Globtim package
 println("\n[Test 1] Loading Globtim package...")
@@ -184,7 +184,7 @@ catch e
     exit(1)
 end
 
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("✓ ALL TESTS PASSED - DynamicalSystems module is accessible!")
-println("=" ^ 70)
+println("="^70)
 println("\nReady to proceed to Phase 2: ObjectiveFunctionRegistry implementation")

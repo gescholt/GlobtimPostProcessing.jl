@@ -35,7 +35,7 @@ try
     global HAS_FORWARDDIFF = true
     println("✓ ForwardDiff available - can compute Hessians automatically")
 catch e
-    @debug "ForwardDiff not available" exception=(e, catch_backtrace())
+    @debug "ForwardDiff not available" exception = (e, catch_backtrace())
     global HAS_FORWARDDIFF = false
     println(
         "✗ ForwardDiff not available - install with: using Pkg; Pkg.add(\"ForwardDiff\")",
@@ -133,7 +133,7 @@ function demo_2_multiple_minima()
         # Two quadratic wells
         d1 = sum((x .- [0.2, 0.2]) .^ 2)
         d2 = sum((x .- [0.8, 0.8]) .^ 2)
-        return min(100*d1, 100*d2)  # Two wells of equal depth
+        return min(100 * d1, 100 * d2)  # Two wells of equal depth
     end
 
     # Test cases
@@ -173,7 +173,7 @@ function demo_2_multiple_minima()
                 "Overall: ",
                 result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT BASINS",
                 " (confidence = ",
-                @sprintf("%.0f%%", 100*result.confidence),
+                @sprintf("%.0f%%", 100 * result.confidence),
                 ")",
             )
         end
@@ -309,7 +309,7 @@ function demo_3_real_experiment(experiment_path::String; objective_function = no
                     "\nOverall fidelity: ",
                     result.is_same_basin ? "✓ SAME BASIN" : "✗ DIFFERENT",
                 )
-                println("Confidence: ", @sprintf("%.0f%%", 100*result.confidence))
+                println("Confidence: ", @sprintf("%.0f%%", 100 * result.confidence))
             catch e
                 println("⚠ Could not compute Hessian: $e")
             end
@@ -387,7 +387,7 @@ function demo_4_batch_processing()
         status = row.is_same_basin ? "✓" : "✗"
         println(
             "Point $i: $status (confidence = ",
-            @sprintf("%.0f%%", 100*row.fidelity_confidence),
+            @sprintf("%.0f%%", 100 * row.fidelity_confidence),
             ")",
         )
         println("  x* = [", @sprintf("%.3f", row.x1), ", ", @sprintf("%.3f", row.x2), "]")
@@ -401,7 +401,7 @@ function demo_4_batch_processing()
 
     println("\n" * "="^70)
     println("SUMMARY: $num_valid / $total polynomial minima correctly identify basins")
-    println("Landscape Fidelity: ", @sprintf("%.1f%%", 100*fidelity_rate))
+    println("Landscape Fidelity: ", @sprintf("%.1f%%", 100 * fidelity_rate))
     println("="^70)
 end
 

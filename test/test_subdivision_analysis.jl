@@ -15,7 +15,7 @@ using GlobtimPostProcessing:
     compare_subdivision_trees,
     print_tree_comparison_table,
     SubdivisionResult,
-    load_subdivision_result#==============================================================================##==============================================================================#
+    load_subdivision_result #==============================================================================#
 
 #                    MOCK OBJECTS (DUCK TYPING)                                #
 
@@ -66,7 +66,7 @@ function create_4d_test_tree()
         MockSubdomain([0.25, 0.25, 0.25, 0.25], [0.25, 0.25, 0.25, 0.25], 1, 1e-5),
     ]
     return MockTree(subdomains, [1, 2], Int[])
-end#==============================================================================##==============================================================================#
+end #==============================================================================#
 
 #                    TEST SUITES                                               #
 
@@ -85,7 +85,7 @@ end#============================================================================
     @test stats.dimension == 2
 
     # Convergence rate
-    @test stats.convergence_rate ≈ 3/5 atol=1e-10
+    @test stats.convergence_rate ≈ 3 / 5 atol = 1e-10
 
     # Depth statistics
     @test stats.max_depth == 2
@@ -232,7 +232,7 @@ end
     # Check labels appear
     @test occursin("Tree1", output)
     @test occursin("Tree2", output)
-end#==============================================================================##==============================================================================#
+end #==============================================================================#
 
 #                    JSON RESULT LOADING TESTS                                 #
 

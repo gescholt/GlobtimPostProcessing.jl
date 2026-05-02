@@ -19,16 +19,16 @@ using LinearAlgebra
 const DEFAULT_EXP = "globtim/globtim_results/lotka_volterra_4d/lv4d_GN16_deg4-12_dom1.0e-3_seed42_20260123_121429"
 
 function main(exp_path::String = DEFAULT_EXP)
-    println("=" ^ 70)
+    println("="^70)
     println("LV4D RESULTS PROCESSING PIPELINE")
-    println("=" ^ 70)
+    println("="^70)
     println()
 
     # =========================================================================
     # Step 1: Load Experiment (LV4DAnalysis)
     # =========================================================================
     println("STEP 1: Loading Experiment")
-    println("-" ^ 40)
+    println("-"^40)
 
     data = load_lv4d_experiment(exp_path)
 
@@ -47,7 +47,7 @@ function main(exp_path::String = DEFAULT_EXP)
     # Step 2: Quality Analysis (LV4DAnalysis)
     # =========================================================================
     println("STEP 2: Quality Analysis")
-    println("-" ^ 40)
+    println("-"^40)
     analyze_quality(data)
     println()
 
@@ -55,7 +55,7 @@ function main(exp_path::String = DEFAULT_EXP)
     # Step 3: Degree-by-Degree Results
     # =========================================================================
     println("STEP 3: Degree-by-Degree Summary")
-    println("-" ^ 40)
+    println("-"^40)
 
     # Build summary table from degree_results
     df = data.degree_results
@@ -101,7 +101,7 @@ function main(exp_path::String = DEFAULT_EXP)
     # Step 4: Parameter Recovery Table (ParameterRecovery module)
     # =========================================================================
     println("STEP 4: Parameter Recovery Analysis")
-    println("-" ^ 40)
+    println("-"^40)
 
     degrees = sort(unique(df.degree))
     p_true = Float64.(data.p_true)
@@ -131,7 +131,7 @@ function main(exp_path::String = DEFAULT_EXP)
     # Step 5: Critical Point Classification (CriticalPointClassification module)
     # =========================================================================
     println("STEP 5: Critical Point Classification")
-    println("-" ^ 40)
+    println("-"^40)
 
     if data.critical_points !== nothing && nrow(data.critical_points) > 0
         cps = copy(data.critical_points)
@@ -163,7 +163,7 @@ function main(exp_path::String = DEFAULT_EXP)
     # Step 6: Best Candidate Summary
     # =========================================================================
     println("STEP 6: Best Candidate Analysis")
-    println("-" ^ 40)
+    println("-"^40)
 
     # Use get_quality_summary for consistent best recovery extraction
     summary = get_quality_summary(data)
@@ -184,9 +184,9 @@ function main(exp_path::String = DEFAULT_EXP)
     # =========================================================================
     # Summary
     # =========================================================================
-    println("=" ^ 70)
+    println("="^70)
     println("PIPELINE COMPLETE")
-    println("=" ^ 70)
+    println("="^70)
     println()
     println("Next steps:")
     println("  1. For visualization: use globtimplots package")

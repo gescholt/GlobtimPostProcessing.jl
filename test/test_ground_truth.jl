@@ -109,9 +109,9 @@ end
         df = load_ground_truth("himmelblau", 2)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
-        maxima_df = df[df.classification .== "maximum", :]
-        saddle_df = df[df.classification .== "saddle", :]
+        minima_df = df[df.classification.=="minimum", :]
+        maxima_df = df[df.classification.=="maximum", :]
+        saddle_df = df[df.classification.=="saddle", :]
 
         # Should have exactly 4 minima
         @test nrow(minima_df) == 4
@@ -148,7 +148,7 @@ end
         df = load_ground_truth("sixhump_camel", 2)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
+        minima_df = df[df.classification.=="minimum", :]
 
         # Should have at least 2 global minima
         @test nrow(minima_df) >= 2
@@ -172,7 +172,7 @@ end
         df = load_ground_truth("rosenbrock_2d", 2)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
+        minima_df = df[df.classification.=="minimum", :]
 
         # Single minimum at [1, 1]
         @test nrow(minima_df) == 1
@@ -188,7 +188,7 @@ end
         df = load_ground_truth("deuflhard_2d", 2)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
+        minima_df = df[df.classification.=="minimum", :]
 
         # Deuflhard should have multiple critical points
         @test nrow(df) >= 3  # at least a few CPs
@@ -213,7 +213,7 @@ end
         df = load_ground_truth("styblinski_tang_2d", 2)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
+        minima_df = df[df.classification.=="minimum", :]
 
         # Should have 4 local minima
         @test nrow(minima_df) == 4
@@ -233,7 +233,7 @@ end
         df = load_ground_truth("rastrigin_2d", 2)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
+        minima_df = df[df.classification.=="minimum", :]
 
         # Rastrigin has minima at all integer points in [-5,5]^2 = 121 minima
         # We may not find all 121 — but we should find a good fraction
@@ -261,7 +261,7 @@ end
         df = load_ground_truth("deuflhard_4d", 4)
         df === nothing && return
 
-        minima_df = df[df.classification .== "minimum", :]
+        minima_df = df[df.classification.=="minimum", :]
 
         # 4D Deuflhard = 2D + 2D, so #minima = #minima_2d ^ 2
         # Should have multiple CPs

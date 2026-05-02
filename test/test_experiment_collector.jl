@@ -642,10 +642,10 @@ end
                         exp_path,
                         config_content = Dict(
                             "objective_name" => obj_name,
-                            "grid_nodes" => 8 + (i-1)*8,
+                            "grid_nodes" => 8 + (i - 1) * 8,
                             "domain_size_param" => 0.1 * i,
                             "min_degree" => 4,
-                            "max_degree" => 12 + i*2,
+                            "max_degree" => 12 + i * 2,
                         ),
                     )
                 end

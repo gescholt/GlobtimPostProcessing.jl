@@ -66,7 +66,7 @@ const HIMMELBLAU = BenchmarkFunction(
     2,
     [(-5.0, 5.0), (-5.0, 5.0)],
     [[3.0, 2.0], [-2.805118, 3.131312], [-3.779310, -3.283186], [3.584428, -1.848126]],
-    [[-0.270845, -0.923039],],
+    [[-0.270845, -0.923039]],
     Vector{Float64}[],  # saddle points will be discovered numerically
     4,
 )
@@ -74,7 +74,8 @@ const HIMMELBLAU = BenchmarkFunction(
 # ============================================================================
 # 3. Six-hump camel — 2 global + 4 local minima/maxima
 # ============================================================================
-sixhump_camel(x) = (4 - 2.1*x[1]^2 + x[1]^4/3)*x[1]^2 + x[1]*x[2] + (-4 + 4*x[2]^2)*x[2]^2
+sixhump_camel(x) =
+    (4 - 2.1 * x[1]^2 + x[1]^4 / 3) * x[1]^2 + x[1] * x[2] + (-4 + 4 * x[2]^2) * x[2]^2
 
 # The six-hump camel has 6 extrema total:
 # 2 global minima at approximately (±0.0898, ∓0.7126) with f ≈ -1.0316
@@ -98,7 +99,7 @@ const SIXHUMP_CAMEL = BenchmarkFunction(
 # ============================================================================
 # 4. Rosenbrock 2D — single minimum at [1, 1]
 # ============================================================================
-rosenbrock_2d(x) = (1 - x[1])^2 + 100*(x[2] - x[1]^2)^2
+rosenbrock_2d(x) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 
 const ROSENBROCK_2D = BenchmarkFunction(
     "rosenbrock_2d",
@@ -114,7 +115,7 @@ const ROSENBROCK_2D = BenchmarkFunction(
 # ============================================================================
 # 5. Deuflhard 2D — multiple CPs, discovered numerically
 # ============================================================================
-deuflhard_2d(x) = (exp(x[1]^2 + x[2]^2) - 3)^2 + (x[1] + x[2] - sin(3*(x[1] + x[2])))^2
+deuflhard_2d(x) = (exp(x[1]^2 + x[2]^2) - 3)^2 + (x[1] + x[2] - sin(3 * (x[1] + x[2])))^2
 
 const DEUFLHARD_2D = BenchmarkFunction(
     "deuflhard_2d",
@@ -130,7 +131,7 @@ const DEUFLHARD_2D = BenchmarkFunction(
 # ============================================================================
 # 6. Styblinski-Tang 2D — separable, known minima
 # ============================================================================
-styblinski_tang_2d(x) = 0.5 * sum(xi^4 - 16*xi^2 + 5*xi for xi in x)
+styblinski_tang_2d(x) = 0.5 * sum(xi^4 - 16 * xi^2 + 5 * xi for xi in x)
 
 # Each dimension has local minima at approximately ±2.903534
 # In 2D: 4 local minima (all combinations of ±2.903534)
@@ -155,7 +156,7 @@ const STYBLINSKI_TANG_2D = BenchmarkFunction(
 # ============================================================================
 # 7. Rastrigin 2D — regular grid of minima
 # ============================================================================
-rastrigin_2d(x) = 20 + x[1]^2 - 10*cos(2π*x[1]) + x[2]^2 - 10*cos(2π*x[2])
+rastrigin_2d(x) = 20 + x[1]^2 - 10 * cos(2π * x[1]) + x[2]^2 - 10 * cos(2π * x[2])
 
 # In [-5.12, 5.12]^2: local minima at all integer points (i, j)
 # That's 11 × 11 = 121 minima from (-5,-5) to (5,5)

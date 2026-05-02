@@ -64,7 +64,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
         @test value >= 0.0  # Deuflhard is non-negative
 
         # Origin value: (exp(0)-3)² = 4 per 2D component, so 4D = 8
-        @test value ≈ 8.0 atol=0.01  # Deuflhard at origin is (1-3)² + (1-3)² = 8
+        @test value ≈ 8.0 atol = 0.01  # Deuflhard at origin is (1-3)² + (1-3)² = 8
 
         # Test at a few random points
         for _ in 1:5
@@ -389,7 +389,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
 
         # 1. Known value at origin: (exp(0)-3)² = 4 per 2D component, 4D = 8
         origin_value = deuflhard_4d_fixture([0.0, 0.0, 0.0, 0.0])
-        @test origin_value ≈ 8.0 atol=0.01  # Deuflhard at origin is (1-3)² + (1-3)² = 8
+        @test origin_value ≈ 8.0 atol = 0.01  # Deuflhard at origin is (1-3)² + (1-3)² = 8
 
         # 2. Symmetric (due to structure)
         p1 = [0.5, 0.3, 0.2, 0.1]

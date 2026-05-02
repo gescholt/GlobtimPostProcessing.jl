@@ -12,7 +12,7 @@ Pkg.activate(dirname(@__DIR__))
 using Test
 
 println("Testing ObjectiveFunctionRegistry Implementation...")
-println("=" ^ 70)
+println("="^70)
 
 # Load the module
 include(joinpath(dirname(@__DIR__), "src", "ObjectiveFunctionRegistry.jl"))
@@ -206,8 +206,8 @@ test_config = Dict{String,Any}(
     end
 end
 
-println("\n" * "=" ^ 70)
+println("\n" * "="^70)
 println("✓ ALL IMPLEMENTATION TESTS PASSED!")
-println("=" ^ 70)
+println("="^70)
 println("\nObjectiveFunctionRegistry module is ready for use.")
 println("Ready to proceed to Phase 3: TrajectoryEvaluator")
