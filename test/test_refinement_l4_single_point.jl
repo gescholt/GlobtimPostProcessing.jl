@@ -12,7 +12,6 @@ using LinearAlgebra
 using Optim
 
 @testset "L4 Single-Point Refinement (hcua)" begin
-
     @testset "NelderMead converges near a minimum" begin
         f(x) = (x[1] - 1.0)^2 + (x[2] + 0.5)^2
         result = refine_critical_point(
@@ -216,7 +215,7 @@ using Optim
         @test isapprox(r.trace_gradient_norms[end], r.gradient_norm; atol = 1e-12)
         @test isapprox(r.trace_gradient_norms[1], r.initial_gradient_norm; atol = 1e-12)
         # Quadratic descent: gradient norm is monotonic.
-        for i = 2:length(r.trace_gradient_norms)
+        for i in 2:length(r.trace_gradient_norms)
             @test r.trace_gradient_norms[i] <= r.trace_gradient_norms[i-1] + 1e-10
         end
     end
