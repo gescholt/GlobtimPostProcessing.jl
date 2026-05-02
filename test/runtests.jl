@@ -97,6 +97,12 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_capture_analysis.jl")
     end
 
+    # Level-4 single-point refinement (bead hcua) — NM/LBFGS/Newton convergence,
+    # tolerance + trust-region sensitivity, early-exit, f-safeguard, trace
+    @testset "L4 Single-Point Refinement" begin
+        include("test_refinement_l4_single_point.jl")
+    end
+
     # Run Integration tests with Real Fixtures (uses real globtim data)
     @testset "Integration: Real Fixtures" begin
         include("test_integration_real_fixtures.jl")
