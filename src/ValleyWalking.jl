@@ -7,7 +7,7 @@ using Printf: @printf
 # Gradient/Hessian dispatch — uses ForwardDiff or FiniteDiff depending on config.
 # ForwardDiff gives machine-precision derivatives but requires the objective to accept
 # Dual numbers (i.e. generic Real types). ODE-based objectives that mutate pre-allocated
-# Float64 buffers (e.g. Dynamic_objectives) are NOT ForwardDiff-compatible and must use
+# Float64 buffers (e.g. DynamicObjectives) are NOT ForwardDiff-compatible and must use
 # FiniteDiff. See data_generation.jl:69 for the known blocker.
 
 function _vw_gradient(f, x::AbstractVector, method::Symbol)

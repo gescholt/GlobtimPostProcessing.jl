@@ -384,10 +384,10 @@ For ODE parameter estimation with log-distance objectives (e.g., `log_L2_norm`),
 - cond(H) ~ 1e10 (numerically intractable Hessian)
 - Newton CP mode finds p_true only 1/15 times vs 14/15 for BFGS on raw L2_norm
 
-**Solution**: Use `Dynamic_objectives.create_refinement_objective(entry)` which auto-detects `log_` distance functions and substitutes the raw variant (e.g., `L2_norm` for `log_L2_norm`). Keep `create_objective(entry)` for visualization (log scale provides better dynamic range for contour plots).
+**Solution**: Use `DynamicObjectives.create_refinement_objective(entry)` which auto-detects `log_` distance functions and substitutes the raw variant (e.g., `L2_norm` for `log_L2_norm`). Keep `create_objective(entry)` for visualization (log scale provides better dynamic range for contour plots).
 
 ```julia
-using Dynamic_objectives
+using DynamicObjectives
 
 entry = load_catalogue("catalogue.jsonl")[1]
 display_obj = create_objective(entry)                # log_L2_norm — good for plots

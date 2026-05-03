@@ -5,7 +5,7 @@
 ## Issues Fixed
 
 ### 1. ✅ JSON Version Conflict
-**Problem**: `Dynamic_objectives` (transitive dependency from Globtim) requires JSON >= 1.3.0, but Project.toml restricted JSON to 0.21.
+**Problem**: `DynamicObjectives` (transitive dependency from Globtim) requires JSON >= 1.3.0, but Project.toml restricted JSON to 0.21.
 
 **Solution**: Updated `Project.toml` line 27:
 ```toml
@@ -103,11 +103,11 @@ These tests are **completely independent** and use only simple mathematical func
 - No file I/O (except for I/O utility tests)
 - Fast execution (~1-2 seconds)
 
-## About the Globtim/Dynamic_objectives Dependency
+## About the Globtim/DynamicObjectives Dependency
 
-**Your observation is correct**: The Phase 1 refinement API **does not need** Dynamic_objectives.
+**Your observation is correct**: The Phase 1 refinement API **does not need** DynamicObjectives.
 
-**Why it's loaded**: The main `GlobtimPostProcessing` module has `using Globtim` (line 43) for the `ErrorCategorizationIntegration.jl` module. This pulls in all of Globtim's dependencies, including Dynamic_objectives.
+**Why it's loaded**: The main `GlobtimPostProcessing` module has `using Globtim` (line 43) for the `ErrorCategorizationIntegration.jl` module. This pulls in all of Globtim's dependencies, including DynamicObjectives.
 
 **Refinement modules don't use Globtim**: The only mention of Globtim in `src/refinement/` is a docstring example comment (not actual code).
 
@@ -139,7 +139,7 @@ For now, the dependency is acceptable since:
 
 **Phase 1 Refinement Status**: ✅ **FULLY TESTED**
 
-The refinement API can be used standalone with any 1-argument objective function without requiring Globtim or Dynamic_objectives for the actual refinement work.
+The refinement API can be used standalone with any 1-argument objective function without requiring Globtim or DynamicObjectives for the actual refinement work.
 
 ## Next Steps
 

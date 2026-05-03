@@ -19,7 +19,7 @@ Historical documents from the Phase 1 refinement integration process:
   - Created during integration process
 
 - **`TESTING_PHASE1.md`** - Testing guide and troubleshooting
-  - Dependency conflict fixes (JSON version, Dynamic_objectives)
+  - Dependency conflict fixes (JSON version, DynamicObjectives)
   - Test environment setup
   - Troubleshooting instructions
 
