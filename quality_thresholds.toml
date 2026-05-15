@@ -34,7 +34,7 @@ reliable_recovery = 0.03    # Below this: true minima found, Newton converges
 structure_visible = 0.05    # Below this: CPs found, recovery may be partial
 unreliable = 0.10           # Above this: polynomial doesn't capture landscape
 #
-# Adaptive algorithm heuristic (bead globopt_merged-stt):
+# Adaptive algorithm heuristic:
 #   1. Fit polynomial → check relative L2
 #   2. If rel L2 > structure_visible (0.05): try increasing degree
 #   3. If degree increase stagnates (see [convergence]): subdivide domain

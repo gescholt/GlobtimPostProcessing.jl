@@ -301,9 +301,9 @@ refined.refined_points    # Vector of refined coordinates
 
 ### Running Tests
 
-```bash
-# From repo root — never use Pkg.test() (breaks workspace path resolution)
-julia --project=profiles/dev -e 'include("pkg/globtimpostprocessing/test/runtests.jl")'
+```julia
+using Pkg
+Pkg.test("GlobtimPostProcessing")
 ```
 
 ### Project Structure

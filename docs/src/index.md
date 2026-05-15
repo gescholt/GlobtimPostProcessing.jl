@@ -4,7 +4,7 @@ Local refinement engine for critical points computed by globtim.
 
 ## Overview
 
-GlobtimPostProcessing.jl **refines critical point candidates** found by [Globtim.jl](https://github.com/gescholt/globopt_merged/tree/main/pkg/globtim) into verified, high-accuracy critical points.
+GlobtimPostProcessing.jl **refines critical point candidates** found by [Globtim.jl](https://github.com/gescholt/Globtim.jl) into verified, high-accuracy critical points.
 
 !!! info "Why Refinement is Necessary"
     Polynomial approximation methods find critical point **candidates**, but these have limited numerical accuracy (~1e-3 to 1e-6). Local optimization refines these candidates to machine precision (~1e-12) and validates them by checking ||∇f(x*)|| ≈ 0.
@@ -87,7 +87,7 @@ This package is the **refinement layer** without visualization dependencies:
 | **globtimpostprocessing** | Local refinement, validation, quality diagnostics |
 | **globtimplots** | Visualization of refined results |
 
-For plotting and visualization, use the separate [GlobtimPlots](https://github.com/gescholt/globopt_merged/tree/main/pkg/globtimplots) package:
+For plotting and visualization, use the separate [GlobtimPlots](https://github.com/gescholt/Globtim.jlplots) package:
 
 ```julia
 using GlobtimPostProcessing
@@ -115,8 +115,8 @@ save_plot(fig, "analysis.png")
 
 ## Related Packages
 
-- [Globtim.jl](https://github.com/gescholt/globopt_merged/tree/main/pkg/globtim) - Core optimization engine
-- [GlobtimPlots](https://github.com/gescholt/globopt_merged/tree/main/pkg/globtimplots) - Visualization layer
+- [Globtim.jl](https://github.com/gescholt/Globtim.jl) - Core optimization engine
+- [GlobtimPlots](https://github.com/gescholt/Globtim.jlplots) - Visualization layer
 
 ## License
 

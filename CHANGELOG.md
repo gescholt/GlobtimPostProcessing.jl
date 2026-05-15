@@ -1,5 +1,25 @@
 # Changelog - GlobtimPostProcessing
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.1.1] - 2026-04-30
+
+Initial public release.
+
+### Added
+
+- Refinement diagnostics — `RefinementResult` struct with call counts (`f_calls`, `g_calls`, `h_calls`), timing, and fine-grained convergence flags; `convergence_reason` enum (`:x_tol`, `:f_tol`, `:g_tol`, `:iterations`, `:timeout`, `:error`).
+- Gradient-norm validation — `compute_gradient_norms`, `validate_critical_points`, `add_gradient_validation!`; automatic integration in `refine_experiment_results` using `config.f_abstol`.
+- Error categorization — campaign-wide error analysis (`categorize_campaign_errors`, `generate_error_summary`), priority-based filtering, batch-analyze CLI integration (`--include-errors`).
+- VegaLite L2 visualization (Phase 1) — `campaign_to_l2_dataframe`, `plot_l2_convergence`, pure DataFrames.jl pipeline.
+- Newton refinement, valley walking, statistical aggregation, campaign comparison utilities.
+- Globtim integration via weakdep extension `GlobtimExt`.
+
+### Notes
+
+- `Globtim` is a weak dependency. Load it alongside `GlobtimPostProcessing` to activate the integration extension.
+- Julia 1.12+ required.
+
 ## [Unreleased] - 2025-11-28
 
 ### Added - Gradient Norm Validation (Phase 2 Tier 2)
