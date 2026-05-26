@@ -320,6 +320,23 @@ function save_refined_results(
         comparison_df[!, :gradient_valid] = gradient_valid_col
     end
 
+    # Add Newton-step-norm validation columns if provided (bead 62qv).
+    # Same per-row expansion as gradient_validation: only converged points get
+    # finite values, the rest are Inf / false.
+    if step_validation !== nothing
+        step_norms_col = fill(Inf, result.n_raw)
+        step_valid_col = fill(false, result.n_raw)
+        for (j, converged) in enumerate(result.convergence_status)
+            if converged
+                converged_idx = sum(result.convergence_status[1:j])
+                step_norms_col[j] = step_validation.step_norms[converged_idx]
+                step_valid_col[j] = step_validation.step_valid[converged_idx]
+            end
+        end
+        comparison_df[!, :step_norm] = step_norms_col
+        comparison_df[!, :step_valid] = step_valid_col
+    end
+
     CSV.write(comparison_csv_path, comparison_df)
 
     # 3. Save summary JSON

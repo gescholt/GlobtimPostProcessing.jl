@@ -354,6 +354,114 @@ function add_gradient_validation!(
 end
 
 """
+    add_step_norm_validation!(
+        comparison_df::DataFrame,
+        objective;
+        step_tolerance::Float64 = 1e-4,
+        eigenvalue_floor_relative::Float64 = 1e-10,
+        use_refined::Bool = true,
+        gradient_method::Symbol = :forwarddiff,
+    ) -> StepNormValidationResult
+
+Post-hoc Newton-step-norm validation on a refinement-comparison DataFrame.
+Mirror of `add_gradient_validation!`, but writes `step_norm` + `step_valid`
+columns and returns a `StepNormValidationResult`.
+
+The point of this function (vs `validate_newton_steps` directly): re-process
+existing `refinement_comparison_deg_K.csv` files in place without re-running
+globtim. Rows with NaN coordinates (failed refinement) get `step_norm = Inf`
+and `step_valid = false`. This is the post-hoc tool for bead 62qv.
+"""
+function add_step_norm_validation!(
+    comparison_df::DataFrame,
+    objective;
+    step_tolerance::Float64 = 1e-4,
+    eigenvalue_floor_relative::Float64 = 1e-10,
+    use_refined::Bool = true,
+    gradient_method::Symbol = :forwarddiff,
+)::StepNormValidationResult
+    prefix = use_refined ? "refined_dim" : "raw_dim"
+
+    dim_cols = filter(c -> startswith(String(c), prefix), names(comparison_df))
+    sort!(dim_cols, by = c -> parse(Int, replace(String(c), prefix => "")))
+    isempty(dim_cols) && error("No $(prefix)* columns found in DataFrame")
+
+    n_points = nrow(comparison_df)
+    n_dims = length(dim_cols)
+
+    points = Vector{Vector{Float64}}(undef, n_points)
+    for i in 1:n_points
+        pt = Vector{Float64}(undef, n_dims)
+        for (j, col) in enumerate(dim_cols)
+            pt[j] = comparison_df[i, col]
+        end
+        points[i] = pt
+    end
+
+    # Compute step norms; rows with NaN coords skip the eigendecomposition
+    # and get Inf (matching the convention in add_gradient_validation!).
+    step_norms = Vector{Float64}(undef, n_points)
+    nonNaN_mask = falses(n_points)
+    for i in 1:n_points
+        nonNaN_mask[i] = !any(isnan, points[i])
+    end
+
+    if any(nonNaN_mask)
+        good_points = points[nonNaN_mask]
+        good_norms = compute_newton_step_norms(
+            good_points,
+            objective;
+            gradient_method = gradient_method,
+            eigenvalue_floor_relative = eigenvalue_floor_relative,
+        )
+        k = 0
+        for i in 1:n_points
+            if nonNaN_mask[i]
+                k += 1
+                step_norms[i] = good_norms[k]
+            else
+                step_norms[i] = Inf
+            end
+        end
+    else
+        fill!(step_norms, Inf)
+    end
+
+    step_valid = step_norms .< step_tolerance
+    n_step_valid = sum(step_valid)
+    n_step_invalid = n_points - n_step_valid
+
+    comparison_df[!, :step_norm] = step_norms
+    comparison_df[!, :step_valid] = step_valid
+
+    finite_norms = filter(isfinite, step_norms)
+    if isempty(finite_norms)
+        mean_n = Inf
+        median_n = Inf
+        max_n = Inf
+        min_n = Inf
+    else
+        mean_n = Statistics.mean(finite_norms)
+        median_n = Statistics.median(finite_norms)
+        max_n = maximum(finite_norms)
+        min_n = minimum(finite_norms)
+    end
+
+    return StepNormValidationResult(
+        step_norms,
+        step_valid,
+        n_step_valid,
+        n_step_invalid,
+        step_tolerance,
+        eigenvalue_floor_relative,
+        mean_n,
+        median_n,
+        max_n,
+        min_n,
+    )
+end
+
+"""
     StepNormValidationResult
 
 Result of Newton-step-norm validation for a set of refined critical points.

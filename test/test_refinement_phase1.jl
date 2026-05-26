@@ -746,6 +746,37 @@ end
         n_ad = compute_newton_step_norms(pts, f; gradient_method = :forwarddiff)
         @test isapprox(n_fd[1], n_ad[1]; rtol = 1e-3)  # FiniteDiff less precise
     end
+
+    @testset "add_step_norm_validation! on comparison DataFrame" begin
+        # Ill-conditioned quadratic, true CP at (1, 2).
+        # At (1.001, 2.001): ‖∇f‖ ≈ 1000 (Hessian-dominated) but step_norm ≈ 1.4e-3.
+        f(x) = 0.5 * (1e6 * (x[1] - 1.0)^2 + (x[2] - 2.0)^2)
+
+        df = DataFrame(
+            raw_dim1 = [0.9, 0.999, NaN],
+            raw_dim2 = [1.9, 1.999, NaN],
+            refined_dim1 = [1.0, 1.001, NaN],
+            refined_dim2 = [2.0, 2.001, NaN],
+        )
+
+        res = add_step_norm_validation!(df, f; step_tolerance = 1e-2)
+
+        # Columns written
+        @test :step_norm in propertynames(df)
+        @test :step_valid in propertynames(df)
+
+        # Convergent points pass; NaN row gets Inf / false
+        @test df.step_norm[1] == 0.0
+        @test isapprox(df.step_norm[2], sqrt(2) * 1e-3; atol = 1e-9)
+        @test df.step_norm[3] == Inf
+        @test df.step_valid == [true, true, false]
+        @test res.n_step_valid == 2
+
+        # Same setup with absolute-grad check would only pass the exact CP
+        grad = validate_critical_points([[1.0, 2.0], [1.001, 2.001]], f; tolerance = 1e-4)
+        @test grad.n_valid == 1                            # absolute check rejects the nearby point
+        @test grad.norms[2] > 100                          # ‖∇f‖ is huge here despite step_norm small
+    end
 end
 
 println(
