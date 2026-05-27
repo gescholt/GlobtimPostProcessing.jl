@@ -423,10 +423,10 @@ function add_step_norm_validation!(
         for i in 1:n_points
             if nonNaN_mask[i]
                 k += 1
-                step_norms[i]       = good.step_norms[k]
+                step_norms[i] = good.step_norms[k]
                 hess_min_eigvals[i] = good.min_abs_eigvals[k]
             else
-                step_norms[i]       = Inf
+                step_norms[i] = Inf
                 hess_min_eigvals[i] = NaN
             end
         end
@@ -546,7 +546,7 @@ function compute_newton_step_diagnostics(
     end
 
     n_pts = length(points)
-    step_norms      = Vector{Float64}(undef, n_pts)
+    step_norms = Vector{Float64}(undef, n_pts)
     min_abs_eigvals = Vector{Float64}(undef, n_pts)
     max_abs_eigvals = Vector{Float64}(undef, n_pts)
 
@@ -592,7 +592,7 @@ function compute_newton_step_diagnostics(
                 end
             end
 
-            step_norms[i]      = LinearAlgebra.norm(step)
+            step_norms[i] = LinearAlgebra.norm(step)
             min_abs_eigvals[i] = abs_min_eig
             max_abs_eigvals[i] = abs_max_eig
         catch e
@@ -602,9 +602,11 @@ function compute_newton_step_diagnostics(
         end
     end
 
-    return (step_norms = step_norms,
-            min_abs_eigvals = min_abs_eigvals,
-            max_abs_eigvals = max_abs_eigvals)
+    return (
+        step_norms = step_norms,
+        min_abs_eigvals = min_abs_eigvals,
+        max_abs_eigvals = max_abs_eigvals,
+    )
 end
 
 """
@@ -623,7 +625,8 @@ function compute_newton_step_norms(
     eigenvalue_floor_relative::Float64 = 1e-10,
 )::Vector{Float64}
     diag = compute_newton_step_diagnostics(
-        points, objective;
+        points,
+        objective;
         gradient_method = gradient_method,
         eigenvalue_floor_relative = eigenvalue_floor_relative,
     )
