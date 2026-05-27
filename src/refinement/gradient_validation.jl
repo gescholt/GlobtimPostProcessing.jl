@@ -364,8 +364,12 @@ end
     ) -> StepNormValidationResult
 
 Post-hoc Newton-step-norm validation on a refinement-comparison DataFrame.
-Mirror of `add_gradient_validation!`, but writes `step_norm` + `step_valid`
-columns and returns a `StepNormValidationResult`.
+Mirror of `add_gradient_validation!`, but writes three columns:
+  - `step_norm` — `‖H⁻¹∇f‖` at each refined CP (bead 62qv).
+  - `step_valid` — `step_norm < step_tolerance` (bead 62qv).
+  - `hessian_min_eigval` — `min |λ(H_f)|` per point; the empirical estimator for
+    the Morse-class Hessian floor `ℓ̂` used in calibrating Thm 1's (epsdAi)
+    bound (bead EPSDAI-1 / `cskw.1`). NaN for rows whose refined coords are NaN.
 
 The point of this function (vs `validate_newton_steps` directly): re-process
 existing `refinement_comparison_deg_K.csv` files in place without re-running
@@ -406,9 +410,10 @@ function add_step_norm_validation!(
         nonNaN_mask[i] = !any(isnan, points[i])
     end
 
+    hess_min_eigvals = Vector{Float64}(undef, n_points)
     if any(nonNaN_mask)
         good_points = points[nonNaN_mask]
-        good_norms = compute_newton_step_norms(
+        good = compute_newton_step_diagnostics(
             good_points,
             objective;
             gradient_method = gradient_method,
@@ -418,13 +423,16 @@ function add_step_norm_validation!(
         for i in 1:n_points
             if nonNaN_mask[i]
                 k += 1
-                step_norms[i] = good_norms[k]
+                step_norms[i]       = good.step_norms[k]
+                hess_min_eigvals[i] = good.min_abs_eigvals[k]
             else
-                step_norms[i] = Inf
+                step_norms[i]       = Inf
+                hess_min_eigvals[i] = NaN
             end
         end
     else
         fill!(step_norms, Inf)
+        fill!(hess_min_eigvals, NaN)
     end
 
     step_valid = step_norms .< step_tolerance
@@ -433,6 +441,7 @@ function add_step_norm_validation!(
 
     comparison_df[!, :step_norm] = step_norms
     comparison_df[!, :step_valid] = step_valid
+    comparison_df[!, :hessian_min_eigval] = hess_min_eigvals
 
     finite_norms = filter(isfinite, step_norms)
     if isempty(finite_norms)
@@ -498,22 +507,28 @@ struct StepNormValidationResult
 end
 
 """
-    compute_newton_step_norms(points, objective; gradient_method, eigenvalue_floor_relative) -> Vector{Float64}
+    compute_newton_step_diagnostics(points, objective; gradient_method, eigenvalue_floor_relative)
+        -> @NamedTuple{step_norms::Vector{Float64}, min_abs_eigvals::Vector{Float64}, max_abs_eigvals::Vector{Float64}}
 
-Compute Newton-step norms `‖H⁻¹ ∇f(x)‖` at each point.
+Compute Newton-step norms `‖H⁻¹ ∇f(x)‖` plus the spectral magnitude bounds
+`min |λ(H)|` and `max |λ(H)|` at each point.
+
+The minimum |λ| at a refined CP is an estimator for the empirical Morse-class
+Hessian floor `ℓ̂` used in calibrating Thm 1's (epsdAi) bound. See bead `cskw`
+(EPSDAI-CAL).
 
 The Hessian inverse uses the same truncated-eigenvalue pseudo-inverse as
 `refine_to_critical_point` in `newton_refinement.jl`: directions whose eigenvalue
 satisfies `|λ| < max(1e-12, eigenvalue_floor_relative × max|λ|)` are dropped from
-the inverse. Returns Inf if either the gradient or Hessian is non-finite, or if
-the Hessian is identically zero.
+the inverse. Step-norm is set to Inf and eigval entries to NaN if either the
+gradient or Hessian is non-finite, or if the Hessian is identically zero.
 """
-function compute_newton_step_norms(
+function compute_newton_step_diagnostics(
     points::Vector{Vector{Float64}},
     objective;
     gradient_method::Symbol = :forwarddiff,
     eigenvalue_floor_relative::Float64 = 1e-10,
-)::Vector{Float64}
+)
     compute_grad = if gradient_method == :forwarddiff
         pt -> ForwardDiff.gradient(objective, pt)
     elseif gradient_method == :finitediff
@@ -530,19 +545,26 @@ function compute_newton_step_norms(
         error("unreachable")
     end
 
-    norms = Vector{Float64}(undef, length(points))
+    n_pts = length(points)
+    step_norms      = Vector{Float64}(undef, n_pts)
+    min_abs_eigvals = Vector{Float64}(undef, n_pts)
+    max_abs_eigvals = Vector{Float64}(undef, n_pts)
 
     for (i, pt) in enumerate(points)
         try
             grad = compute_grad(pt)
             if !all(isfinite, grad)
-                norms[i] = Inf
+                step_norms[i] = Inf
+                min_abs_eigvals[i] = NaN
+                max_abs_eigvals[i] = NaN
                 continue
             end
 
             H = compute_hess(pt)
             if !all(isfinite, H)
-                norms[i] = Inf
+                step_norms[i] = Inf
+                min_abs_eigvals[i] = NaN
+                max_abs_eigvals[i] = NaN
                 continue
             end
 
@@ -552,8 +574,11 @@ function compute_newton_step_norms(
             V = eig.vectors
 
             abs_max_eig = maximum(abs, eigenvalues)
+            abs_min_eig = minimum(abs, eigenvalues)
             if !isfinite(abs_max_eig) || abs_max_eig <= 0
-                norms[i] = Inf
+                step_norms[i] = Inf
+                min_abs_eigvals[i] = NaN
+                max_abs_eigvals[i] = NaN
                 continue
             end
 
@@ -567,13 +592,42 @@ function compute_newton_step_norms(
                 end
             end
 
-            norms[i] = LinearAlgebra.norm(step)
+            step_norms[i]      = LinearAlgebra.norm(step)
+            min_abs_eigvals[i] = abs_min_eig
+            max_abs_eigvals[i] = abs_max_eig
         catch e
-            norms[i] = Inf
+            step_norms[i] = Inf
+            min_abs_eigvals[i] = NaN
+            max_abs_eigvals[i] = NaN
         end
     end
 
-    return norms
+    return (step_norms = step_norms,
+            min_abs_eigvals = min_abs_eigvals,
+            max_abs_eigvals = max_abs_eigvals)
+end
+
+"""
+    compute_newton_step_norms(points, objective; gradient_method, eigenvalue_floor_relative) -> Vector{Float64}
+
+Compute Newton-step norms `‖H⁻¹ ∇f(x)‖` at each point.
+
+Thin wrapper around `compute_newton_step_diagnostics` that returns only the
+step-norm vector — preserves the original API for callers that don't need the
+spectral bounds.
+"""
+function compute_newton_step_norms(
+    points::Vector{Vector{Float64}},
+    objective;
+    gradient_method::Symbol = :forwarddiff,
+    eigenvalue_floor_relative::Float64 = 1e-10,
+)::Vector{Float64}
+    diag = compute_newton_step_diagnostics(
+        points, objective;
+        gradient_method = gradient_method,
+        eigenvalue_floor_relative = eigenvalue_floor_relative,
+    )
+    return diag.step_norms
 end
 
 """
