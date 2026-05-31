@@ -168,6 +168,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_hessian_classification_correctness.jl")
     end
 
+    # Metrics JSONL loader (May 2026 — round-trip with Globtim.Metrics)
+    @testset "Metrics JSONL Loader" begin
+        include("test_metrics_loader.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end

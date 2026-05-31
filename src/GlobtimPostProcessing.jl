@@ -187,6 +187,9 @@ export print_volume_distribution
 export progress_bar, format_error, format_time, compute_display_error
 export count_splits_per_dim, get_path_to_root, format_path_compact
 
+# Metrics JSONL loader (May 2026)
+export load_metrics
+
 # Enhanced analysis exports (moved from globtim - January 2026)
 # Statistical table types
 export StatisticalTable, RobustStatistics, ConditionNumberAnalysis, ValidationResults
@@ -288,6 +291,9 @@ include("LandscapeCaptureTypes.jl")
 # Enhanced analysis (moved from globtim - January 2026)
 # Statistical tables, condition number analysis, and mathematical validation
 include("EnhancedAnalysis.jl")
+
+# JSONL metrics loader (May 2026 — consumer of Globtim.Metrics.MetricsLogger)
+include("MetricsLoader.jl")
 
 # Unified pipeline module (type-aware experiment loading - January 2026)
 # MUST be included before LV4DAnalysis which depends on it
