@@ -2,6 +2,10 @@
 
 This guide covers assessing how well polynomial critical points correspond to objective function basins.
 
+![Landscape fidelity — Deuflhard 2D, degree 10. Panel A shows raw polynomial CPs (★) and their refined counterparts (●▲) overlaid on the objective contour. Panel B zooms on p*; the gold ellipse is the Hessian-quadratic basin level set `{x : ½(x−p*)ᵀH(x−p*) ≤ Δf}`. Raw CPs inside the ellipse map to p* under refinement.](assets/landscape_fidelity.png)
+
+The figure above is the visual definition of basin membership used by `check_hessian_basin`: the gold ellipse in Panel B is the level set `{x : ½(x − x_min)ᵀ H (x − x_min) ≤ Δf}` with `Δf = threshold_factor · |f_min|` (or `Δf = threshold_factor` when `f_min ≈ 0`). The basin radius `r = √(2 Δf / λ_min(H))` is the semi-axis along the **flattest** Hessian eigenvector — the most permissive direction. Regenerate with `pkg/globtimpostprocessing/examples/figures/landscape_fidelity.jl`.
+
 ## Overview
 
 **Landscape fidelity** measures the correspondence between polynomial approximant critical points and objective function basins of attraction.
