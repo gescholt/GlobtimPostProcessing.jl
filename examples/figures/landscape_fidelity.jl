@@ -95,7 +95,7 @@ Label(fig[0, 1:4],
 
 # Panel A: full landscape with all CPs
 axA = Axis(fig[1, 1];
-    title  = "(A) Full landscape — raw polynomial CPs ★, refined CPs ●▲▼",
+    title  = "(A) Full landscape — polynomial CPs and their refined counterparts",
     xlabel = "x₁", ylabel = "x₂",
     aspect = DataAspect(),
     limits = ((-1.2, 1.2), (-1.2, 1.2)),
@@ -123,11 +123,7 @@ scatter!(axA, maxes.refined_dim1, maxes.refined_dim2;
     marker = :dtriangle, markersize = 11,
     color = :crimson, strokecolor = :white, strokewidth = 0.8,
     label = "Refined maximum")
-# Arrows raw → refined for points that moved
-for (r0, rf) in zip(raw_moved, ref_moved)
-    arrows!(axA, [r0[1]], [r0[2]], [rf[1] - r0[1]], [rf[2] - r0[2]];
-        color = (:black, 0.45), arrowsize = 8, linewidth = 1.0)
-end
+# (raw → refined arrows are deferred to Panel B's zoom — too busy at full scale)
 # Ground-truth minima
 scatter!(axA, [p_true[1], p_true_sym[1]], [p_true[2], p_true_sym[2]];
     marker = :star8, markersize = 24,
