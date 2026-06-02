@@ -41,15 +41,12 @@ flowchart LR
 
 ## Installation
 
+GlobtimPostProcessing is not yet registered in the General registry; install it from
+its public repository:
+
 ```julia
 using Pkg
-Pkg.add("GlobtimPostProcessing")
-```
-
-Or for development:
-
-```julia
-Pkg.develop(path="/path/to/globtimpostprocessing")
+Pkg.add(url="https://github.com/gescholt/GlobtimPostProcessing.jl")
 ```
 
 ## Quick Example
