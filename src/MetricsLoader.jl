@@ -64,13 +64,13 @@ function load_metrics(path::AbstractString)
         for (lineno, line) in enumerate(eachline(io))
             isempty(strip(line)) && continue
             row = JSON.parse(line)
-            row isa AbstractDict || throw(ArgumentError(
-                "metrics row at $path:$lineno is not a JSON object: $line",
-            ))
+            row isa AbstractDict || throw(
+                ArgumentError("metrics row at $path:$lineno is not a JSON object: $line"),
+            )
             kind = get(row, "kind", nothing)
-            kind === nothing && throw(ArgumentError(
-                "metrics row at $path:$lineno has no `kind` field: $line",
-            ))
+            kind === nothing && throw(
+                ArgumentError("metrics row at $path:$lineno has no `kind` field: $line"),
+            )
             n_rows += 1
             if kind == "meta"
                 push!(meta_rows, row)
@@ -83,9 +83,9 @@ function load_metrics(path::AbstractString)
             end
         end
     end
-    length(meta_rows) > 1 && throw(ArgumentError(
-        "metrics file $path has $(length(meta_rows)) meta rows (expected 1)",
-    ))
+    length(meta_rows) > 1 && throw(
+        ArgumentError("metrics file $path has $(length(meta_rows)) meta rows (expected 1)"),
+    )
     meta = isempty(meta_rows) ? Dict{String,Any}() : meta_rows[1]
 
     leaves = _metrics_rows_to_dataframe(leaf_rows)
