@@ -179,6 +179,38 @@ Use `:finitediff` for:
 - Objectives with discontinuities
 - Black-box objective functions
 
+### Newton-step-norm validation (scale-invariant)
+
+For objectives with very ill-conditioned Hessians — notably ODE parameter-estimation
+error functions, whose local Hessian eigenvalues can reach `1e6`+ — the absolute test
+`||∇f|| < tol` is unsatisfiable even at machine-distance from the true critical point
+(a point `1e-6` away can still have `||∇f|| ≈ 2`). The **Newton-step norm** is the
+scale-invariant alternative:
+
+```
+is_critical ⟺ ||H⁻¹ ∇f|| < step_tolerance
+```
+
+`H⁻¹∇f` is the Newton step length — invariant to the spectral magnitude of `H` — and
+uses a truncated pseudo-inverse (eigenvalues below `eigenvalue_floor_relative` are
+dropped) so ill-conditioned modes don't blow it up.
+
+```julia
+# Step-norm diagnostics for a set of points
+norms = compute_newton_step_norms(points, objective_func; gradient_method=:finitediff)
+
+# Retro-populate an existing refinement_comparison DataFrame with step_norm + step_valid
+add_step_norm_validation!(comparison_df, objective_func;
+    step_tolerance = 1e-4,
+    eigenvalue_floor_relative = 1e-10,
+    use_refined = true,
+)
+```
+
+`add_step_norm_validation!` adds `step_norm` and `step_valid` columns, letting existing
+experiment CSVs be re-scored without rerunning refinement. This criterion surfaces true
+critical-point signals on ODE problems that absolute-gradient validation reports as 0%.
+
 ## Output Files
 
 `refine_experiment_results()` creates three files per degree:
