@@ -1,6 +1,6 @@
 # GlobtimPostProcessing.jl
 
-> **Core Purpose**: Take raw critical point **candidates** from globtim's polynomial approximation and **refine** them to high numerical accuracy using local optimization. The polynomial approximation finds *where* critical points might be (~1e-3 to 1e-6 accuracy); this package determines *if* they are true critical points and computes their precise coordinates (~1e-12 accuracy).
+> **Core Purpose**: Take raw critical point **candidates** from globtim's polynomial approximation and **refine** them to high numerical accuracy using local optimization. The polynomial approximation finds *where* critical points might be (candidates are typically accurate to ~1e-3 to 1e-6); this package determines *if* they are true critical points (validating `‖∇f(x*)‖ < 1e-6`) and sharpens their coordinates with a local optimizer — to gradient norm `1e-8` by default, down to `~1e-12` in high-precision mode.
 
 Local refinement engine for critical points computed by globtim. This package loads, refines, validates, and reports on experimental results.
 
@@ -205,7 +205,7 @@ flowchart LR
     end
 
     subgraph Result
-        F["Verified Critical Points<br/>~1e-12 accuracy"]
+        F["Verified Critical Points<br/>‖∇f‖ < 1e-6 (refined)"]
     end
 
     A -->|CSV| B

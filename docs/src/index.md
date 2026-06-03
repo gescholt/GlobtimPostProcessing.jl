@@ -7,7 +7,7 @@ Local refinement engine for critical points computed by globtim.
 GlobtimPostProcessing.jl **refines critical point candidates** found by [Globtim.jl](https://github.com/gescholt/Globtim.jl) into verified, high-accuracy critical points.
 
 !!! info "Why Refinement is Necessary"
-    Polynomial approximation methods find critical point **candidates**, but these have limited numerical accuracy (~1e-3 to 1e-6). Local optimization refines these candidates to machine precision (~1e-12) and validates them by checking ||∇f(x*)|| ≈ 0.
+    Polynomial approximation methods find critical point **candidates**, but these have limited numerical accuracy (typically ~1e-3 to 1e-6). Local optimization refines these candidates toward the optimizer's tolerance (gradient norm `1e-8` by default, down to `~1e-12` in high-precision mode) and validates them by checking ‖∇f(x*)‖ < 1e-6.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
     end
 
     subgraph Result
-        F["Verified Critical Points<br/>~1e-12 accuracy"]
+        F["Verified Critical Points<br/>‖∇f‖ < 1e-6 (refined)"]
     end
 
     A -->|CSV| B
