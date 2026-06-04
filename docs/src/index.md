@@ -84,7 +84,7 @@ This package is the **refinement layer** without visualization dependencies:
 | **globtimpostprocessing** | Local refinement, validation, quality diagnostics |
 | **globtimplots** | Visualization of refined results |
 
-For plotting and visualization, use the separate [GlobtimPlots](https://github.com/gescholt/Globtim.jlplots) package:
+For plotting and visualization, use the separate [GlobtimPlots](https://github.com/gescholt/GlobtimPlots.jl) package:
 
 ```julia
 using GlobtimPostProcessing
@@ -113,7 +113,7 @@ save_plot(fig, "analysis.png")
 ## Related Packages
 
 - [Globtim.jl](https://github.com/gescholt/Globtim.jl) - Core optimization engine
-- [GlobtimPlots](https://github.com/gescholt/Globtim.jlplots) - Visualization layer
+- [GlobtimPlots](https://github.com/gescholt/GlobtimPlots.jl) - Visualization layer
 
 ## License
 
