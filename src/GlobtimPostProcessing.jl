@@ -79,6 +79,7 @@ export param_distance, load_experiment_config, load_critical_points_for_degree
 export detect_csv_schema, get_coordinate_columns
 export extract_true_parameters
 export compute_parameter_recovery_stats, generate_parameter_recovery_table, has_ground_truth
+export assemble_benefit_matrix, BenefitCell, ODE_PE_SYSTEMS
 
 # Quality diagnostics exports (Issue #7, Phase 3)
 export load_quality_thresholds
@@ -294,6 +295,9 @@ include("EnhancedAnalysis.jl")
 
 # JSONL metrics loader (May 2026 — consumer of Globtim.Metrics.MetricsLogger)
 include("MetricsLoader.jl")
+
+# Subdivision × sparsification → recovery benefit matrix (June 2026 — Part A baseline)
+include("BenefitMatrix.jl")
 
 # Unified pipeline module (type-aware experiment loading - January 2026)
 # MUST be included before LV4DAnalysis which depends on it

@@ -173,6 +173,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_metrics_loader.jl")
     end
 
+    # Benefit matrix assembly (June 2026 — Part A baseline; honest-missing semantics)
+    @testset "Benefit Matrix" begin
+        include("test_benefit_matrix.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end
