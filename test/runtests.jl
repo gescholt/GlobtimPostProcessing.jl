@@ -65,18 +65,6 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_quality_diagnostics.jl")
     end
 
-    # Run Batch Processing tests (Issue #20, Phase 2)
-    # COMMENTED OUT: Requires ErrorCategorization which needs Globtim
-    # @testset "Batch Processing (Issue #20, Phase 2)" begin
-    #     include("test_batch_processing.jl")
-    # end
-
-    # Run Error Categorization tests (Issue #20, Phase 3)
-    # COMMENTED OUT: Requires Globtim dependency
-    # @testset "Error Categorization (Issue #20, Phase 3)" begin
-    #     include("test_error_categorization.jl")
-    # end
-
     # Run Critical Point Classification tests
     @testset "Critical Point Classification" begin
         include("test_critical_point_classification.jl")
