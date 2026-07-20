@@ -126,6 +126,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_valley_walking.jl")
     end
 
+    # Run Valley Ideal tests (July 2026, VALLEY-IDEAL.1)
+    @testset "Valley Ideal" begin
+        include("test_valley_ideal.jl")
+    end
+
     # Run Postprocessing Pipeline tests (March 2026)
     @testset "Postprocessing Pipeline" begin
         include("test_postprocessing_pipeline.jl")

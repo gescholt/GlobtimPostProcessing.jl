@@ -172,6 +172,10 @@ export trace_valley, trace_valleys_from_critical_points
 export walk_newton_projection, walk_predictor_corrector, walk_tangent_projection
 export run_valley_analysis
 
+# Valley ideal exports (approximate vanishing ideal recovery)
+export ValleyIdealConfig, ValleyIdealResult, ValleyIdealGenerator
+export recover_vanishing_ideal, physical_generator, generator_string
+
 # Subdivision tree analysis exports (load + analyze saved JLD2/JSON trees)
 export load_subdivision_tree, analyze_subdivision_tree, SubdivisionTreeStats
 export tree_leaves_to_dataframe, tree_depth_summary
@@ -279,6 +283,9 @@ include("experiment_display.jl")
 
 # Valley walking (positive-dimensional minima tracing)
 include("ValleyWalking.jl")
+
+# Valley ideal (approximate vanishing ideal of a sampled valley)
+include("ValleyIdeal.jl")
 
 # Subdivision tree analysis (adaptive subdivision postprocessing - January 2026)
 include("SubdivisionTreeAnalysis.jl")
