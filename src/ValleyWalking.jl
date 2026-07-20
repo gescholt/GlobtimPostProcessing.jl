@@ -6,9 +6,13 @@ using Printf: @printf
 
 # Gradient/Hessian dispatch — uses ForwardDiff or FiniteDiff depending on config.
 # ForwardDiff gives machine-precision derivatives but requires the objective to accept
-# Dual numbers (i.e. generic Real types). ODE-based objectives that mutate pre-allocated
-# Float64 buffers (e.g. DynamicObjectives) are NOT ForwardDiff-compatible and must use
-# FiniteDiff. See data_generation.jl:69 for the known blocker.
+# Dual numbers (i.e. generic Real types). DynamicObjectives.TolerantObjective mutates
+# pre-allocated Float64 buffers and is NOT ForwardDiff-compatible (data_generation.jl:69)
+# — but a plain `remake(prob; u0=..., p=...) + solve` closure over the same model IS
+# Dual-compatible and should be preferred when walking ODE landscapes: near a sloppy
+# direction (small transverse Hessian eigenvalue λ) the projection divides gradient
+# noise by λ, so FiniteDiff's ~1e-9 noise produces O(noise/λ) drift per corrector call
+# while ForwardDiff stays exact (see experiments/sandbox/valley_ideal_ode_validation.jl).
 
 function _vw_gradient(f, x::AbstractVector, method::Symbol)
     if method == :forwarddiff
@@ -43,6 +47,11 @@ Configuration for valley walking algorithms.
 - `method`: Walking method — `:newton_projection`, `:predictor_corrector`, or `:tangent_projection` (default: :newton_projection)
 - `gradient_method`: Differentiation backend — `:forwarddiff` or `:finitediff` (default: :forwarddiff).
   Use `:finitediff` for ODE-based objectives that are not ForwardDiff-compatible.
+- `close_tol`: Closure radius — a walk that returns within this distance of its
+  start (after > 4 accepted steps) is a closed curve and stops instead of
+  re-tracing it. `0.0` (default) means auto: `2 * initial_step_size`, mirroring
+  `manifold_resolve`. Valleys with circumference below ~5 steps may close
+  prematurely; raise `close_tol` resolution by lowering the step size instead.
 """
 @kwdef struct ValleyWalkConfig
     gradient_tolerance::Float64 = 1e-4
@@ -53,7 +62,15 @@ Configuration for valley walking algorithms.
     projection_tol::Float64 = 1e-10
     method::Symbol = :newton_projection
     gradient_method::Symbol = :forwarddiff
+    close_tol::Float64 = 0.0
 end
+
+# Effective closure radius: explicit, or 2× the initial step (manifold_resolve).
+_close_tol(config::ValleyWalkConfig) =
+    config.close_tol > 0 ? config.close_tol : 2 * config.initial_step_size
+
+# A path is closed when it returned to its start after actually leaving it.
+_path_is_closed(steps, ctol) = length(steps) > 4 && norm(steps[end] - steps[1]) < ctol
 
 """
 Result of tracing a valley from a starting point.
@@ -65,6 +82,9 @@ Result of tracing a valley from a starting point.
 - `arc_length`: Total arc length of both paths
 - `n_points`: Total number of points in both paths
 - `valley_dimension`: Number of near-zero Hessian eigenvalues (0 if not a valley)
+- `is_closed`: The positive-direction walk returned to its start (a closed
+  curve / orbit). When true, `path_negative` is just the start point — the
+  closed curve is already fully covered by `path_positive`.
 - `method`: Walking method used
 - `converged`: Whether the trace completed successfully
 """
@@ -75,6 +95,7 @@ struct ValleyTraceResult
     arc_length::Float64
     n_points::Int
     valley_dimension::Int
+    is_closed::Bool
     method::Symbol
     converged::Bool
 end
@@ -125,7 +146,7 @@ function project_to_valley(
     gradient_method::Symbol = :forwarddiff,
 )
     x = Vector{Float64}(point)
-    for _ in 1:max_iter
+    for _ = 1:max_iter
         g = _vw_gradient(f, x, gradient_method)
         norm(g) < tol && break
         H = _vw_hessian(f, x, gradient_method)
@@ -170,7 +191,7 @@ function project_to_valley_tangent(
     t = tangent / norm(tangent)
     n = length(x)
 
-    for _ in 1:max_iter
+    for _ = 1:max_iter
         g = _vw_gradient(f, x, gradient_method)
         norm(g) < tol && break
 
@@ -214,7 +235,7 @@ function get_valley_tangent(
 
     dirs = eigendecomp.vectors[:, mask]
     best = dirs[:, 1]
-    for j in 1:size(dirs, 2)
+    for j = 1:size(dirs, 2)
         abs(dot(dirs[:, j], prev_dir)) > abs(dot(best, prev_dir)) && (best = dirs[:, j])
     end
     dot(best, prev_dir) < 0 && (best = -best)
@@ -237,8 +258,9 @@ function walk_newton_projection(
     current = Vector{Float64}(start_point)
     direction = initial_direction / norm(initial_direction)
     step_size = config.initial_step_size
+    ctol = _close_tol(config)
 
-    for _ in 1:config.max_steps
+    for _ = 1:config.max_steps
         tangent = get_valley_tangent(f, current, direction, config)
         isnothing(tangent) && break
         direction = tangent
@@ -258,6 +280,7 @@ function walk_newton_projection(
         if norm(projected - candidate) < step_size
             current = projected
             push!(steps, copy(current))
+            _path_is_closed(steps, ctol) && break   # closed curve — stop re-tracing
             step_size = min(step_size * 1.1, 0.2)
         else
             step_size *= 0.5
@@ -283,8 +306,9 @@ function walk_predictor_corrector(
     current = Vector{Float64}(start_point)
     direction = initial_direction / norm(initial_direction)
     step_size = config.initial_step_size
+    ctol = _close_tol(config)
 
-    for _ in 1:config.max_steps
+    for _ = 1:config.max_steps
         tangent = get_valley_tangent(f, current, direction, config)
         isnothing(tangent) && break
         direction = tangent
@@ -305,11 +329,13 @@ function walk_predictor_corrector(
             # Good step - accept and maybe increase step size
             current = corrected
             push!(steps, copy(current))
+            _path_is_closed(steps, ctol) && break   # closed curve — stop re-tracing
             step_size = min(step_size * 1.2, 0.3)
         elseif correction_size < step_size
             # Okay step - accept but reduce step size
             current = corrected
             push!(steps, copy(current))
+            _path_is_closed(steps, ctol) && break   # closed curve — stop re-tracing
             step_size *= 0.8
         else
             # Bad step - reduce step size and retry
@@ -340,8 +366,9 @@ function walk_tangent_projection(
     current = Vector{Float64}(start_point)
     direction = initial_direction / norm(initial_direction)
     step_size = config.initial_step_size
+    ctol = _close_tol(config)
 
-    for _ in 1:config.max_steps
+    for _ = 1:config.max_steps
         tangent = get_valley_tangent(f, current, direction, config)
         isnothing(tangent) && break
         direction = tangent
@@ -362,6 +389,7 @@ function walk_tangent_projection(
         if norm(projected - candidate) < step_size
             current = projected
             push!(steps, copy(current))
+            _path_is_closed(steps, ctol) && break   # closed curve — stop re-tracing
             step_size = min(step_size * 1.1, 0.2)
         else
             step_size *= 0.5
@@ -394,6 +422,7 @@ function trace_valley(
             0.0,
             1,
             0,
+            false,
             config.method,
             false,
         )
@@ -416,14 +445,18 @@ function trace_valley(
         )
     end
 
-    # Walk in both directions
+    # Walk in the positive direction; when the curve closes on itself the
+    # negative direction would only re-trace it, so it is skipped.
     path_pos = walk_func(f, start_point, initial_dir, config)
-    path_neg = walk_func(f, start_point, -initial_dir, config)
+    is_closed = _path_is_closed(path_pos, _close_tol(config))
+    path_neg =
+        is_closed ? [Vector{Float64}(start_point)] :
+        walk_func(f, start_point, -initial_dir, config)
 
     # Compute arc length
     arc_len =
-        sum(norm(path_pos[i+1] - path_pos[i]) for i in 1:(length(path_pos)-1); init = 0.0) +
-        sum(norm(path_neg[i+1] - path_neg[i]) for i in 1:(length(path_neg)-1); init = 0.0)
+        sum(norm(path_pos[i+1] - path_pos[i]) for i = 1:(length(path_pos)-1); init = 0.0) +
+        sum(norm(path_neg[i+1] - path_neg[i]) for i = 1:(length(path_neg)-1); init = 0.0)
 
     n_points = length(path_pos) + length(path_neg)
 
@@ -434,6 +467,7 @@ function trace_valley(
         arc_len,
         n_points,
         vdim,
+        is_closed,
         config.method,
         true,
     )
@@ -458,7 +492,7 @@ function trace_valleys_from_critical_points(
 
     results = ValleyTraceResult[]
 
-    for i in 1:nrow(df)
+    for i = 1:nrow(df)
         point = [df[i, col] for col in dim_cols]
         result = trace_valley(f, point, config)
         result.converged && push!(results, result)
@@ -520,12 +554,13 @@ function run_valley_analysis(
 
         status = trace.converged ? "converged" : "not converged"
         @printf(
-            "  CP %2d: dim=%d  arc_length=%.2f  points=%d  %s\n",
+            "  CP %2d: dim=%d  arc_length=%.2f  points=%d  %s%s\n",
             cp_idx,
             trace.valley_dimension,
             trace.arc_length,
             trace.n_points,
-            status
+            status,
+            trace.is_closed ? "  (closed curve)" : ""
         )
 
         if trace.converged

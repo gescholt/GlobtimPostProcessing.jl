@@ -230,8 +230,9 @@ end
         for p in path
             @test abs(norm(p) - 1.0) < 1e-4
         end
-        # Should have moved away from start
-        @test norm(path[end] - start) > 0.1
+        # Should have genuinely traveled along the circle (the endpoint may be
+        # back near the start now that closed curves stop after one lap).
+        @test maximum(norm(p - start) for p in path) > 1.0
     end
 
     @testset "all path points are critical" begin
@@ -354,7 +355,9 @@ end
         for p in path
             @test abs(norm(p) - 1.0) < 1e-4
         end
-        @test norm(path[end] - start) > 0.1
+        # Should have genuinely traveled along the circle (the endpoint may be
+        # back near the start now that closed curves stop after one lap).
+        @test maximum(norm(p - start) for p in path) > 1.0
     end
 end
 
@@ -381,8 +384,9 @@ end
         for p in path
             @test abs(norm(p) - 1.0) < 1e-4
         end
-        # Should have moved away from start
-        @test norm(path[end] - start) > 0.1
+        # Should have genuinely traveled along the circle (the endpoint may be
+        # back near the start now that closed curves stop after one lap).
+        @test maximum(norm(p - start) for p in path) > 1.0
     end
 
     @testset "all path points are critical" begin
@@ -428,7 +432,7 @@ end
 
         # Compute spacing variance for each (coefficient of variation)
         function spacing_cv(path)
-            spacings = [norm(path[i+1] - path[i]) for i in 1:(length(path)-1)]
+            spacings = [norm(path[i+1] - path[i]) for i = 1:(length(path)-1)]
             isempty(spacings) && return Inf
             μ = sum(spacings) / length(spacings)
             μ < 1e-12 && return Inf
@@ -469,7 +473,7 @@ end
         projection_tol = 1e-10,
     )
 
-    @testset "bidirectional trace on unit circle" begin
+    @testset "closed-curve trace on unit circle" begin
         start = [1.0, 0.0]
         result = trace_valley(f_circle, start, config)
 
@@ -477,16 +481,18 @@ end
         @test result.converged == true
         @test result.start_point ≈ start
         @test length(result.path_positive) > 3
-        @test length(result.path_negative) > 3
         @test result.arc_length > 0.1
         @test result.n_points == length(result.path_positive) + length(result.path_negative)
         @test result.valley_dimension == 1
 
-        # Both paths should stay on the circle
+        # The circle closes: one lap, no negative-direction re-trace.
+        @test result.is_closed == true
+        @test length(result.path_negative) == 1
+        # Arc length ≈ circumference 2π (up to the closure gap of ≤ 2 steps).
+        @test 2π - 3 * config.initial_step_size < result.arc_length < 2π + 0.2
+
+        # The path should stay on the circle
         for p in result.path_positive
-            @test abs(norm(p) - 1.0) < 1e-4
-        end
-        for p in result.path_negative
             @test abs(norm(p) - 1.0) < 1e-4
         end
     end
@@ -638,6 +644,7 @@ end
             0.5,
             4,
             1,
+            false,
             :newton_projection,
             true,
         )
@@ -646,6 +653,7 @@ end
         @test result.valley_dimension == 1
         @test result.n_points == 4
         @test result.arc_length == 0.5
+        @test result.is_closed == false
     end
 end
 
@@ -865,7 +873,7 @@ end
     )
 
     function spacing_cv(path)
-        spacings = [norm(path[i+1] - path[i]) for i in 1:(length(path)-1)]
+        spacings = [norm(path[i+1] - path[i]) for i = 1:(length(path)-1)]
         length(spacings) < 2 && return Inf
         μ = mean(spacings)
         μ < 1e-12 && return Inf
@@ -919,28 +927,26 @@ end
             for m in methods
                 r = circle_results[m]
                 @test spacing_cv(r.path_positive) < 0.5
-                @test spacing_cv(r.path_negative) < 0.5
+                # A closed trace skips the negative walk (path_negative is just
+                # the start point), so spacing is only defined on open traces.
+                r.is_closed || @test spacing_cv(r.path_negative) < 0.5
             end
         end
 
-        @testset "predictor_corrector covers most arc (aggressive step growth)" begin
-            # predictor_corrector grows step by 1.2× vs 1.1× for the others
-            arc_pc = circle_results[:predictor_corrector].arc_length
-            arc_np = circle_results[:newton_projection].arc_length
-            arc_tp = circle_results[:tangent_projection].arc_length
-            @test arc_pc >= arc_np
-            @test arc_pc >= arc_tp
+        @testset "every method closes the circle in exactly one lap" begin
+            # Pre-closure this compared multi-lap arc lengths across methods;
+            # now all methods stop at closure, so each arc ≈ circumference 2π
+            # (short by at most the closure gap of ~2 steps).
+            for m in methods
+                r = circle_results[m]
+                @test r.is_closed == true
+                @test 2π - 0.7 < r.arc_length < 2π + 0.2
+            end
         end
 
         @testset "tangent_projection spacing no worse than 1.5× newton" begin
-            cv_np = max(
-                spacing_cv(circle_results[:newton_projection].path_positive),
-                spacing_cv(circle_results[:newton_projection].path_negative),
-            )
-            cv_tp = max(
-                spacing_cv(circle_results[:tangent_projection].path_positive),
-                spacing_cv(circle_results[:tangent_projection].path_negative),
-            )
+            cv_np = spacing_cv(circle_results[:newton_projection].path_positive)
+            cv_tp = spacing_cv(circle_results[:tangent_projection].path_positive)
             @test cv_tp < cv_np * 1.5
         end
     end
@@ -1103,5 +1109,51 @@ end
     @testset "invalid gradient_method raises error" begin
         bad_config = ValleyWalkConfig(gradient_method = :bogus)
         @test_throws ErrorException detect_valley(f_circle, [1.0, 0.0], bad_config)
+    end
+end
+
+# ─── closure detection tests (VALLEY-IDEAL.3) ───────────────────────────────
+
+@testset "closure detection" begin
+    config = ValleyWalkConfig(
+        gradient_tolerance = 1e-4,
+        eigenvalue_threshold = 1e-2,
+        initial_step_size = 0.05,
+        max_steps = 400,
+        max_projection_iter = 20,
+        projection_tol = 1e-10,
+        method = :tangent_projection,
+    )
+
+    @testset "circle closes after one lap, not max_steps laps" begin
+        result = trace_valley(f_circle, [1.0, 0.0], config)
+        @test result.is_closed == true
+        # One lap at steps ≤ 0.2 needs ≥ ~32 points; 400 steps would be ~12 laps.
+        @test result.n_points < 200
+        @test 2π - 3 * config.initial_step_size < result.arc_length < 2π + 0.2
+    end
+
+    @testset "open valley (hyperbola) does not close" begin
+        result = trace_valley(f_hyperbola, [1.0, 2.0], config)
+        @test result.converged == true
+        @test result.is_closed == false
+        # Both directions walked on an open curve.
+        @test length(result.path_negative) > 3
+    end
+
+    @testset "explicit close_tol is honored" begin
+        config_tight = ValleyWalkConfig(
+            gradient_tolerance = 1e-4,
+            eigenvalue_threshold = 1e-2,
+            initial_step_size = 0.05,
+            max_steps = 400,
+            max_projection_iter = 20,
+            projection_tol = 1e-10,
+            method = :tangent_projection,
+            close_tol = 0.15,
+        )
+        result = trace_valley(f_circle, [1.0, 0.0], config_tight)
+        @test result.is_closed == true
+        @test norm(result.path_positive[end] - result.path_positive[1]) < 0.15
     end
 end
