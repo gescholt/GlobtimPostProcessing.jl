@@ -93,11 +93,11 @@ function _monomial_exponents(n::Int, D::Int)
     out = Vector{Vector{Int}}()
     function rec(prefix::Vector{Int}, remaining::Int, budget::Int)
         if remaining == 1
-            for d = 0:budget
+            for d in 0:budget
                 push!(out, vcat(prefix, d))
             end
         else
-            for d = 0:budget
+            for d in 0:budget
                 rec(vcat(prefix, d), remaining - 1, budget - d)
             end
         end
@@ -141,7 +141,7 @@ function _evaluation_matrix(points::Vector{Vector{Float64}}, exps::Vector{Vector
     M = Matrix{Float64}(undef, length(points), length(exps))
     @inbounds for (j, e) in enumerate(exps), (i, p) in enumerate(points)
         v = 1.0
-        for d = 1:n
+        for d in 1:n
             v *= p[d]^e[d]
         end
         M[i, j] = v
@@ -178,8 +178,8 @@ function recover_vanishing_ideal(
     # Coordinates that are constant on the cloud (e.g. a valley confined to a
     # hyperplane x_i = c) get a floor halfwidth — their normalized value is 0.
     if config.normalize
-        lo = [minimum(p[d] for p in pts) for d = 1:n]
-        hi = [maximum(p[d] for p in pts) for d = 1:n]
+        lo = [minimum(p[d] for p in pts) for d in 1:n]
+        hi = [maximum(p[d] for p in pts) for d in 1:n]
         center = (lo .+ hi) ./ 2
         halfwidth = max.((hi .- lo) ./ 2, 1e-8)
         pts = [(p .- center) ./ halfwidth for p in pts]
@@ -202,7 +202,7 @@ function recover_vanishing_ideal(
     sigma_gaps = Float64[]
     generators = ValleyIdealGenerator[]
 
-    for D = 1:config.degree_max
+    for D in 1:config.degree_max
         exps = filter(e -> sum(e) <= D, all_exps)
         nb = length(exps)
         M = _evaluation_matrix(pts, exps)
@@ -213,9 +213,9 @@ function recover_vanishing_ideal(
         # on those coordinates during un-scaling and drown the genuine
         # generators (the circle-in-a-hyperplane failure mode).
         colnorm = [
-            let s = norm(view(M, :, j));
-                s == 0.0 ? 1.0 : s;
-            end for j = 1:nb
+            let s = norm(view(M, :, j))
+                s == 0.0 ? 1.0 : s
+            end for j in 1:nb
         ]
         sv = svd(M ./ colnorm')
         push!(sigma_gaps, sv.S[end] / sv.S[1])
@@ -224,7 +224,7 @@ function recover_vanishing_ideal(
 
         # Kernel basis as coefficient vectors in the (unscaled) monomial basis.
         V = Matrix{Float64}(undef, nb, k)
-        for i = 1:k
+        for i in 1:k
             v = sv.V[:, end-i+1] ./ colnorm
             V[:, i] = v ./ norm(v)
         end
@@ -235,7 +235,7 @@ function recover_vanishing_ideal(
             for m in _monomial_exponents(n, D - g.degree)
                 v = zeros(nb)
                 for (c, e) in zip(g.coeffs, g.exponents)
-                    v[exp_index[e .+ m]] += c
+                    v[exp_index[e.+m]] += c
                 end
                 push!(prods, v ./ norm(v))
             end
@@ -255,7 +255,7 @@ function recover_vanishing_ideal(
         n_new = k - r
         if n_new > 0
             rsv = svd(V)
-            for i = 1:n_new
+            for i in 1:n_new
                 u = rsv.U[:, i]
                 res = maximum(abs.(M * u)) / norm(u)
                 push!(generators, ValleyIdealGenerator(D, exps, u, res))
@@ -315,17 +315,17 @@ function physical_generator(
     c = result.center
     h = result.halfwidth
     cleaned = copy(gen.coeffs)
-    cleaned[abs.(cleaned) .< clean*maximum(abs, cleaned)] .= 0.0
+    cleaned[abs.(cleaned).<clean*maximum(abs, cleaned)] .= 0.0
     acc = Dict{Vector{Int},Float64}()
     for (coef, e) in zip(cleaned, gen.exponents)
         # Expand ∏ᵢ ((xᵢ − cᵢ)/hᵢ)^{eᵢ} term by term via per-variable binomials.
         terms = Dict(zeros(Int, n) => coef)
-        for i = 1:n
+        for i in 1:n
             k = e[i]
             k == 0 && continue
-            uni = [binomial(k, j) * (-c[i])^(k - j) / h[i]^k for j = 0:k]
+            uni = [binomial(k, j) * (-c[i])^(k - j) / h[i]^k for j in 0:k]
             nxt = Dict{Vector{Int},Float64}()
-            for (te, tc) in terms, j = 0:k
+            for (te, tc) in terms, j in 0:k
                 ne = copy(te)
                 ne[i] += j
                 nxt[ne] = get(nxt, ne, 0.0) + tc * uni[j+1]
