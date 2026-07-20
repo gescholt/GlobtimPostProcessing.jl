@@ -146,7 +146,7 @@ function project_to_valley(
     gradient_method::Symbol = :forwarddiff,
 )
     x = Vector{Float64}(point)
-    for _ = 1:max_iter
+    for _ in 1:max_iter
         g = _vw_gradient(f, x, gradient_method)
         norm(g) < tol && break
         H = _vw_hessian(f, x, gradient_method)
@@ -191,7 +191,7 @@ function project_to_valley_tangent(
     t = tangent / norm(tangent)
     n = length(x)
 
-    for _ = 1:max_iter
+    for _ in 1:max_iter
         g = _vw_gradient(f, x, gradient_method)
         norm(g) < tol && break
 
@@ -235,7 +235,7 @@ function get_valley_tangent(
 
     dirs = eigendecomp.vectors[:, mask]
     best = dirs[:, 1]
-    for j = 1:size(dirs, 2)
+    for j in 1:size(dirs, 2)
         abs(dot(dirs[:, j], prev_dir)) > abs(dot(best, prev_dir)) && (best = dirs[:, j])
     end
     dot(best, prev_dir) < 0 && (best = -best)
@@ -260,7 +260,7 @@ function walk_newton_projection(
     step_size = config.initial_step_size
     ctol = _close_tol(config)
 
-    for _ = 1:config.max_steps
+    for _ in 1:config.max_steps
         tangent = get_valley_tangent(f, current, direction, config)
         isnothing(tangent) && break
         direction = tangent
@@ -308,7 +308,7 @@ function walk_predictor_corrector(
     step_size = config.initial_step_size
     ctol = _close_tol(config)
 
-    for _ = 1:config.max_steps
+    for _ in 1:config.max_steps
         tangent = get_valley_tangent(f, current, direction, config)
         isnothing(tangent) && break
         direction = tangent
@@ -368,7 +368,7 @@ function walk_tangent_projection(
     step_size = config.initial_step_size
     ctol = _close_tol(config)
 
-    for _ = 1:config.max_steps
+    for _ in 1:config.max_steps
         tangent = get_valley_tangent(f, current, direction, config)
         isnothing(tangent) && break
         direction = tangent
@@ -455,8 +455,8 @@ function trace_valley(
 
     # Compute arc length
     arc_len =
-        sum(norm(path_pos[i+1] - path_pos[i]) for i = 1:(length(path_pos)-1); init = 0.0) +
-        sum(norm(path_neg[i+1] - path_neg[i]) for i = 1:(length(path_neg)-1); init = 0.0)
+        sum(norm(path_pos[i+1] - path_pos[i]) for i in 1:(length(path_pos)-1); init = 0.0) +
+        sum(norm(path_neg[i+1] - path_neg[i]) for i in 1:(length(path_neg)-1); init = 0.0)
 
     n_points = length(path_pos) + length(path_neg)
 
@@ -492,7 +492,7 @@ function trace_valleys_from_critical_points(
 
     results = ValleyTraceResult[]
 
-    for i = 1:nrow(df)
+    for i in 1:nrow(df)
         point = [df[i, col] for col in dim_cols]
         result = trace_valley(f, point, config)
         result.converged && push!(results, result)
