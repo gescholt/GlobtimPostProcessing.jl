@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - Documenter configuration pointed `repo` / `repolink` at the private `globopt_merged` monorepo and `edit_link` at a nonexistent `master` branch; repoint to the public `GlobtimPostProcessing.jl` repository on `main`.
+- Pin `PrettyTables` compat to `"2"` — the display helpers `using PrettyTables: Highlighter, tf_unicode_rounded, ft_printf`, all removed in PrettyTables 3; a prior widening to `"2, 3"` let a fresh resolve pull v3 and broke the test suite (`UndefVarError`).
 
 ## [0.1.1] - 2026-04-30
 
