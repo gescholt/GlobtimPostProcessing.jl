@@ -4,9 +4,9 @@ using Documenter, GlobtimPostProcessing
 makedocs(
     sitename = "GlobtimPostProcessing.jl Documentation",
     modules = [GlobtimPostProcessing],
-    repo = "github.com/gescholt/globopt_merged",
+    repo = "github.com/gescholt/GlobtimPostProcessing.jl",
     format = Documenter.HTML(
-        repolink = "https://github.com/gescholt/globopt_merged/tree/main/pkg/globtimpostprocessing",
+        repolink = "https://github.com/gescholt/GlobtimPostProcessing.jl",
         edit_link = "master",
         assets = String[],
     ),
@@ -26,5 +26,4 @@ makedocs(
     checkdocs = :none,
 )
 
-# deploydocs not used - GitLab repo
-# deploydocs(repo = "github.com/gescholt/globopt_merged.git")
+# deploydocs(repo = "github.com/gescholt/GlobtimPostProcessing.jl.git", devbranch = "master")
