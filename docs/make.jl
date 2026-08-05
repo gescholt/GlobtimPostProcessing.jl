@@ -7,7 +7,7 @@ makedocs(
     repo = "github.com/gescholt/GlobtimPostProcessing.jl",
     format = Documenter.HTML(
         repolink = "https://github.com/gescholt/GlobtimPostProcessing.jl",
-        edit_link = "master",
+        edit_link = "main",
         assets = String[],
     ),
     pages = [
@@ -26,4 +26,4 @@ makedocs(
     checkdocs = :none,
 )
 
-# deploydocs(repo = "github.com/gescholt/GlobtimPostProcessing.jl.git", devbranch = "master")
+# deploydocs(repo = "github.com/gescholt/GlobtimPostProcessing.jl.git", devbranch = "main")
