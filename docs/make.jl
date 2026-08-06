@@ -26,4 +26,4 @@ makedocs(
     checkdocs = :none,
 )
 
-# deploydocs(repo = "github.com/gescholt/GlobtimPostProcessing.jl.git", devbranch = "main")
+deploydocs(repo = "github.com/gescholt/GlobtimPostProcessing.jl.git", devbranch = "main")

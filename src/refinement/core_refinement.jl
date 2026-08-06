@@ -26,6 +26,7 @@ Updated: 2025-11-22 (Moved to globtimpostprocessing)
 """
 
 # Note: using Optim is done in main GlobtimPostProcessing.jl
+import Logging
 
 """
 Result of refining a single critical point.
@@ -51,8 +52,6 @@ Tier 1 Diagnostics (zero-cost, always available):
 - `iteration_limit_reached::Bool`: Hit max iteration limit
 - `convergence_reason::Symbol`: Primary stopping reason (:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error)
 """
-
-import Logging
 struct RefinementResult
     # Original fields (backward compatibility)
     refined::Vector{Float64}
@@ -190,6 +189,15 @@ function _resolve_optim_method(method::Symbol; step_size::Float64 = 1.0)
 end
 _resolve_optim_method(method; step_size::Float64 = 1.0) = method  # passthrough for Optim objects
 
+"""
+    refine_critical_point(objective_func, initial_point; method=Optim.NelderMead(), bounds=nothing, kwargs...) -> RefinementResult
+
+Locally refine a single candidate critical `initial_point` of `objective_func` with Optim.jl,
+improving numerical accuracy (typically from ~1e-10 to ~1e-16). Gradient-free NelderMead is the
+default for robustness on ODE-based / stiff objectives; pass `method`, `bounds`, and the tolerance
+keywords (`f_abstol`, `x_abstol`, `max_iterations`, `max_time`, `store_trace`) to tune. See
+[`refine_critical_points`](@ref) for the batch version.
+"""
 function refine_critical_point(
     objective_func,
     initial_point::Vector{Float64};
