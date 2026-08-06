@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · GlobtimPostProcessing.jl Documentation</title><meta name="title" content="Examples · GlobtimPostProcessing.jl Documentation"/><meta property="og:title" content="Examples · GlobtimPostProcessing.jl Documentation"/><meta property="twitter:title" content="Examples · GlobtimPostProcessing.jl Documentation"/><meta name="description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><meta property="og:description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><meta property="twitter:description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">GlobtimPostProcessing.jl Documentation</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../getting_started/">Getting Started</a></li><li><span class="tocitem">Guides</span><ul><li><a class="tocitem" href="../refinement/">Critical Point Refinement</a></li><li><a class="tocitem" href="../quality_diagnostics/">Quality Diagnostics</a></li><li><a class="tocitem" href="../parameter_recovery/">Parameter Recovery</a></li><li><a class="tocitem" href="../landscape_fidelity/">Landscape Fidelity</a></li><li><a class="tocitem" href="../campaign_analysis/">Campaign Analysis</a></li></ul></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Example-1:-Single-Experiment-Analysis"><span>Example 1: Single Experiment Analysis</span></a></li><li><a class="tocitem" href="#Example-2:-Campaign-Comparison"><span>Example 2: Campaign Comparison</span></a></li><li><a class="tocitem" href="#Example-3:-ODE-Parameter-Estimation-Pipeline"><span>Example 3: ODE Parameter Estimation Pipeline</span></a></li><li><a class="tocitem" href="#Example-4:-Quality-Gated-Pipeline"><span>Example 4: Quality-Gated Pipeline</span></a></li><li><a class="tocitem" href="#Example-5:-Batch-Refinement-Script"><span>Example 5: Batch Refinement Script</span></a></li><li><a class="tocitem" href="#Running-the-Examples"><span>Running the Examples</span></a></li><li><a class="tocitem" href="#See-Also"><span>See Also</span></a></li></ul></li><li><a class="tocitem" href="../api_reference/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/gescholt/GlobtimPostProcessing.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="github.com/gescholt/GlobtimPostProcessing.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Workflow-Examples"><a class="docs-heading-anchor" href="#Workflow-Examples">Workflow Examples</a><a id="Workflow-Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Workflow-Examples" title="Permalink"></a></h1><p>Complete end-to-end examples for common analysis workflows.</p><h2 id="Example-1:-Single-Experiment-Analysis"><a class="docs-heading-anchor" href="#Example-1:-Single-Experiment-Analysis">Example 1: Single Experiment Analysis</a><a id="Example-1:-Single-Experiment-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Example-1:-Single-Experiment-Analysis" title="Permalink"></a></h2><p>A complete workflow for analyzing a single experiment.</p><pre><code class="language-julia hljs">using GlobtimPostProcessing
+
+# ============================================================
+# 1. Setup
+# ============================================================
+
+experiment_dir = &quot;path/to/lotka_volterra_4d_exp&quot;
+
+# Define objective function (must match experiment)
+function lotka_volterra_objective(p::Vector{Float64})
+    # ODE solver and trajectory matching
+    # (implementation depends on your problem)
+    return trajectory_distance(p)
+end
+
+# ============================================================
+# 2. Quality Check
+# ============================================================
+
+println(&quot;=== Quality Assessment ===&quot;)
+
+# L2 approximation quality
+l2_result = check_l2_quality(experiment_dir)
+println(&quot;L2 Grade: \$(l2_result.grade)&quot;)
+
+# Stagnation check
+stagnation = detect_stagnation(experiment_dir)
+if stagnation.is_stagnant
+    println(&quot;WARNING: Stagnation at degree \$(stagnation.stagnation_start_degree)&quot;)
+end
+
+# Distribution quality
+dist = check_objective_distribution_quality(experiment_dir)
+println(&quot;Outliers: \$(dist.num_outliers) (\$(round(100*dist.outlier_fraction, digits=1))%)&quot;)
+
+# ============================================================
+# 3. Critical Point Refinement
+# ============================================================
+
+println(&quot;\n=== Refinement ===&quot;)
+
+# Use ODE-specific config for robust refinement
+config = ode_refinement_config()
+refined = refine_experiment_results(experiment_dir, lotka_volterra_objective, config)
+
+# Summary printed automatically
+# Additional details:
+println(&quot;Converged: \$(refined.n_converged)/\$(refined.n_raw)&quot;)
+println(&quot;Best raw value: \$(refined.best_raw_value)&quot;)
+println(&quot;Best refined value: \$(refined.best_refined_value)&quot;)
+
+# ============================================================
+# 4. Parameter Recovery (if ground truth available)
+# ============================================================
+
+println(&quot;\n=== Parameter Recovery ===&quot;)
+
+if has_ground_truth(experiment_dir)
+    # Recovery from raw points
+    raw_stats = compute_parameter_recovery_stats(experiment_dir)
+    println(&quot;Raw recovery error: \$(raw_stats.min_distance)&quot;)
+
+    # Recovery from refined points
+    config = load_experiment_config(experiment_dir)
+    p_true = config[&quot;p_true&quot;]
+    best_refined = refined.refined_points[refined.best_refined_idx]
+    refined_distance = param_distance(best_refined, p_true)
+    println(&quot;Refined recovery error: \$(refined_distance)&quot;)
+
+    improvement = 100 * (1 - refined_distance / raw_stats.min_distance)
+    println(&quot;Improvement: \$(round(improvement, digits=1))%&quot;)
+else
+    println(&quot;No ground truth available&quot;)
+end
+
+# ============================================================
+# 5. Summary Report
+# ============================================================
+
+println(&quot;\n=== Summary ===&quot;)
+println(&quot;Experiment: \$(experiment_dir)&quot;)
+println(&quot;L2 Quality: \$(l2_result.grade)&quot;)
+println(&quot;Convergence Rate: \$(round(100 * refined.n_converged / refined.n_raw, digits=1))%&quot;)
+println(&quot;Best Objective: \$(refined.best_refined_value)&quot;)</code></pre><h2 id="Example-2:-Campaign-Comparison"><a class="docs-heading-anchor" href="#Example-2:-Campaign-Comparison">Example 2: Campaign Comparison</a><a id="Example-2:-Campaign-Comparison-1"></a><a class="docs-heading-anchor-permalink" href="#Example-2:-Campaign-Comparison" title="Permalink"></a></h2><p>Comparing results across multiple experiments.</p><pre><code class="language-julia hljs">using GlobtimPostProcessing
+using DataFrames
+using Statistics
+
+# ============================================================
+# 1. Load Campaign
+# ============================================================
+
+campaign_dir = &quot;path/to/domain_sweep_campaign&quot;
+campaign = load_campaign_with_progress(campaign_dir)
+
+println(&quot;Campaign: \$(campaign.campaign_id)&quot;)
+println(&quot;Experiments: \$(length(campaign.experiments))&quot;)
+
+# ============================================================
+# 2. Build Comparison Table
+# ============================================================
+
+results = DataFrame(
+    experiment = String[],
+    domain_range = Float64[],
+    degree = Int[],
+    l2_grade = Symbol[],
+    n_critical = Int[],
+    convergence_rate = Float64[],
+    recovery_error = Float64[]
+)
+
+for exp in campaign.experiments
+    # Load config
+    config = load_experiment_config(exp.source_path)
+
+    # Quality check
+    l2 = check_l2_quality(exp.source_path)
+
+    # Refinement (simplified - just get convergence rate)
+    # In practice, you&#39;d run full refinement
+    n_critical = size(exp.critical_points, 1)
+
+    # Recovery
+    recovery = if has_ground_truth(exp.source_path)
+        stats = compute_parameter_recovery_stats(exp.source_path)
+        stats.min_distance
+    else
+        NaN
+    end
+
+    push!(results, (
+        experiment = exp.experiment_id,
+        domain_range = config[&quot;domain_range&quot;],
+        degree = config[&quot;degree_max&quot;],
+        l2_grade = l2.grade,
+        n_critical = n_critical,
+        convergence_rate = 0.0,  # Placeholder
+        recovery_error = recovery
+    ))
+end
+
+# ============================================================
+# 3. Analyze Trends
+# ============================================================
+
+println(&quot;\n=== Trends by Domain Size ===&quot;)
+
+by_domain = groupby(results, :domain_range)
+for group in by_domain
+    domain = first(group.domain_range)
+    mean_recovery = mean(filter(!isnan, group.recovery_error))
+    n_excellent = count(g -&gt; g == :excellent, group.l2_grade)
+
+    println(&quot;Domain \$domain:&quot;)
+    println(&quot;  Experiments: \$(nrow(group))&quot;)
+    println(&quot;  Excellent L2: \$n_excellent&quot;)
+    println(&quot;  Mean recovery: \$(mean_recovery)&quot;)
+end
+
+# ============================================================
+# 4. Export Results
+# ============================================================
+
+CSV.write(&quot;campaign_comparison.csv&quot;, results)
+println(&quot;\nResults saved to campaign_comparison.csv&quot;)</code></pre><h2 id="Example-3:-ODE-Parameter-Estimation-Pipeline"><a class="docs-heading-anchor" href="#Example-3:-ODE-Parameter-Estimation-Pipeline">Example 3: ODE Parameter Estimation Pipeline</a><a id="Example-3:-ODE-Parameter-Estimation-Pipeline-1"></a><a class="docs-heading-anchor-permalink" href="#Example-3:-ODE-Parameter-Estimation-Pipeline" title="Permalink"></a></h2><p>Complete pipeline for ODE-based parameter estimation.</p><pre><code class="language-julia hljs">using GlobtimPostProcessing
+using DifferentialEquations
+using ForwardDiff
+
+# ============================================================
+# 1. Define ODE Problem
+# ============================================================
+
+# Lotka-Volterra predator-prey model
+function lotka_volterra!(du, u, p, t)
+    x, y = u
+    alpha, beta, gamma, delta = p
+
+    du[1] = alpha * x - beta * x * y
+    du[2] = delta * x * y - gamma * y
+end
+
+# Reference trajectory (from known parameters)
+p_true = [1.0, 0.5, 0.5, 0.5]
+u0 = [1.0, 1.0]
+tspan = (0.0, 10.0)
+prob_true = ODEProblem(lotka_volterra!, u0, tspan, p_true)
+sol_true = solve(prob_true, Tsit5())
+
+# Objective function
+function trajectory_objective(p)
+    prob = remake(prob_true, p=p)
+    sol = solve(prob, Tsit5(), saveat=0.1)
+
+    if sol.retcode != :Success
+        return 1e10  # Penalty for failed solve
+    end
+
+    # L2 distance to reference
+    error = 0.0
+    for i in eachindex(sol.t)
+        t = sol.t[i]
+        ref = sol_true(t)
+        error += sum((sol.u[i] .- ref).^2)
+    end
+    return sqrt(error)
+end
+
+# ============================================================
+# 2. Run Analysis
+# ============================================================
+
+experiment_dir = &quot;path/to/lv_experiment&quot;
+
+# Quality check
+l2 = check_l2_quality(experiment_dir)
+println(&quot;L2 Grade: \$(l2.grade)&quot;)
+
+# Refine with ODE-specific settings
+config = ode_refinement_config()
+refined = refine_experiment_results(experiment_dir, trajectory_objective, config)
+
+# ============================================================
+# 3. Validate Best Estimate
+# ============================================================
+
+best_estimate = refined.refined_points[refined.best_refined_idx]
+
+println(&quot;\n=== Best Parameter Estimate ===&quot;)
+println(&quot;Found: \$best_estimate&quot;)
+println(&quot;True:  \$p_true&quot;)
+println(&quot;Error: \$(param_distance(best_estimate, p_true))&quot;)
+
+# Validate gradient
+grad_norm = compute_gradient_norm(trajectory_objective, best_estimate)
+println(&quot;Gradient norm: \$grad_norm&quot;)
+
+# ============================================================
+# 4. Landscape Fidelity Check
+# ============================================================
+
+# Load polynomial minimum
+df = load_critical_points_for_degree(experiment_dir, refined.degree)
+x_star = Vector(df[1, [:x1, :x2, :x3, :x4]])
+
+# Check if in same basin
+result = check_objective_proximity(x_star, best_estimate, trajectory_objective)
+println(&quot;\nLandscape Fidelity:&quot;)
+println(&quot;Same basin: \$(result.is_same_basin)&quot;)
+println(&quot;Relative diff: \$(result.metric)&quot;)</code></pre><h2 id="Example-4:-Quality-Gated-Pipeline"><a class="docs-heading-anchor" href="#Example-4:-Quality-Gated-Pipeline">Example 4: Quality-Gated Pipeline</a><a id="Example-4:-Quality-Gated-Pipeline-1"></a><a class="docs-heading-anchor-permalink" href="#Example-4:-Quality-Gated-Pipeline" title="Permalink"></a></h2><p>Only process high-quality experiments.</p><pre><code class="language-julia hljs">using GlobtimPostProcessing
+
+# ============================================================
+# Quality Gate Function
+# ============================================================
+
+function quality_gate(experiment_dir; min_grade=:good, max_outlier_frac=0.1)
+    # L2 quality
+    l2 = check_l2_quality(experiment_dir)
+    if l2.grade == :poor
+        return false, &quot;L2 quality poor&quot;
+    end
+
+    # Stagnation
+    stagnation = detect_stagnation(experiment_dir)
+    if stagnation.is_stagnant &amp;&amp; stagnation.stagnant_count &gt;= 3
+        return false, &quot;Severe stagnation&quot;
+    end
+
+    # Outliers
+    dist = check_objective_distribution_quality(experiment_dir)
+    if dist.outlier_fraction &gt; max_outlier_frac
+        return false, &quot;Too many outliers&quot;
+    end
+
+    return true, &quot;Passed&quot;
+end
+
+# ============================================================
+# Process Campaign with Quality Gate
+# ============================================================
+
+function process_with_quality_gate(campaign_dir, objective)
+    campaign = load_campaign_results(campaign_dir)
+
+    passed = []
+    failed = []
+
+    for exp in campaign.experiments
+        ok, reason = quality_gate(exp.source_path)
+
+        if ok
+            push!(passed, exp)
+        else
+            push!(failed, (exp, reason))
+        end
+    end
+
+    println(&quot;Quality Gate Results:&quot;)
+    println(&quot;  Passed: \$(length(passed))&quot;)
+    println(&quot;  Failed: \$(length(failed))&quot;)
+
+    # Show failures
+    for (exp, reason) in failed
+        println(&quot;  - \$(exp.experiment_id): \$reason&quot;)
+    end
+
+    # Process passed experiments
+    println(&quot;\nProcessing passed experiments...&quot;)
+
+    results = []
+    for exp in passed
+        refined = refine_experiment_results(exp.source_path, objective)
+        push!(results, refined)
+    end
+
+    return results
+end</code></pre><h2 id="Example-5:-Batch-Refinement-Script"><a class="docs-heading-anchor" href="#Example-5:-Batch-Refinement-Script">Example 5: Batch Refinement Script</a><a id="Example-5:-Batch-Refinement-Script-1"></a><a class="docs-heading-anchor-permalink" href="#Example-5:-Batch-Refinement-Script" title="Permalink"></a></h2><p>Script for batch processing many experiments.</p><pre><code class="language-julia hljs">#!/usr/bin/env julia
+
+using GlobtimPostProcessing
+using ProgressMeter
+using Dates
+
+# ============================================================
+# Configuration
+# ============================================================
+
+const CAMPAIGN_DIR = ARGS[1]  # Pass as command line argument
+const OUTPUT_DIR = get(ARGS, 2, &quot;batch_results_\$(Dates.format(now(), &quot;yyyymmdd_HHMMSS&quot;))&quot;)
+
+# ============================================================
+# Define Objective (customize for your problem)
+# ============================================================
+
+function my_objective(p::Vector{Float64})
+    # Your objective function here
+    return sum(p.^2)  # Placeholder
+end
+
+# ============================================================
+# Main
+# ============================================================
+
+function main()
+    mkpath(OUTPUT_DIR)
+
+    # Load campaign
+    println(&quot;Loading campaign from: \$CAMPAIGN_DIR&quot;)
+    campaign = load_campaign_results(CAMPAIGN_DIR)
+    n = length(campaign.experiments)
+    println(&quot;Found \$n experiments&quot;)
+
+    # Process each experiment
+    config = ode_refinement_config()
+    summary = []
+
+    @showprogress for exp in campaign.experiments
+        try
+            refined = refine_experiment_results(
+                exp.source_path,
+                my_objective,
+                config
+            )
+
+            push!(summary, (
+                id = exp.experiment_id,
+                status = &quot;success&quot;,
+                n_converged = refined.n_converged,
+                best_value = refined.best_refined_value
+            ))
+        catch e
+            push!(summary, (
+                id = exp.experiment_id,
+                status = &quot;failed&quot;,
+                n_converged = 0,
+                best_value = Inf
+            ))
+            @warn &quot;Failed to process \$(exp.experiment_id): \$e&quot;
+        end
+    end
+
+    # Write summary
+    summary_df = DataFrame(summary)
+    CSV.write(joinpath(OUTPUT_DIR, &quot;batch_summary.csv&quot;), summary_df)
+
+    # Report
+    n_success = count(s -&gt; s.status == &quot;success&quot;, summary)
+    println(&quot;\nBatch Complete:&quot;)
+    println(&quot;  Successful: \$n_success / \$n&quot;)
+    println(&quot;  Results in: \$OUTPUT_DIR&quot;)
+end
+
+main()</code></pre><h2 id="Running-the-Examples"><a class="docs-heading-anchor" href="#Running-the-Examples">Running the Examples</a><a id="Running-the-Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Running-the-Examples" title="Permalink"></a></h2><p>Save any example to a file and run:</p><pre><code class="language-bash hljs">julia --project=. example_script.jl</code></pre><p>Or run interactively in the REPL:</p><pre><code class="language-julia hljs">include(&quot;example_script.jl&quot;)</code></pre><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../getting_started/">Getting Started</a> - Basic concepts</li><li><a href="../refinement/">Critical Point Refinement</a> - Refinement details</li><li><a href="../campaign_analysis/">Campaign Analysis</a> - Multi-experiment analysis</li><li><a href="../api_reference/">API Reference</a> - Full function documentation</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../campaign_analysis/">« Campaign Analysis</a><a class="docs-footer-nextpage" href="../api_reference/">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 6 August 2026 03:50">Thursday 6 August 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

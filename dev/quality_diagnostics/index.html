@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Quality Diagnostics · GlobtimPostProcessing.jl Documentation</title><meta name="title" content="Quality Diagnostics · GlobtimPostProcessing.jl Documentation"/><meta property="og:title" content="Quality Diagnostics · GlobtimPostProcessing.jl Documentation"/><meta property="twitter:title" content="Quality Diagnostics · GlobtimPostProcessing.jl Documentation"/><meta name="description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><meta property="og:description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><meta property="twitter:description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">GlobtimPostProcessing.jl Documentation</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../getting_started/">Getting Started</a></li><li><span class="tocitem">Guides</span><ul><li><a class="tocitem" href="../refinement/">Critical Point Refinement</a></li><li class="is-active"><a class="tocitem" href>Quality Diagnostics</a><ul class="internal"><li><a class="tocitem" href="#Overview"><span>Overview</span></a></li><li><a class="tocitem" href="#Quick-Start"><span>Quick Start</span></a></li><li><a class="tocitem" href="#L2-Approximation-Quality"><span>L2 Approximation Quality</span></a></li><li><a class="tocitem" href="#Stagnation-Detection"><span>Stagnation Detection</span></a></li><li><a class="tocitem" href="#Objective-Distribution-Quality"><span>Objective Distribution Quality</span></a></li><li><a class="tocitem" href="#Quality-Thresholds-Configuration"><span>Quality Thresholds Configuration</span></a></li><li><a class="tocitem" href="#Combined-Quality-Assessment"><span>Combined Quality Assessment</span></a></li><li><a class="tocitem" href="#Troubleshooting"><span>Troubleshooting</span></a></li><li><a class="tocitem" href="#See-Also"><span>See Also</span></a></li></ul></li><li><a class="tocitem" href="../parameter_recovery/">Parameter Recovery</a></li><li><a class="tocitem" href="../landscape_fidelity/">Landscape Fidelity</a></li><li><a class="tocitem" href="../campaign_analysis/">Campaign Analysis</a></li></ul></li><li><a class="tocitem" href="../workflow_examples/">Examples</a></li><li><a class="tocitem" href="../api_reference/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Guides</a></li><li class="is-active"><a href>Quality Diagnostics</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Quality Diagnostics</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/gescholt/GlobtimPostProcessing.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="github.com/gescholt/GlobtimPostProcessing.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Quality-Diagnostics"><a class="docs-heading-anchor" href="#Quality-Diagnostics">Quality Diagnostics</a><a id="Quality-Diagnostics-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Diagnostics" title="Permalink"></a></h1><p>This guide covers the quality assessment tools in GlobtimPostProcessing.jl for evaluating experiment quality.</p><h2 id="Overview"><a class="docs-heading-anchor" href="#Overview">Overview</a><a id="Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Overview" title="Permalink"></a></h2><p>Quality diagnostics help assess:</p><ul><li><strong>L2 approximation quality</strong>: How well does the polynomial approximate the objective?</li><li><strong>Convergence stagnation</strong>: Has the approximation stopped improving with higher degrees?</li><li><strong>Objective distribution</strong>: Are there outliers or anomalies in critical point values?</li></ul><h2 id="Quick-Start"><a class="docs-heading-anchor" href="#Quick-Start">Quick Start</a><a id="Quick-Start-1"></a><a class="docs-heading-anchor-permalink" href="#Quick-Start" title="Permalink"></a></h2><pre><code class="language-julia hljs">using GlobtimPostProcessing
+
+experiment_dir = &quot;path/to/experiment&quot;
+
+# L2 approximation quality
+l2_result = check_l2_quality(experiment_dir)
+println(&quot;L2 Grade: \$(l2_result.grade)&quot;)
+
+# Stagnation detection
+stagnation = detect_stagnation(experiment_dir)
+if stagnation.is_stagnant
+    println(&quot;Stagnation detected at degree \$(stagnation.stagnation_start_degree)&quot;)
+end
+
+# Objective distribution
+dist_result = check_objective_distribution_quality(experiment_dir)
+println(&quot;Outliers: \$(dist_result.num_outliers)&quot;)</code></pre><h2 id="L2-Approximation-Quality"><a class="docs-heading-anchor" href="#L2-Approximation-Quality">L2 Approximation Quality</a><a id="L2-Approximation-Quality-1"></a><a class="docs-heading-anchor-permalink" href="#L2-Approximation-Quality" title="Permalink"></a></h2><p>The L2 norm measures how well the polynomial approximation fits the objective function.</p><h3 id="Usage"><a class="docs-heading-anchor" href="#Usage">Usage</a><a id="Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Usage" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Load experiment and check quality
+l2_result = check_l2_quality(experiment_dir)
+
+println(&quot;Grade: \$(l2_result.grade)&quot;)       # :excellent, :good, :fair, :poor
+println(&quot;L2 norm: \$(l2_result.l2_norm)&quot;)
+println(&quot;Dimension: \$(l2_result.dimension)&quot;)</code></pre><h3 id="Quality-Grades"><a class="docs-heading-anchor" href="#Quality-Grades">Quality Grades</a><a id="Quality-Grades-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Grades" title="Permalink"></a></h3><p>Grades are <strong>dimension-aware</strong> - higher dimensions naturally have higher L2 norms:</p><table><tr><th style="text-align: right">Grade</th><th style="text-align: right">Meaning</th></tr><tr><td style="text-align: right"><code>:excellent</code></td><td style="text-align: right">L2 &lt; 0.5 * threshold</td></tr><tr><td style="text-align: right"><code>:good</code></td><td style="text-align: right">L2 &lt; 1.0 * threshold</td></tr><tr><td style="text-align: right"><code>:fair</code></td><td style="text-align: right">L2 &lt; 2.0 * threshold</td></tr><tr><td style="text-align: right"><code>:poor</code></td><td style="text-align: right">L2 &gt;= 2.0 * threshold</td></tr></table><h3 id="Dimension-Specific-Thresholds"><a class="docs-heading-anchor" href="#Dimension-Specific-Thresholds">Dimension-Specific Thresholds</a><a id="Dimension-Specific-Thresholds-1"></a><a class="docs-heading-anchor-permalink" href="#Dimension-Specific-Thresholds" title="Permalink"></a></h3><p>Default thresholds in <code>quality_thresholds.toml</code>:</p><pre><code class="language-toml hljs">[l2_norm_thresholds]
+dim_2 = 0.01
+dim_3 = 0.05
+dim_4 = 0.10
+dim_6 = 0.20
+default = 0.15</code></pre><h3 id="Custom-Thresholds"><a class="docs-heading-anchor" href="#Custom-Thresholds">Custom Thresholds</a><a id="Custom-Thresholds-1"></a><a class="docs-heading-anchor-permalink" href="#Custom-Thresholds" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Load custom thresholds
+thresholds = load_quality_thresholds(&quot;my_thresholds.toml&quot;)
+
+# Use with quality check
+quality = check_l2_quality(l2_norm, dimension, thresholds)</code></pre><h2 id="Stagnation-Detection"><a class="docs-heading-anchor" href="#Stagnation-Detection">Stagnation Detection</a><a id="Stagnation-Detection-1"></a><a class="docs-heading-anchor-permalink" href="#Stagnation-Detection" title="Permalink"></a></h2><p>Detects when polynomial approximation stops improving with higher degrees.</p><h3 id="Usage-2"><a class="docs-heading-anchor" href="#Usage-2">Usage</a><a class="docs-heading-anchor-permalink" href="#Usage-2" title="Permalink"></a></h3><pre><code class="language-julia hljs">stagnation = detect_stagnation(experiment_dir)
+
+if stagnation.is_stagnant
+    println(&quot;Stagnation detected!&quot;)
+    println(&quot;Started at degree: \$(stagnation.stagnation_start_degree)&quot;)
+    println(&quot;Consecutive stagnant degrees: \$(stagnation.stagnant_count)&quot;)
+else
+    println(&quot;No stagnation - approximation still improving&quot;)
+end
+
+# View improvement factors between degrees
+for (i, factor) in enumerate(stagnation.improvement_factors)
+    println(&quot;Degree \$(i) -&gt; \$(i+1): \$(round(factor, digits=3))&quot;)
+end</code></pre><h3 id="Detection-Criteria"><a class="docs-heading-anchor" href="#Detection-Criteria">Detection Criteria</a><a id="Detection-Criteria-1"></a><a class="docs-heading-anchor-permalink" href="#Detection-Criteria" title="Permalink"></a></h3><p>Stagnation is detected when:</p><ol><li>L2 norm fails to improve by <code>min_improvement_factor</code> for consecutive degrees</li><li>L2 norm is not already below the converged threshold</li></ol><h3 id="Configuration"><a class="docs-heading-anchor" href="#Configuration">Configuration</a><a id="Configuration-1"></a><a class="docs-heading-anchor-permalink" href="#Configuration" title="Permalink"></a></h3><p>Default parameters in <code>quality_thresholds.toml</code>:</p><pre><code class="language-toml hljs">[convergence]
+min_improvement_factor = 0.9      # Must improve by at least 10%
+stagnation_tolerance = 3          # Consecutive stagnant degrees
+absolute_improvement_threshold = 1e-8  # Below this = converged</code></pre><h3 id="StagnationResult-Fields"><a class="docs-heading-anchor" href="#StagnationResult-Fields">StagnationResult Fields</a><a id="StagnationResult-Fields-1"></a><a class="docs-heading-anchor-permalink" href="#StagnationResult-Fields" title="Permalink"></a></h3><pre><code class="language-julia hljs">struct StagnationResult
+    is_stagnant::Bool
+    stagnation_start_degree::Union{Int, Nothing}
+    stagnant_count::Int
+    improvement_factors::Vector{Float64}
+end</code></pre><h2 id="Objective-Distribution-Quality"><a class="docs-heading-anchor" href="#Objective-Distribution-Quality">Objective Distribution Quality</a><a id="Objective-Distribution-Quality-1"></a><a class="docs-heading-anchor-permalink" href="#Objective-Distribution-Quality" title="Permalink"></a></h2><p>Analyzes the distribution of objective values at critical points to detect outliers.</p><h3 id="Usage-3"><a class="docs-heading-anchor" href="#Usage-3">Usage</a><a class="docs-heading-anchor-permalink" href="#Usage-3" title="Permalink"></a></h3><pre><code class="language-julia hljs">dist_result = check_objective_distribution_quality(experiment_dir)
+
+println(&quot;Has outliers: \$(dist_result.has_outliers)&quot;)
+println(&quot;Outlier count: \$(dist_result.num_outliers)&quot;)
+println(&quot;Outlier fraction: \$(round(100*dist_result.outlier_fraction, digits=1))%&quot;)
+println(&quot;Quality: \$(dist_result.quality)&quot;)
+
+# Distribution statistics
+println(&quot;Q1: \$(dist_result.q1)&quot;)
+println(&quot;Q3: \$(dist_result.q3)&quot;)
+println(&quot;IQR: \$(dist_result.iqr)&quot;)</code></pre><h3 id="Outlier-Detection"><a class="docs-heading-anchor" href="#Outlier-Detection">Outlier Detection</a><a id="Outlier-Detection-1"></a><a class="docs-heading-anchor-permalink" href="#Outlier-Detection" title="Permalink"></a></h3><p>Uses IQR-based method:</p><ul><li>Lower bound: Q1 - k * IQR</li><li>Upper bound: Q3 + k * IQR</li></ul><p>Values outside these bounds are outliers.</p><h3 id="Quality-Grades-2"><a class="docs-heading-anchor" href="#Quality-Grades-2">Quality Grades</a><a class="docs-heading-anchor-permalink" href="#Quality-Grades-2" title="Permalink"></a></h3><table><tr><th style="text-align: right">Grade</th><th style="text-align: right">Meaning</th></tr><tr><td style="text-align: right"><code>:good</code></td><td style="text-align: right">Few outliers (below threshold)</td></tr><tr><td style="text-align: right"><code>:poor</code></td><td style="text-align: right">Many outliers (above threshold)</td></tr><tr><td style="text-align: right"><code>:insufficient_data</code></td><td style="text-align: right">Not enough points to assess</td></tr></table><h3 id="Configuration-2"><a class="docs-heading-anchor" href="#Configuration-2">Configuration</a><a class="docs-heading-anchor-permalink" href="#Configuration-2" title="Permalink"></a></h3><pre><code class="language-toml hljs">[objective_distribution]
+min_points_for_distribution_check = 10
+max_outlier_fraction = 0.10
+outlier_iqr_multiplier = 1.5</code></pre><h3 id="ObjectiveDistributionResult-Fields"><a class="docs-heading-anchor" href="#ObjectiveDistributionResult-Fields">ObjectiveDistributionResult Fields</a><a id="ObjectiveDistributionResult-Fields-1"></a><a class="docs-heading-anchor-permalink" href="#ObjectiveDistributionResult-Fields" title="Permalink"></a></h3><pre><code class="language-julia hljs">struct ObjectiveDistributionResult
+    has_outliers::Bool
+    num_outliers::Int
+    outlier_fraction::Float64
+    quality::Symbol
+    q1::Float64
+    q3::Float64
+    iqr::Float64
+end</code></pre><h2 id="Quality-Thresholds-Configuration"><a class="docs-heading-anchor" href="#Quality-Thresholds-Configuration">Quality Thresholds Configuration</a><a id="Quality-Thresholds-Configuration-1"></a><a class="docs-heading-anchor-permalink" href="#Quality-Thresholds-Configuration" title="Permalink"></a></h2><p>All thresholds are configurable via <code>quality_thresholds.toml</code>.</p><h3 id="Default-Location"><a class="docs-heading-anchor" href="#Default-Location">Default Location</a><a id="Default-Location-1"></a><a class="docs-heading-anchor-permalink" href="#Default-Location" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Package default
+thresholds = load_quality_thresholds()
+
+# Custom file
+thresholds = load_quality_thresholds(&quot;/path/to/my_thresholds.toml&quot;)</code></pre><h3 id="Full-Configuration-File"><a class="docs-heading-anchor" href="#Full-Configuration-File">Full Configuration File</a><a id="Full-Configuration-File-1"></a><a class="docs-heading-anchor-permalink" href="#Full-Configuration-File" title="Permalink"></a></h3><pre><code class="language-toml hljs"># quality_thresholds.toml
+
+[l2_norm_thresholds]
+# Dimension-specific L2 norm thresholds
+dim_2 = 0.01
+dim_3 = 0.05
+dim_4 = 0.10
+dim_6 = 0.20
+default = 0.15
+
+[parameter_recovery]
+# Parameter recovery thresholds
+excellent_threshold = 1e-6
+good_threshold = 1e-4
+acceptable_threshold = 1e-2
+
+[convergence]
+# Stagnation detection parameters
+min_improvement_factor = 0.9
+stagnation_tolerance = 3
+absolute_improvement_threshold = 1e-8
+
+[objective_distribution]
+# Outlier detection parameters
+min_points_for_distribution_check = 10
+max_outlier_fraction = 0.10
+outlier_iqr_multiplier = 1.5</code></pre><h2 id="Combined-Quality-Assessment"><a class="docs-heading-anchor" href="#Combined-Quality-Assessment">Combined Quality Assessment</a><a id="Combined-Quality-Assessment-1"></a><a class="docs-heading-anchor-permalink" href="#Combined-Quality-Assessment" title="Permalink"></a></h2><h3 id="Example:-Full-Quality-Report"><a class="docs-heading-anchor" href="#Example:-Full-Quality-Report">Example: Full Quality Report</a><a id="Example:-Full-Quality-Report-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Full-Quality-Report" title="Permalink"></a></h3><pre><code class="language-julia hljs">using GlobtimPostProcessing
+
+function assess_experiment_quality(experiment_dir)
+    println(&quot;Quality Assessment for: \$experiment_dir&quot;)
+    println(&quot;=&quot;^60)
+
+    # L2 Quality
+    l2_result = check_l2_quality(experiment_dir)
+    println(&quot;\nL2 Approximation:&quot;)
+    println(&quot;  Grade: \$(l2_result.grade)&quot;)
+    println(&quot;  L2 norm: \$(l2_result.l2_norm)&quot;)
+
+    # Stagnation
+    stagnation = detect_stagnation(experiment_dir)
+    println(&quot;\nConvergence:&quot;)
+    if stagnation.is_stagnant
+        println(&quot;  WARNING: Stagnation at degree \$(stagnation.stagnation_start_degree)&quot;)
+    else
+        println(&quot;  OK: Approximation still improving&quot;)
+    end
+
+    # Distribution
+    dist = check_objective_distribution_quality(experiment_dir)
+    println(&quot;\nObjective Distribution:&quot;)
+    println(&quot;  Quality: \$(dist.quality)&quot;)
+    println(&quot;  Outliers: \$(dist.num_outliers) (\$(round(100*dist.outlier_fraction))%)&quot;)
+
+    # Summary
+    println(&quot;\n&quot; * &quot;=&quot;^60)
+    overall = if l2_result.grade in [:excellent, :good] &amp;&amp;
+                 !stagnation.is_stagnant &amp;&amp;
+                 dist.quality == :good
+        &quot;GOOD&quot;
+    else
+        &quot;NEEDS ATTENTION&quot;
+    end
+    println(&quot;Overall Assessment: \$overall&quot;)
+end</code></pre><h2 id="Troubleshooting"><a class="docs-heading-anchor" href="#Troubleshooting">Troubleshooting</a><a id="Troubleshooting-1"></a><a class="docs-heading-anchor-permalink" href="#Troubleshooting" title="Permalink"></a></h2><h3 id="Poor-L2-Quality"><a class="docs-heading-anchor" href="#Poor-L2-Quality">Poor L2 Quality</a><a id="Poor-L2-Quality-1"></a><a class="docs-heading-anchor-permalink" href="#Poor-L2-Quality" title="Permalink"></a></h3><p><strong>Possible causes:</strong></p><ul><li>Polynomial degree too low</li><li>Domain too large</li><li>Objective has sharp features</li></ul><p><strong>Solutions:</strong></p><pre><code class="language-julia hljs"># Increase polynomial degree in globtim experiment
+# Or reduce domain size
+# Or use adaptive refinement</code></pre><h3 id="Stagnation-Detected"><a class="docs-heading-anchor" href="#Stagnation-Detected">Stagnation Detected</a><a id="Stagnation-Detected-1"></a><a class="docs-heading-anchor-permalink" href="#Stagnation-Detected" title="Permalink"></a></h3><p><strong>Possible causes:</strong></p><ul><li>Reached approximation limit for this domain size</li><li>Objective has features polynomial can&#39;t capture</li></ul><p><strong>Solutions:</strong></p><pre><code class="language-julia hljs"># Reduce domain size around region of interest
+# Or accept current approximation as &quot;good enough&quot;</code></pre><h3 id="Many-Outliers"><a class="docs-heading-anchor" href="#Many-Outliers">Many Outliers</a><a id="Many-Outliers-1"></a><a class="docs-heading-anchor-permalink" href="#Many-Outliers" title="Permalink"></a></h3><p><strong>Possible causes:</strong></p><ul><li>Some critical points are invalid (numerical issues)</li><li>Multiple distinct basins with very different values</li></ul><p><strong>Solutions:</strong></p><pre><code class="language-julia hljs"># Filter critical points by gradient validation
+# Or investigate outlier points manually</code></pre><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../getting_started/">Getting Started</a> - Basic workflow</li><li><a href="../refinement/">Critical Point Refinement</a> - Post-processing critical points</li><li><a href="https://gescholt.github.io/Globtim.jl/stable/polynomial_approximation">Polynomial Approximation (Globtim.jl)</a> - Core algorithm</li><li><a href="../api_reference/">API Reference</a> - Full function documentation</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../refinement/">« Critical Point Refinement</a><a class="docs-footer-nextpage" href="../parameter_recovery/">Parameter Recovery »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 6 August 2026 03:50">Thursday 6 August 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

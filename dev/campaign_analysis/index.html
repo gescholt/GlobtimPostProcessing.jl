@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Campaign Analysis · GlobtimPostProcessing.jl Documentation</title><meta name="title" content="Campaign Analysis · GlobtimPostProcessing.jl Documentation"/><meta property="og:title" content="Campaign Analysis · GlobtimPostProcessing.jl Documentation"/><meta property="twitter:title" content="Campaign Analysis · GlobtimPostProcessing.jl Documentation"/><meta name="description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><meta property="og:description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><meta property="twitter:description" content="Documentation for GlobtimPostProcessing.jl Documentation."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">GlobtimPostProcessing.jl Documentation</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../getting_started/">Getting Started</a></li><li><span class="tocitem">Guides</span><ul><li><a class="tocitem" href="../refinement/">Critical Point Refinement</a></li><li><a class="tocitem" href="../quality_diagnostics/">Quality Diagnostics</a></li><li><a class="tocitem" href="../parameter_recovery/">Parameter Recovery</a></li><li><a class="tocitem" href="../landscape_fidelity/">Landscape Fidelity</a></li><li class="is-active"><a class="tocitem" href>Campaign Analysis</a><ul class="internal"><li><a class="tocitem" href="#Overview"><span>Overview</span></a></li><li><a class="tocitem" href="#Quick-Start"><span>Quick Start</span></a></li><li><a class="tocitem" href="#Loading-Campaigns"><span>Loading Campaigns</span></a></li><li><a class="tocitem" href="#Computing-Campaign-Statistics"><span>Computing Campaign Statistics</span></a></li><li><a class="tocitem" href="#Batch-Analysis"><span>Batch Analysis</span></a></li><li><a class="tocitem" href="#Campaign-Reports"><span>Campaign Reports</span></a></li><li><a class="tocitem" href="#Comparing-Experiments"><span>Comparing Experiments</span></a></li><li><a class="tocitem" href="#Common-Workflows"><span>Common Workflows</span></a></li><li><a class="tocitem" href="#API-Reference"><span>API Reference</span></a></li><li><a class="tocitem" href="#Troubleshooting"><span>Troubleshooting</span></a></li><li><a class="tocitem" href="#See-Also"><span>See Also</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../workflow_examples/">Examples</a></li><li><a class="tocitem" href="../api_reference/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Guides</a></li><li class="is-active"><a href>Campaign Analysis</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Campaign Analysis</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/gescholt/GlobtimPostProcessing.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="github.com/gescholt/GlobtimPostProcessing.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Campaign-Analysis"><a class="docs-heading-anchor" href="#Campaign-Analysis">Campaign Analysis</a><a id="Campaign-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Campaign-Analysis" title="Permalink"></a></h1><p>This guide covers analyzing multiple experiments together as a campaign.</p><h2 id="Overview"><a class="docs-heading-anchor" href="#Overview">Overview</a><a id="Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Overview" title="Permalink"></a></h2><p>A <strong>campaign</strong> is a collection of related experiments, typically:</p><ul><li>Parameter sweeps (varying domain size, polynomial degree, etc.)</li><li>Multiple runs with different random seeds</li><li>Comparisons across different test functions</li></ul><p>Campaign analysis aggregates results to identify trends and draw conclusions.</p><h2 id="Quick-Start"><a class="docs-heading-anchor" href="#Quick-Start">Quick Start</a><a id="Quick-Start-1"></a><a class="docs-heading-anchor-permalink" href="#Quick-Start" title="Permalink"></a></h2><pre><code class="language-julia hljs">using GlobtimPostProcessing
+
+# Load campaign (directory containing experiment subdirectories)
+campaign = load_campaign_results(&quot;path/to/campaign_dir&quot;)
+
+println(&quot;Campaign: \$(campaign.campaign_id)&quot;)
+println(&quot;Experiments: \$(length(campaign.experiments))&quot;)
+
+# Analyze
+campaign_stats = analyze_campaign(campaign)
+
+# Generate report
+generate_campaign_report(campaign, campaign_stats)</code></pre><h2 id="Loading-Campaigns"><a class="docs-heading-anchor" href="#Loading-Campaigns">Loading Campaigns</a><a id="Loading-Campaigns-1"></a><a class="docs-heading-anchor-permalink" href="#Loading-Campaigns" title="Permalink"></a></h2><h3 id="Directory-Structure"><a class="docs-heading-anchor" href="#Directory-Structure">Directory Structure</a><a id="Directory-Structure-1"></a><a class="docs-heading-anchor-permalink" href="#Directory-Structure" title="Permalink"></a></h3><p>Expected structure:</p><pre><code class="nohighlight hljs">campaign_dir/
+├── experiment_001/
+│   ├── critical_points_deg_*.csv
+│   ├── experiment_config.json
+│   └── l2_errors_*.csv
+├── experiment_002/
+│   ├── critical_points_deg_*.csv
+│   ├── experiment_config.json
+│   └── l2_errors_*.csv
+└── experiment_003/
+    └── ...</code></pre><h3 id="Loading"><a class="docs-heading-anchor" href="#Loading">Loading</a><a id="Loading-1"></a><a class="docs-heading-anchor-permalink" href="#Loading" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Load all experiments in directory
+campaign = load_campaign_results(&quot;path/to/campaign_dir&quot;)
+
+# Access individual experiments
+for exp in campaign.experiments
+    println(&quot;Experiment: \$(exp.experiment_id)&quot;)
+    println(&quot;  Path: \$(exp.source_path)&quot;)
+    println(&quot;  Critical points: \$(size(exp.critical_points))&quot;)
+end</code></pre><h3 id="With-Progress"><a class="docs-heading-anchor" href="#With-Progress">With Progress</a><a id="With-Progress-1"></a><a class="docs-heading-anchor-permalink" href="#With-Progress" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Show progress bar for large campaigns
+campaign = load_campaign_with_progress(&quot;path/to/campaign_dir&quot;)</code></pre><h2 id="Computing-Campaign-Statistics"><a class="docs-heading-anchor" href="#Computing-Campaign-Statistics">Computing Campaign Statistics</a><a id="Computing-Campaign-Statistics-1"></a><a class="docs-heading-anchor-permalink" href="#Computing-Campaign-Statistics" title="Permalink"></a></h2><pre><code class="language-julia hljs">campaign_stats = analyze_campaign(campaign)
+
+# Available statistics
+println(&quot;Mean L2 error: \$(campaign_stats.mean_l2)&quot;)
+println(&quot;Best L2 error: \$(campaign_stats.min_l2)&quot;)
+println(&quot;Mean critical points: \$(campaign_stats.mean_n_critical)&quot;)
+println(&quot;Total experiments: \$(campaign_stats.n_experiments)&quot;)</code></pre><h3 id="Aggregation-by-Parameter"><a class="docs-heading-anchor" href="#Aggregation-by-Parameter">Aggregation by Parameter</a><a id="Aggregation-by-Parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Aggregation-by-Parameter" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Group by domain size
+stats_by_domain = aggregate_campaign_statistics(
+    campaign,
+    group_by = :domain_range
+)
+
+for (domain, stats) in stats_by_domain
+    println(&quot;Domain \$domain:&quot;)
+    println(&quot;  Mean L2: \$(stats.mean_l2)&quot;)
+    println(&quot;  Mean recovery: \$(stats.mean_recovery)&quot;)
+end</code></pre><h2 id="Batch-Analysis"><a class="docs-heading-anchor" href="#Batch-Analysis">Batch Analysis</a><a id="Batch-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Batch-Analysis" title="Permalink"></a></h2><h3 id="Batch-Processing"><a class="docs-heading-anchor" href="#Batch-Processing">Batch Processing</a><a id="Batch-Processing-1"></a><a class="docs-heading-anchor-permalink" href="#Batch-Processing" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Process all experiments with progress
+results = batch_analyze_campaign(campaign) do exp
+    # Custom analysis per experiment
+    stats = compute_statistics(exp)
+    l2 = check_l2_quality(exp.source_path)
+    return (l2_grade = l2.grade, n_points = size(exp.critical_points, 1))
+end
+
+# Results is a vector of named tuples
+for (exp, result) in zip(campaign.experiments, results)
+    println(&quot;\$(exp.experiment_id): \$(result.l2_grade), \$(result.n_points) points&quot;)
+end</code></pre><h3 id="With-Progress-Bar"><a class="docs-heading-anchor" href="#With-Progress-Bar">With Progress Bar</a><a id="With-Progress-Bar-1"></a><a class="docs-heading-anchor-permalink" href="#With-Progress-Bar" title="Permalink"></a></h3><pre><code class="language-julia hljs">results = batch_analyze_campaign_with_progress(campaign) do exp
+    refine_experiment_results(exp.source_path, objective)
+end</code></pre><h2 id="Campaign-Reports"><a class="docs-heading-anchor" href="#Campaign-Reports">Campaign Reports</a><a id="Campaign-Reports-1"></a><a class="docs-heading-anchor-permalink" href="#Campaign-Reports" title="Permalink"></a></h2><h3 id="Text-Report"><a class="docs-heading-anchor" href="#Text-Report">Text Report</a><a id="Text-Report-1"></a><a class="docs-heading-anchor-permalink" href="#Text-Report" title="Permalink"></a></h3><pre><code class="language-julia hljs">report = generate_campaign_report(campaign, campaign_stats)
+save_campaign_report(report, &quot;campaign_analysis.txt&quot;)</code></pre><h3 id="Summary-Table"><a class="docs-heading-anchor" href="#Summary-Table">Summary Table</a><a id="Summary-Table-1"></a><a class="docs-heading-anchor-permalink" href="#Summary-Table" title="Permalink"></a></h3><pre><code class="language-julia hljs">using DataFrames
+
+# Build summary DataFrame
+summary = DataFrame(
+    experiment_id = String[],
+    domain_range = Float64[],
+    degree = Int[],
+    l2_error = Float64[],
+    n_critical = Int[]
+)
+
+for exp in campaign.experiments
+    config = load_experiment_config(exp.source_path)
+    push!(summary, (
+        experiment_id = exp.experiment_id,
+        domain_range = config[&quot;domain_range&quot;],
+        degree = config[&quot;degree_max&quot;],
+        l2_error = exp.performance_metrics[&quot;l2_error&quot;],
+        n_critical = size(exp.critical_points, 1)
+    ))
+end
+
+# Export
+CSV.write(&quot;campaign_summary.csv&quot;, summary)</code></pre><h2 id="Comparing-Experiments"><a class="docs-heading-anchor" href="#Comparing-Experiments">Comparing Experiments</a><a id="Comparing-Experiments-1"></a><a class="docs-heading-anchor-permalink" href="#Comparing-Experiments" title="Permalink"></a></h2><h3 id="Metrics-Comparison"><a class="docs-heading-anchor" href="#Metrics-Comparison">Metrics Comparison</a><a id="Metrics-Comparison-1"></a><a class="docs-heading-anchor-permalink" href="#Metrics-Comparison" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Compare specific experiments
+exp1 = campaign.experiments[1]
+exp2 = campaign.experiments[5]
+
+println(&quot;Comparison:&quot;)
+println(&quot;  Experiment 1: \$(exp1.experiment_id)&quot;)
+println(&quot;    L2 error: \$(exp1.performance_metrics[&quot;l2_error&quot;])&quot;)
+println(&quot;    Critical points: \$(size(exp1.critical_points, 1))&quot;)
+println(&quot;  Experiment 2: \$(exp2.experiment_id)&quot;)
+println(&quot;    L2 error: \$(exp2.performance_metrics[&quot;l2_error&quot;])&quot;)
+println(&quot;    Critical points: \$(size(exp2.critical_points, 1))&quot;)</code></pre><h3 id="Trend-Analysis"><a class="docs-heading-anchor" href="#Trend-Analysis">Trend Analysis</a><a id="Trend-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Trend-Analysis" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Analyze trend across domain sizes
+using Statistics
+
+domains = Float64[]
+l2_errors = Float64[]
+
+for exp in campaign.experiments
+    config = load_experiment_config(exp.source_path)
+    push!(domains, config[&quot;domain_range&quot;])
+    push!(l2_errors, exp.performance_metrics[&quot;l2_error&quot;])
+end
+
+# Correlation
+correlation = cor(domains, log10.(l2_errors))
+println(&quot;Log-linear correlation (domain vs L2): \$correlation&quot;)</code></pre><h2 id="Common-Workflows"><a class="docs-heading-anchor" href="#Common-Workflows">Common Workflows</a><a id="Common-Workflows-1"></a><a class="docs-heading-anchor-permalink" href="#Common-Workflows" title="Permalink"></a></h2><h3 id="Workflow-1:-Parameter-Sweep-Analysis"><a class="docs-heading-anchor" href="#Workflow-1:-Parameter-Sweep-Analysis">Workflow 1: Parameter Sweep Analysis</a><a id="Workflow-1:-Parameter-Sweep-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Workflow-1:-Parameter-Sweep-Analysis" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Analyze domain size sweep
+function analyze_domain_sweep(campaign_dir)
+    campaign = load_campaign_results(campaign_dir)
+
+    results = DataFrame(
+        domain = Float64[],
+        mean_l2 = Float64[],
+        best_recovery = Float64[]
+    )
+
+    # Group by domain
+    by_domain = Dict{Float64, Vector}()
+    for exp in campaign.experiments
+        config = load_experiment_config(exp.source_path)
+        domain = config[&quot;domain_range&quot;]
+        if !haskey(by_domain, domain)
+            by_domain[domain] = []
+        end
+        push!(by_domain[domain], exp)
+    end
+
+    # Aggregate
+    for (domain, exps) in sort(collect(by_domain))
+        l2s = [e.performance_metrics[&quot;l2_error&quot;] for e in exps]
+        recoveries = Float64[]
+        for e in exps
+            if has_ground_truth(e.source_path)
+                stats = compute_parameter_recovery_stats(e.source_path)
+                push!(recoveries, stats.min_distance)
+            end
+        end
+
+        push!(results, (
+            domain = domain,
+            mean_l2 = mean(l2s),
+            best_recovery = isempty(recoveries) ? NaN : minimum(recoveries)
+        ))
+    end
+
+    return results
+end</code></pre><h3 id="Workflow-2:-Degree-Comparison"><a class="docs-heading-anchor" href="#Workflow-2:-Degree-Comparison">Workflow 2: Degree Comparison</a><a id="Workflow-2:-Degree-Comparison-1"></a><a class="docs-heading-anchor-permalink" href="#Workflow-2:-Degree-Comparison" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Compare different polynomial degrees
+function compare_degrees(campaign_dir)
+    campaign = load_campaign_results(campaign_dir)
+
+    for exp in campaign.experiments
+        config = load_experiment_config(exp.source_path)
+        println(&quot;Degree \$(config[&quot;degree_max&quot;]):&quot;)
+
+        l2_result = check_l2_quality(exp.source_path)
+        println(&quot;  L2 Grade: \$(l2_result.grade)&quot;)
+
+        if has_ground_truth(exp.source_path)
+            recovery = compute_parameter_recovery_stats(exp.source_path)
+            println(&quot;  Recovery: \$(recovery.min_distance)&quot;)
+        end
+    end
+end</code></pre><h3 id="Workflow-3:-Quality-Gated-Analysis"><a class="docs-heading-anchor" href="#Workflow-3:-Quality-Gated-Analysis">Workflow 3: Quality-Gated Analysis</a><a id="Workflow-3:-Quality-Gated-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Workflow-3:-Quality-Gated-Analysis" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Only process high-quality experiments
+function analyze_quality_gated(campaign_dir; min_grade=:good)
+    campaign = load_campaign_results(campaign_dir)
+
+    passed = ExperimentResult[]
+    for exp in campaign.experiments
+        l2_result = check_l2_quality(exp.source_path)
+        if l2_result.grade in [:excellent, :good]
+            push!(passed, exp)
+        end
+    end
+
+    println(&quot;Quality gate: \$(length(passed))/\$(length(campaign.experiments)) passed&quot;)
+
+    # Continue analysis with high-quality experiments only
+    for exp in passed
+        # ... further analysis
+    end
+end</code></pre><h2 id="API-Reference"><a class="docs-heading-anchor" href="#API-Reference">API Reference</a><a id="API-Reference-1"></a><a class="docs-heading-anchor-permalink" href="#API-Reference" title="Permalink"></a></h2><h3 id="Types"><a class="docs-heading-anchor" href="#Types">Types</a><a id="Types-1"></a><a class="docs-heading-anchor-permalink" href="#Types" title="Permalink"></a></h3><pre><code class="language-julia hljs">struct CampaignResults
+    campaign_id::String
+    experiments::Vector{ExperimentResult}
+    campaign_metadata::Dict{String, Any}
+    collection_timestamp::DateTime
+end</code></pre><h3 id="Functions"><a class="docs-heading-anchor" href="#Functions">Functions</a><a id="Functions-1"></a><a class="docs-heading-anchor-permalink" href="#Functions" title="Permalink"></a></h3><table><tr><th style="text-align: right">Function</th><th style="text-align: right">Description</th></tr><tr><td style="text-align: right"><code>load_campaign_results(dir)</code></td><td style="text-align: right">Load all experiments in directory</td></tr><tr><td style="text-align: right"><code>load_campaign_with_progress(dir)</code></td><td style="text-align: right">Load with progress bar</td></tr><tr><td style="text-align: right"><code>analyze_campaign(campaign)</code></td><td style="text-align: right">Compute campaign statistics</td></tr><tr><td style="text-align: right"><code>aggregate_campaign_statistics(campaign, group_by)</code></td><td style="text-align: right">Aggregate by parameter</td></tr><tr><td style="text-align: right"><code>batch_analyze_campaign(f, campaign)</code></td><td style="text-align: right">Apply function to all experiments</td></tr><tr><td style="text-align: right"><code>generate_campaign_report(campaign, stats)</code></td><td style="text-align: right">Generate text report</td></tr><tr><td style="text-align: right"><code>save_campaign_report(report, path)</code></td><td style="text-align: right">Save report to file</td></tr></table><h2 id="Troubleshooting"><a class="docs-heading-anchor" href="#Troubleshooting">Troubleshooting</a><a id="Troubleshooting-1"></a><a class="docs-heading-anchor-permalink" href="#Troubleshooting" title="Permalink"></a></h2><h3 id="&quot;No-experiments-found&quot;"><a class="docs-heading-anchor" href="#&quot;No-experiments-found&quot;">&quot;No experiments found&quot;</a><a id="&quot;No-experiments-found&quot;-1"></a><a class="docs-heading-anchor-permalink" href="#&quot;No-experiments-found&quot;" title="Permalink"></a></h3><p>Check directory structure:</p><pre><code class="language-julia hljs"># List subdirectories
+for entry in readdir(campaign_dir)
+    path = joinpath(campaign_dir, entry)
+    if isdir(path)
+        println(&quot;Found: \$entry&quot;)
+        # Check for required files
+        has_config = isfile(joinpath(path, &quot;experiment_config.json&quot;))
+        has_csv = !isempty(glob(&quot;critical_points_*.csv&quot;, path))
+        println(&quot;  Config: \$has_config, CSV: \$has_csv&quot;)
+    end
+end</code></pre><h3 id="Memory-issues-with-large-campaigns"><a class="docs-heading-anchor" href="#Memory-issues-with-large-campaigns">Memory issues with large campaigns</a><a id="Memory-issues-with-large-campaigns-1"></a><a class="docs-heading-anchor-permalink" href="#Memory-issues-with-large-campaigns" title="Permalink"></a></h3><pre><code class="language-julia hljs"># Process in batches
+for batch in Iterators.partition(campaign.experiments, 10)
+    for exp in batch
+        # Process experiment
+        # ...
+    end
+    GC.gc()  # Force garbage collection
+end</code></pre><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../getting_started/">Getting Started</a> - Basic workflow</li><li><a href="../quality_diagnostics/">Quality Diagnostics</a> - Quality assessment</li><li><a href="../parameter_recovery/">Parameter Recovery</a> - Ground truth comparison</li><li><a href="../api_reference/">API Reference</a> - Full function documentation</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../landscape_fidelity/">« Landscape Fidelity</a><a class="docs-footer-nextpage" href="../workflow_examples/">Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 6 August 2026 03:50">Thursday 6 August 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
