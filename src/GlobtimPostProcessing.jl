@@ -176,6 +176,10 @@ export run_valley_analysis
 export ValleyIdealConfig, ValleyIdealResult, ValleyIdealGenerator
 export recover_vanishing_ideal, physical_generator, generator_string
 
+# Consensus validation exports (stiff/sloppy tube across two fits — beads n1hx/pxvr)
+export ConsensusValidationConfig, ConsensusCP, ConsensusValidationResult
+export validate_consensus, match_critical_point_sets
+
 # Subdivision tree analysis exports (load + analyze saved JLD2/JSON trees)
 export load_subdivision_tree, analyze_subdivision_tree, SubdivisionTreeStats
 export tree_leaves_to_dataframe, tree_depth_summary
@@ -286,6 +290,9 @@ include("ValleyWalking.jl")
 
 # Valley ideal (approximate vanishing ideal of a sampled valley)
 include("ValleyIdeal.jl")
+
+# Consensus validation (stiff/sloppy tube across two independent fits — beads n1hx/pxvr)
+include("ConsensusValidation.jl")
 
 # Subdivision tree analysis (adaptive subdivision postprocessing - January 2026)
 include("SubdivisionTreeAnalysis.jl")

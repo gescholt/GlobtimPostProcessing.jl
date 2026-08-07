@@ -131,6 +131,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_valley_ideal.jl")
     end
 
+    # Run Consensus Validation tests (August 2026, beads n1hx/pxvr)
+    @testset "Consensus Validation" begin
+        include("test_consensus_validation.jl")
+    end
+
     # Run Postprocessing Pipeline tests (March 2026)
     @testset "Postprocessing Pipeline" begin
         include("test_postprocessing_pipeline.jl")
