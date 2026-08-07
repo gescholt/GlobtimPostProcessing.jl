@@ -157,8 +157,12 @@ cp.stiff_spread         # ≈ 0.002  (agree on the identifiable combination)
 cp.tube_extent          # ≈ 0.40   (disagree along the sloppy y-axis: the tube)
 ```
 """
-function validate_consensus(cps1::AbstractVector, cps2::AbstractVector, objective;
-                            config::ConsensusValidationConfig = ConsensusValidationConfig())
+function validate_consensus(
+    cps1::AbstractVector,
+    cps2::AbstractVector,
+    objective;
+    config::ConsensusValidationConfig = ConsensusValidationConfig(),
+)
     resolution = isnan(config.resolution) ? config.match_tol : config.resolution
     pairs, un1, un2 = match_critical_point_sets(cps1, cps2; tol = config.match_tol)
     out = ConsensusCP[]
@@ -178,43 +182,84 @@ function validate_consensus(cps1::AbstractVector, cps2::AbstractVector, objectiv
         stiff = abs.(λ) .>= config.sloppy_ratio * λmax
         Δ = a .- b
         disagree = [abs(dot(view(V, :, k), Δ)) for k in eachindex(λ)]
-        stiff_spread = sqrt(sum((disagree[k]^2 for k in eachindex(λ) if stiff[k]); init = 0.0))
-        tube_extent = sqrt(sum((disagree[k]^2 for k in eachindex(λ) if !stiff[k]); init = 0.0))
+        stiff_spread =
+            sqrt(sum((disagree[k]^2 for k in eachindex(λ) if stiff[k]); init = 0.0))
+        tube_extent =
+            sqrt(sum((disagree[k]^2 for k in eachindex(λ) if !stiff[k]); init = 0.0))
 
         g = _vw_gradient(objective, loc, config.gradient_method)
         gnorm = norm(g)
         floor = 1e-12 * max(λmax, eps())
-        nd = sqrt(sum(eachindex(λ)) do k
-            denom = abs(λ[k]) < floor ? sign(λ[k]) * floor + (λ[k] == 0 ? floor : 0.0) : λ[k]
-            (dot(view(V, :, k), g) / denom)^2
-        end)
+        nd = sqrt(
+            sum(eachindex(λ)) do k
+                denom =
+                    abs(λ[k]) < floor ? sign(λ[k]) * floor + (λ[k] == 0 ? floor : 0.0) :
+                    λ[k]
+                (dot(view(V, :, k), g) / denom)^2
+            end,
+        )
 
         idv = [dot(view(V, :, k), loc) for k in eachindex(λ) if stiff[k]]
-        push!(out, ConsensusCP(loc, _cp_type_from_eigs(λ), λ, V, count(stiff),
-                               V[:, stiff], idv, V[:, .!stiff], disagree,
-                               stiff_spread, tube_extent, exp(-stiff_spread / resolution), gnorm, nd))
+        push!(
+            out,
+            ConsensusCP(
+                loc,
+                _cp_type_from_eigs(λ),
+                λ,
+                V,
+                count(stiff),
+                V[:, stiff],
+                idv,
+                V[:, .!stiff],
+                disagree,
+                stiff_spread,
+                tube_extent,
+                exp(-stiff_spread / resolution),
+                gnorm,
+                nd,
+            ),
+        )
     end
     return ConsensusValidationResult(out, length(cps1), length(cps2), length(out), un1, un2)
 end
 
 "DataFrame overload: extracts coordinate columns `x1, x2, …` from each frame."
-function validate_consensus(df1::DataFrame, df2::DataFrame, objective;
-                            config::ConsensusValidationConfig = ConsensusValidationConfig())
+function validate_consensus(
+    df1::DataFrame,
+    df2::DataFrame,
+    objective;
+    config::ConsensusValidationConfig = ConsensusValidationConfig(),
+)
     validate_consensus(_extract_xcols(df1), _extract_xcols(df2), objective; config = config)
 end
 
 function _extract_xcols(df::DataFrame)
-    cols = sort([c for c in names(df) if occursin(r"^x\d+$", c)]; by = c -> parse(Int, c[2:end]))
+    cols = sort(
+        [c for c in names(df) if occursin(r"^x\d+$", c)];
+        by = c -> parse(Int, c[2:end]),
+    )
     isempty(cols) && error("no coordinate columns matching x1,x2,… found in DataFrame")
     [Float64[df[r, c] for c in cols] for r in 1:nrow(df)]
 end
 
 function Base.show(io::IO, ::MIME"text/plain", r::ConsensusValidationResult)
-    println(io, "ConsensusValidationResult: $(r.n_matched) matched of $(r.n_fit1)×$(r.n_fit2) CPs; ",
-            "$(length(r.unmatched1))+$(length(r.unmatched2)) fit-specific dropped")
+    println(
+        io,
+        "ConsensusValidationResult: $(r.n_matched) matched of $(r.n_fit1)×$(r.n_fit2) CPs; ",
+        "$(length(r.unmatched1))+$(length(r.unmatched2)) fit-specific dropped",
+    )
     for (k, cp) in enumerate(r.consensus)
-        @printf(io, "  [%d] loc=%s  %s  stiff=%d  stiff_spread=%.3g  tube=%.3g  conf=%.2f  newton=%.2g\n",
-                k, string(round.(cp.location; digits = 4)), cp.cp_type, cp.n_stiff,
-                cp.stiff_spread, cp.tube_extent, cp.confidence, cp.newton_decrement)
+        @printf(
+            io,
+            "  [%d] loc=%s  %s  stiff=%d  stiff_spread=%.3g  tube=%.3g  conf=%.2f  newton=%.2g\n",
+            k,
+            string(round.(cp.location; digits = 4)),
+            cp.cp_type,
+            cp.n_stiff,
+            cp.stiff_spread,
+            cp.tube_extent,
+            cp.confidence,
+            cp.newton_decrement
+        )
     end
 end
