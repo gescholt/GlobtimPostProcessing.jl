@@ -3,9 +3,12 @@
 LV4D Results Processing Pipeline Demo
 
 Demonstrates the full workflow for analyzing LV4D experiment results.
-Run from GlobalOptim directory:
 
-    julia --project=globtimpostprocessing globtimpostprocessing/scripts/lv4d_pipeline_demo.jl [experiment_path]
+    julia --project scripts/lv4d_pipeline_demo.jl <experiment_path>
+
+`<experiment_path>` is the output directory of an LV4D experiment run — the one
+containing the per-degree result files that `load_lv4d_experiment` reads. There is
+no default: point it at a directory you produced.
 """
 
 using GlobtimPostProcessing
@@ -15,10 +18,9 @@ using PrettyTables
 using Printf
 using LinearAlgebra
 
-# Default experiment path
-const DEFAULT_EXP = "globtim/globtim_results/lotka_volterra_4d/lv4d_GN16_deg4-12_dom1.0e-3_seed42_20260123_121429"
+function main(exp_path::String)
+    isdir(exp_path) || error("Experiment directory not found: $exp_path")
 
-function main(exp_path::String = DEFAULT_EXP)
     println("="^70)
     println("LV4D RESULTS PROCESSING PIPELINE")
     println("="^70)
@@ -197,8 +199,10 @@ function main(exp_path::String = DEFAULT_EXP)
     return data
 end
 
-# Run with command line argument or default
 if abspath(PROGRAM_FILE) == @__FILE__
-    exp_path = length(ARGS) >= 1 ? ARGS[1] : DEFAULT_EXP
-    main(exp_path)
+    if length(ARGS) != 1
+        println("usage: julia --project $(basename(@__FILE__)) <experiment_path>")
+        exit(1)
+    end
+    main(ARGS[1])
 end
