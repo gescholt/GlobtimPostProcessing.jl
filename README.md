@@ -7,6 +7,7 @@ Local refinement engine for critical points computed by globtim. This package lo
 > **Note**: For visualization/plotting, use the separate `globtimplots` package.
 
 ## Contents
+- [Installation](#installation)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [LV4D Analysis](#lv4d-analysis)
@@ -14,6 +15,22 @@ Local refinement engine for critical points computed by globtim. This package lo
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Development](#development)
+
+## Installation
+
+Requires **Julia 1.12** or newer. Registered in the General registry — press `]` at the
+Julia prompt to enter Pkg mode (backspace exits):
+
+```julia-repl
+pkg> add GlobtimPostProcessing
+```
+
+Globtim comes in as a dependency. Add it explicitly, together with
+`HomotopyContinuation`, if you are also *producing* the critical points you refine here:
+
+```julia-repl
+pkg> add Globtim HomotopyContinuation
+```
 
 ## Features
 
