@@ -91,6 +91,13 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_refinement_l4_single_point.jl")
     end
 
+    # Level-5 multi-start recall (bead dx2h) — from grid + seeded random starts,
+    # does each descent method reach EVERY known local minimum? Recall/precision,
+    # basin coverage, false-merge audit, worst-case starts, Newton classification.
+    @testset "L5 Multi-Start Recall" begin
+        include("test_multistart_recall_l5.jl")
+    end
+
     # Run Integration tests with Real Fixtures (uses real globtim data)
     @testset "Integration: Real Fixtures" begin
         include("test_integration_real_fixtures.jl")
