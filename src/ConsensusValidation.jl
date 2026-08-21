@@ -134,6 +134,36 @@ function _cp_type_from_eigs(λ::AbstractVector; tol::Float64 = 1e-8)
     return :saddle
 end
 
+# Local Hessian spectrum + gradient diagnostics at a point: eigenpairs ordered stiff-first,
+# stiff mask at `sloppy_ratio`, gradient norm, and the eigen-floored Newton decrement.
+function _local_spectrum(
+    objective,
+    x::AbstractVector{Float64},
+    method::Symbol,
+    sloppy_ratio::Float64,
+)
+    H = _vw_hessian(objective, x, method)
+    H = 0.5 .* (H .+ H')                       # symmetrise
+    F = eigen(Symmetric(H))
+    ord = sortperm(abs.(F.values); rev = true) # stiff (large |λ|) first
+    λ = F.values[ord]
+    V = F.vectors[:, ord]
+    λmax = maximum(abs, λ)
+    stiff = abs.(λ) .>= sloppy_ratio * λmax
+
+    g = _vw_gradient(objective, x, method)
+    gnorm = norm(g)
+    floor = 1e-12 * max(λmax, eps())
+    nd = sqrt(
+        sum(eachindex(λ)) do k
+            denom =
+                abs(λ[k]) < floor ? sign(λ[k]) * floor + (λ[k] == 0 ? floor : 0.0) : λ[k]
+            (dot(view(V, :, k), g) / denom)^2
+        end,
+    )
+    return λ, V, stiff, gnorm, nd
+end
+
 """
     validate_consensus(cps1, cps2, objective; config=ConsensusValidationConfig()) -> ConsensusValidationResult
 
@@ -171,33 +201,15 @@ function validate_consensus(
         b = collect(float.(cps2[j]))
         loc = 0.5 .* (a .+ b)
 
-        H = _vw_hessian(objective, loc, config.gradient_method)
-        H = 0.5 .* (H .+ H')                       # symmetrise
-        F = eigen(Symmetric(H))
-        ord = sortperm(abs.(F.values); rev = true) # stiff (large |λ|) first
-        λ = F.values[ord]
-        V = F.vectors[:, ord]
-        λmax = maximum(abs, λ)
+        λ, V, stiff, gnorm, nd =
+            _local_spectrum(objective, loc, config.gradient_method, config.sloppy_ratio)
 
-        stiff = abs.(λ) .>= config.sloppy_ratio * λmax
         Δ = a .- b
         disagree = [abs(dot(view(V, :, k), Δ)) for k in eachindex(λ)]
         stiff_spread =
             sqrt(sum((disagree[k]^2 for k in eachindex(λ) if stiff[k]); init = 0.0))
         tube_extent =
             sqrt(sum((disagree[k]^2 for k in eachindex(λ) if !stiff[k]); init = 0.0))
-
-        g = _vw_gradient(objective, loc, config.gradient_method)
-        gnorm = norm(g)
-        floor = 1e-12 * max(λmax, eps())
-        nd = sqrt(
-            sum(eachindex(λ)) do k
-                denom =
-                    abs(λ[k]) < floor ? sign(λ[k]) * floor + (λ[k] == 0 ? floor : 0.0) :
-                    λ[k]
-                (dot(view(V, :, k), g) / denom)^2
-            end,
-        )
 
         idv = [dot(view(V, :, k), loc) for k in eachindex(λ) if stiff[k]]
         push!(
@@ -240,6 +252,252 @@ function _extract_xcols(df::DataFrame)
     )
     isempty(cols) && error("no coordinate columns matching x1,x2,… found in DataFrame")
     [Float64[df[r, c] for c in cols] for r in 1:nrow(df)]
+end
+
+"""
+    EnsembleCluster
+
+One τ-cluster of the pooled K-fit critical-point ensemble (see [`ensemble_consensus`](@ref)).
+
+# Fields
+- `centroid::Vector{Float64}`: mean of the member points.
+- `cp_type::Symbol`: `:minimum` / `:maximum` / `:saddle` / `:degenerate` from the Hessian at the centroid.
+- `n_members::Int`: pooled points in the cluster (one fit may contribute several).
+- `fits::Vector{Int}`: sorted indices of the distinct fits represented.
+- `recurrence::Float64`: `length(fits)/K` — how systematically this location recurs across fits.
+  **This is a systematicity score, not a truth score** (see [`ensemble_consensus`](@ref)).
+- `eigenvalues::Vector{Float64}`: Hessian eigenvalues at the centroid, `|λ|` descending.
+- `n_stiff::Int`: stiff (identifiable) directions at the centroid.
+- `identifiable_values::Vector{Float64}`: stiff-direction coordinates `vₖ · centroid`.
+- `stiff_extent::Float64`, `sloppy_extent::Float64`: maximal member deviation from the centroid
+  inside the stiff / sloppy subspace — the cluster's own shape split by identifiability.
+- `gradient_norm::Float64`, `newton_decrement::Float64`: oracle diagnostics at the centroid
+  (`newton_decrement` small ⇒ genuine stationary point of `objective`).
+"""
+struct EnsembleCluster
+    centroid::Vector{Float64}
+    cp_type::Symbol
+    n_members::Int
+    fits::Vector{Int}
+    recurrence::Float64
+    eigenvalues::Vector{Float64}
+    n_stiff::Int
+    identifiable_values::Vector{Float64}
+    stiff_extent::Float64
+    sloppy_extent::Float64
+    gradient_norm::Float64
+    newton_decrement::Float64
+end
+
+"""
+    EnsembleConsensusResult
+
+Result of [`ensemble_consensus`](@ref).
+
+# Fields
+- `clusters::Vector{EnsembleCluster}`: recurrence-descending.
+- `K::Int`: number of fits pooled; `n_pool::Int`: total pooled critical points.
+- `frame_point::Vector{Float64}`: where the shared stiff frame was computed (highest-recurrence
+  centroid unless overridden).
+- `frame_dirs::Matrix{Float64}`: stiff eigenvectors of the Hessian at `frame_point` (columns) —
+  the shared identifiable directions the estimate below is expressed in.
+- `identifiable_mean::Vector{Float64}`, `identifiable_std::Vector{Float64}`: ensemble estimate of
+  each identifiable combination — mean/std of `frame_dirs[:,k] · centroid` over the estimating
+  clusters. **This is the headline output** on sloppy landscapes.
+- `n_estimating::Int`: clusters with `recurrence ≥ min_recurrence` used for the estimate.
+"""
+struct EnsembleConsensusResult
+    clusters::Vector{EnsembleCluster}
+    K::Int
+    n_pool::Int
+    frame_point::Vector{Float64}
+    frame_dirs::Matrix{Float64}
+    identifiable_mean::Vector{Float64}
+    identifiable_std::Vector{Float64}
+    n_estimating::Int
+end
+
+"""
+    ensemble_consensus(cp_sets, objective; config=ConsensusValidationConfig(),
+                       min_recurrence=0.5, frame_point=nothing) -> EnsembleConsensusResult
+
+Pool the critical-point sets of `K = length(cp_sets)` independent fits, greedily τ-cluster them
+(`config.match_tol`; a point joins the nearest cluster centroid within τ, else opens a new one),
+and score each cluster by **recurrence** = fraction of distinct fits represented.
+
+# Semantics — measured, not aspirational (FHN3D_1 / LV2D, 2026-08-20, beads pxvr/2f1i)
+
+On sloppy landscapes recurrence is a **systematicity** score, *not* a validity score: noise-pinned
+valley structures recur across every fit and take the top recurrence, while the true minimizer's
+copies scatter along the flat basin and split their votes (measured: true CP at recurrence 0.38
+*below* 19 valley clusters at 0.62–1.00). Do **not** threshold on recurrence to accept critical
+points; `m ≥ K/2` voting rejects the true minimizer in the PE regime. Use recurrence to *localize
+systematic structure* (high) and fit-specific artifacts (`1/K` singletons), and validate points
+with the extrinsic `newton_decrement` oracle instead — cheapest applied only inside the
+consensus tube.
+
+The **headline output** is the ensemble estimate of the identifiable combination(s):
+`identifiable_mean ± identifiable_std`, the statistics of the stiff-frame coordinates over all
+clusters with `recurrence ≥ min_recurrence`. Measured on FHN3D_1: the stiff coordinate is
+recovered to ~2e-6 at σ=0.02 and ~5e-7 at σ=0.2 objective noise from K=8 fits, with zero
+true-objective gradient evaluations at the fitting stage.
+
+The shared stiff frame is the Hessian eigenframe at `frame_point` (default: the
+highest-recurrence cluster's centroid; pass a vector to override, e.g. a refined minimizer).
+
+`cp_sets` is a vector of K critical-point sets, each a vector of coordinate vectors (a
+`DataFrame` overload is provided). Requires `K ≥ 2` and a nonempty pool.
+"""
+function ensemble_consensus(
+    cp_sets::AbstractVector,
+    objective;
+    config::ConsensusValidationConfig = ConsensusValidationConfig(),
+    min_recurrence::Float64 = 0.5,
+    frame_point::Union{Nothing,AbstractVector} = nothing,
+)
+    K = length(cp_sets)
+    K >= 2 || error("ensemble_consensus requires at least 2 critical-point sets, got $K")
+
+    # greedy τ-clustering of the pooled ensemble (running-mean centroids)
+    centroids = Vector{Float64}[]
+    members = Vector{Vector{Float64}}[]
+    fitsets = Vector{Set{Int}}()
+    n_pool = 0
+    for (k, S) in enumerate(cp_sets), c0 in S
+        c = collect(float.(c0))
+        n_pool += 1
+        best, hit = config.match_tol, 0
+        for (ci, cent) in enumerate(centroids)
+            d = norm(c .- cent)
+            d < best && ((best, hit) = (d, ci))
+        end
+        if hit == 0
+            push!(centroids, copy(c))
+            push!(members, [c])
+            push!(fitsets, Set(k))
+        else
+            push!(members[hit], c)
+            push!(fitsets[hit], k)
+            centroids[hit] = vec(mean(reduce(hcat, members[hit]); dims = 2))
+        end
+    end
+    n_pool > 0 || error("ensemble_consensus: all $K critical-point sets are empty")
+
+    clusters = EnsembleCluster[]
+    for ci in eachindex(centroids)
+        cent = centroids[ci]
+        λ, V, stiff, gnorm, nd =
+            _local_spectrum(objective, cent, config.gradient_method, config.sloppy_ratio)
+        devs = [m .- cent for m in members[ci]]
+        stiff_ext = maximum(
+            (
+                sqrt(
+                    sum(
+                        (dot(view(V, :, k), d)^2 for k in eachindex(λ) if stiff[k]);
+                        init = 0.0,
+                    ),
+                ) for d in devs
+            );
+            init = 0.0,
+        )
+        sloppy_ext = maximum(
+            (
+                sqrt(
+                    sum(
+                        (dot(view(V, :, k), d)^2 for k in eachindex(λ) if !stiff[k]);
+                        init = 0.0,
+                    ),
+                ) for d in devs
+            );
+            init = 0.0,
+        )
+        idv = [dot(view(V, :, k), cent) for k in eachindex(λ) if stiff[k]]
+        push!(
+            clusters,
+            EnsembleCluster(
+                cent,
+                _cp_type_from_eigs(λ),
+                length(members[ci]),
+                sort!(collect(fitsets[ci])),
+                length(fitsets[ci]) / K,
+                λ,
+                count(stiff),
+                idv,
+                stiff_ext,
+                sloppy_ext,
+                gnorm,
+                nd,
+            ),
+        )
+    end
+    sort!(clusters; by = c -> (c.recurrence, c.n_members), rev = true)
+
+    # shared identifiable frame + ensemble estimate over the recurrent clusters
+    fp = frame_point === nothing ? clusters[1].centroid : collect(float.(frame_point))
+    λf, Vf, stifff, _, _ =
+        _local_spectrum(objective, fp, config.gradient_method, config.sloppy_ratio)
+    frame_dirs = Vf[:, stifff]
+    est = [c.centroid for c in clusters if c.recurrence >= min_recurrence]
+    n_est = length(est)
+    nstiff_f = size(frame_dirs, 2)
+    id_mean = fill(NaN, nstiff_f)
+    id_std = fill(NaN, nstiff_f)
+    if n_est >= 1
+        for k in 1:nstiff_f
+            vals = [dot(view(frame_dirs, :, k), c) for c in est]
+            id_mean[k] = mean(vals)
+            id_std[k] = n_est >= 2 ? std(vals) : 0.0
+        end
+    end
+
+    return EnsembleConsensusResult(
+        clusters,
+        K,
+        n_pool,
+        fp,
+        frame_dirs,
+        id_mean,
+        id_std,
+        n_est,
+    )
+end
+
+"DataFrame overload: each element's coordinate columns `x1, x2, …` are extracted."
+function ensemble_consensus(dfs::AbstractVector{DataFrame}, objective; kwargs...)
+    ensemble_consensus([_extract_xcols(df) for df in dfs], objective; kwargs...)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", r::EnsembleConsensusResult)
+    println(
+        io,
+        "EnsembleConsensusResult: $(r.n_pool) pooled CPs from $(r.K) fits -> ",
+        "$(length(r.clusters)) clusters; identifiable estimate from $(r.n_estimating)",
+    )
+    for k in axes(r.frame_dirs, 2)
+        @printf(
+            io,
+            "  identifiable[%d] = %.6g ± %.2g  (dir %s)\n",
+            k,
+            r.identifiable_mean[k],
+            r.identifiable_std[k],
+            string(round.(r.frame_dirs[:, k]; digits = 3)),
+        )
+    end
+    for (k, c) in enumerate(r.clusters)
+        @printf(
+            io,
+            "  [%d] rec=%.2f (%d/%d fits, %d pts)  %s  loc=%s  nd=%.2g  sloppy_ext=%.2g\n",
+            k,
+            c.recurrence,
+            length(c.fits),
+            r.K,
+            c.n_members,
+            c.cp_type,
+            string(round.(c.centroid; digits = 4)),
+            c.newton_decrement,
+            c.sloppy_extent,
+        )
+    end
 end
 
 function Base.show(io::IO, ::MIME"text/plain", r::ConsensusValidationResult)

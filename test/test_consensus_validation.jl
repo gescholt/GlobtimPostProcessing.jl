@@ -63,3 +63,58 @@ end
     @test res.consensus[1].n_stiff == 1
     @test res.consensus[1].tube_extent > 0.35
 end
+
+@testset "ensemble_consensus: clustering, recurrence, identifiable estimate" begin
+    # stiff in x (λ≈20), sloppy in y (λ≈0.02). Each of K=4 fits reports copies of the
+    # minimizer at three positions along the sloppy y-axis (a tube populated at y=-0.2,0,0.2,
+    # spacing > τ so they stay distinct clusters), agreeing in stiff x to ±0.001. Fit 3 adds
+    # one fit-specific artifact far away.
+    f = x -> 10.0 * x[1]^2 + 0.01 * x[2]^2
+    jit = [0.001, -0.001, 0.0005, -0.0005]
+    sets = [[[jit[k], y] for y in (-0.2, 0.0, 0.2)] for k in 1:4]
+    push!(sets[3], [0.45, 0.45])                      # fit-specific artifact
+    res = ensemble_consensus(sets, f;
+                             config = ConsensusValidationConfig(match_tol = 0.05, sloppy_ratio = 1e-2),
+                             min_recurrence = 0.5)
+
+    @test res.K == 4 && res.n_pool == 13
+    @test length(res.clusters) == 4                   # 3 tube slots + 1 artifact
+    @test res.clusters[1].recurrence == 1.0           # recurrence-descending order
+    recs = [c.recurrence for c in res.clusters]
+    @test count(==(1.0), recs) == 3                   # every tube slot seen by all 4 fits
+    @test count(==(0.25), recs) == 1                  # the artifact is a 1/K singleton
+    singleton = res.clusters[findfirst(==(0.25), recs)]
+    @test singleton.fits == [3] && singleton.n_members == 1
+
+    # tube clusters: one identifiable direction, x-aligned, tight in stiff / pointlike in sloppy
+    tube = res.clusters[1]
+    @test tube.n_stiff == 1
+    @test tube.stiff_extent < 0.002                   # jitter-scale agreement in x
+    @test tube.sloppy_extent < 1e-12                  # same y within a cluster
+
+    # headline: ensemble identifiable-value estimate over recurrence ≥ 0.5 clusters
+    @test res.n_estimating == 3
+    @test size(res.frame_dirs, 2) == 1
+    @test abs(abs(res.frame_dirs[1, 1]) - 1.0) < 1e-6 # stiff frame is the x-axis
+    @test abs(res.identifiable_mean[1]) < 1.5e-3      # true stiff value is x = 0
+    @test res.identifiable_std[1] < 2e-3
+
+    # frame_point override reproduces the same frame at the true minimizer
+    res2 = ensemble_consensus(sets, f;
+                              config = ConsensusValidationConfig(match_tol = 0.05, sloppy_ratio = 1e-2),
+                              frame_point = [0.0, 0.0])
+    @test res2.frame_point == [0.0, 0.0]
+    @test abs(res2.identifiable_mean[1]) < 1.5e-3
+
+    @test_throws ErrorException ensemble_consensus([sets[1]], f)   # K ≥ 2 required
+end
+
+@testset "ensemble_consensus: DataFrame overload" begin
+    f = x -> 10.0 * x[1]^2 + 0.01 * x[2]^2
+    dfs = [DataFrame(x1 = [0.001], x2 = [0.0]), DataFrame(x1 = [-0.001], x2 = [0.0])]
+    res = ensemble_consensus(dfs, f;
+                             config = ConsensusValidationConfig(match_tol = 0.05, sloppy_ratio = 1e-2))
+    @test length(res.clusters) == 1
+    @test res.clusters[1].recurrence == 1.0
+    @test res.clusters[1].newton_decrement < 1e-6     # centroid is the true stationary point
+end

@@ -179,6 +179,7 @@ export recover_vanishing_ideal, physical_generator, generator_string
 # Consensus validation exports (stiff/sloppy tube across two fits — beads n1hx/pxvr)
 export ConsensusValidationConfig, ConsensusCP, ConsensusValidationResult
 export validate_consensus, match_critical_point_sets
+export EnsembleCluster, EnsembleConsensusResult, ensemble_consensus
 
 # Subdivision tree analysis exports (load + analyze saved JLD2/JSON trees)
 export load_subdivision_tree, analyze_subdivision_tree, SubdivisionTreeStats
