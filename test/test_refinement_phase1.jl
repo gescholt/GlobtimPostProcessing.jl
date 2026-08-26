@@ -125,6 +125,30 @@ using Optim  # Need Optim for type checks
         @test all(all(abs.(r.refined) .< 1e-3) for r in results)
     end
 
+    @testset "Tight-box bounded refinement moves (REFINE-BOX regression)" begin
+        # NelderMead's default initial simplex (~2.5% of coordinate magnitude)
+        # exceeds a tight box radius at O(1) parameters; before the
+        # normalized-coordinate fix every off-start vertex was infeasible under
+        # Fminbox and refinement silently returned the input.
+        p_star = [1.3, 0.8, 2.1]
+        r = 0.01
+        bounds = [(p - r, p + r) for p in p_star]
+        f(p) = sum(abs2, p .- p_star)
+        start = p_star .+ [6e-3, -4e-3, 5e-3]  # inside the box, off the minimum
+
+        results = refine_critical_points_batch(
+            f,
+            [start];
+            bounds = bounds,
+            max_iterations = 300,
+            show_progress = false,
+        )
+        refined = results[1].refined
+        @test sqrt(sum(abs2, refined .- p_star)) < 1e-4  # actually moved to the minimum
+        @test sqrt(sum(abs2, refined .- start)) > 1e-3   # and is not the input point
+        @test all(bounds[i][1] <= refined[i] <= bounds[i][2] for i in 1:3)
+    end
+
     @testset "Timeout Handling" begin
         # Very slow function (sleep-based)
         function slow_function(p::Vector{Float64})

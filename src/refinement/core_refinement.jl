@@ -267,14 +267,40 @@ function refine_critical_point(
         # Choose bounded or unbounded optimization
         # Suppress Fminbox "Initial position on boundary" warnings — these are expected
         # when clamping points to bounds. A batch summary is printed instead.
+        #
+        # Bounded refinement runs in NORMALIZED coordinates z ∈ [-1,1]^n:
+        # NelderMead's default initial simplex is ~2.5% of the coordinate
+        # magnitude, which exceeds a tight box radius (r ≤ 0.01 at O(1)
+        # parameters) — under Fminbox every off-start vertex is then infeasible,
+        # the simplex collapses on the start point, and refinement silently
+        # returns the input (refined == raw, converged = true). The affine
+        # change of variables makes the simplex box-scale-invariant. Note
+        # x_abstol is therefore box-relative in the bounded case.
         result = if lb !== nothing && ub !== nothing
+            norm_center = (lb .+ ub) ./ 2
+            norm_radius = (ub .- lb) ./ 2
+            all(norm_radius .> 0) ||
+                error("refine_critical_point: degenerate bounds (zero-width dimension)")
+            # Start nudged strictly inside so the whole initial simplex stays
+            # feasible: NelderMead's default simplexer offsets vertices by 50%
+            # OF THE COORDINATE VALUE, which for a start near the boundary
+            # lands vertices outside the box, where Fminbox's barrier freezes
+            # that coordinate. Fixed absolute steps (b = 0) in z-space are
+            # scale-free; 0.9 + 0.05 keeps every vertex at |z| <= 0.95.
+            z0 = clamp.((starting_point .- norm_center) ./ norm_radius, -0.9, 0.9)
+            g = z -> objective_func(norm_center .+ norm_radius .* z)
+            bounded_method =
+                method isa Optim.NelderMead ?
+                Optim.NelderMead(
+                    initial_simplex = Optim.AffineSimplexer(a = 0.05, b = 0.0),
+                ) : method
             Logging.with_logger(Logging.NullLogger()) do
                 Optim.optimize(
-                    objective_func,
-                    lb,
-                    ub,
-                    starting_point,
-                    Optim.Fminbox(method),
+                    g,
+                    fill(-1.0, length(z0)),
+                    fill(1.0, length(z0)),
+                    z0,
+                    Optim.Fminbox(bounded_method),
                     opt_options,
                 )
             end
@@ -287,11 +313,14 @@ function refine_critical_point(
         # Check if timed out
         timed_out = max_time !== nothing && elapsed_time >= max_time
 
-        # Extract results
+        # Extract results (map back from normalized coordinates in the bounded
+        # case, and ensure the result respects bounds — Fminbox + NelderMead may
+        # not strictly enforce them)
         refined_point = Optim.minimizer(result)
-
-        # Ensure result respects bounds (Fminbox + NelderMead may not strictly enforce)
         if lb !== nothing && ub !== nothing
+            norm_center = (lb .+ ub) ./ 2
+            norm_radius = (ub .- lb) ./ 2
+            refined_point = norm_center .+ norm_radius .* refined_point
             refined_point = clamp.(refined_point, lb, ub)
         end
 
