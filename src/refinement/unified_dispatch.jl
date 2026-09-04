@@ -260,7 +260,9 @@ function refine_point(
     bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
     trace::Bool = false,
 )
-    project(x) = bounds === nothing ? x : [clamp(x[i], bounds[i][1], bounds[i][2]) for i in eachindex(x)]
+    project(x) =
+        bounds === nothing ? x :
+        [clamp(x[i], bounds[i][1], bounds[i][2]) for i in eachindex(x)]
     x = project(copy(point))
     t0 = time()
     sumsq(r) = sum(abs2, r)
@@ -297,7 +299,9 @@ function refine_point(
         if all(isfinite, delta) && f_new < f
             step = LinearAlgebra.norm(x_new .- x)
             decrease = (f - f_new) / max(f, floatmin(Float64))
-            x = x_new; r = r_new; f = f_new
+            x = x_new
+            r = r_new
+            f = f_new
             J = ForwardDiff.jacobian(m.residual, x)
             g = 2.0 .* (J' * r)
             lambda = max(lambda * m.lambda_down, 1e-15)
@@ -334,7 +338,11 @@ function refine_point(
             eig = LinearAlgebra.eigen(LinearAlgebra.Symmetric(H))
             eigenvalues = collect(eig.values)
             eigvecs = eig.vectors
-            cp_type = _classify_eigenvalues(eigenvalues, m.hessian_tol; relative_tol = m.hessian_relative_tol)
+            cp_type = _classify_eigenvalues(
+                eigenvalues,
+                m.hessian_tol;
+                relative_tol = m.hessian_relative_tol,
+            )
             cond_num, min_eig = _eigenvalue_diagnostics(eigenvalues)
         end
     end
