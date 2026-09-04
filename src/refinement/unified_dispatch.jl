@@ -251,6 +251,112 @@ function refine_point(
     )
 end
 
+# ── Levenberg–Marquardt on a residual vector (bead rai5.9) ──────────────────
+
+function refine_point(
+    m::LevenbergMarquardt,
+    objective,
+    point::Vector{Float64};
+    bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
+    trace::Bool = false,
+)
+    project(x) = bounds === nothing ? x : [clamp(x[i], bounds[i][1], bounds[i][2]) for i in eachindex(x)]
+    x = project(copy(point))
+    t0 = time()
+    sumsq(r) = sum(abs2, r)
+    r = Float64.(m.residual(x))
+    trace_pts = Vector{Float64}[]
+    trace_g = Float64[]
+    finite_start = all(isfinite, r)
+    J = finite_start ? ForwardDiff.jacobian(m.residual, x) : zeros(length(r), length(x))
+    f = finite_start ? sumsq(r) : Inf
+    g = 2.0 .* (J' * r)                         # ∇‖r‖²
+    gnorm(v) = all(isfinite, v) ? maximum(abs, v) : Inf
+    initial_gnorm = gnorm(g)
+    trace && (push!(trace_pts, copy(x)); push!(trace_g, initial_gnorm))
+    lambda = m.lambda0
+    iterations = 0
+    rejected = 0
+    converged = finite_start && initial_gnorm <= m.g_abstol
+    stalled = !finite_start
+    while !converged && !stalled && iterations < m.max_iterations
+        if m.max_time !== nothing && time() - t0 > m.max_time
+            break
+        end
+        A = J' * J
+        D = LinearAlgebra.Diagonal(max.(LinearAlgebra.diag(A), eps(Float64)))
+        delta = try
+            -((A + lambda * D) \ (J' * r))
+        catch err
+            err isa LinearAlgebra.SingularException || rethrow()
+            fill(NaN, length(x))
+        end
+        x_new = all(isfinite, delta) ? project(x .+ delta) : x
+        r_new = all(isfinite, delta) ? Float64.(m.residual(x_new)) : r
+        f_new = all(isfinite, r_new) ? sumsq(r_new) : Inf
+        if all(isfinite, delta) && f_new < f
+            step = LinearAlgebra.norm(x_new .- x)
+            decrease = (f - f_new) / max(f, floatmin(Float64))
+            x = x_new; r = r_new; f = f_new
+            J = ForwardDiff.jacobian(m.residual, x)
+            g = 2.0 .* (J' * r)
+            lambda = max(lambda * m.lambda_down, 1e-15)
+            iterations += 1
+            trace && (push!(trace_pts, copy(x)); push!(trace_g, gnorm(g)))
+            if gnorm(g) <= m.g_abstol
+                converged = true
+            elseif step <= m.x_abstol || decrease <= m.f_reltol
+                stalled = true                  # accepted step too small to matter
+            end
+        else
+            rejected += 1
+            lambda *= m.lambda_up
+            iterations += 1                     # a rejected step still costs a solve
+            lambda > m.lambda_max && (stalled = true)
+        end
+    end
+    # A projected point sits on the box: a zero gradient there is not
+    # first-order optimality of the box problem, but the convention shared with
+    # the other methods is gradient-based, so `converged` means ‖∇f‖∞ ≤ g_abstol.
+    obj_value = try
+        Float64(objective(x))
+    catch
+        NaN
+    end
+    cp_type = :unknown
+    eigenvalues = Float64[]
+    eigvecs = Matrix{Float64}(undef, 0, 0)
+    cond_num = NaN
+    min_eig = NaN
+    if finite_start && all(isfinite, r)
+        H = ForwardDiff.hessian(y -> sumsq(m.residual(y)), x)
+        if all(isfinite, H)
+            eig = LinearAlgebra.eigen(LinearAlgebra.Symmetric(H))
+            eigenvalues = collect(eig.values)
+            eigvecs = eig.vectors
+            cp_type = _classify_eigenvalues(eigenvalues, m.hessian_tol; relative_tol = m.hessian_relative_tol)
+            cond_num, min_eig = _eigenvalue_diagnostics(eigenvalues)
+        end
+    end
+    return CriticalPointRefinementResult(
+        point = x,
+        objective_value = obj_value,
+        cp_type = cp_type,
+        eigenvalues = eigenvalues,
+        eigenvectors = eigvecs,
+        condition_number = cond_num,
+        min_eigenvalue = min_eig,
+        gradient_norm = gnorm(g),
+        converged = converged,
+        iterations = iterations,
+        initial_gradient_norm = initial_gnorm,
+        rejected_steps = rejected,
+        trace = trace_pts,
+        trace_gradient_norms = trace_g,
+        gradient_method = :forwarddiff,
+    )
+end
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Batch refinement
 # ═══════════════════════════════════════════════════════════════════════════════

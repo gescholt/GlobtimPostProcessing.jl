@@ -199,6 +199,48 @@ needs_gradient(::OptimGradientDescent) = true
 method_name(::OptimGradientDescent) = :gradientdescent
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Levenberg–Marquardt on a residual vector (bead rai5.9)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+"""
+    LevenbergMarquardt <: RefinementMethod
+
+Damped Gauss–Newton (Levenberg–Marquardt with Marquardt diagonal scaling) on a
+residual vector `r(x)`, minimising `‖r(x)‖²` with the exact ForwardDiff
+Jacobian of `r`. Built for least-squares losses whose per-datum residuals are
+available as a Dual-compatible closure (an ODE misfit through `remake`+`solve`);
+the scalar `objective` handed to `refine_point` is evaluated once at the final
+point for the reported `objective_value` and is not used in the iteration.
+
+Fields: `residual` (required; `x::AbstractVector -> AbstractVector`),
+`g_abstol` (sup-norm of `∇‖r‖²` that counts as converged), `x_abstol` and
+`f_reltol` (step / relative-decrease stalls, returned unconverged), `max_iterations`,
+`max_time`, the damping schedule `lambda0`, `lambda_up`, `lambda_down`, `lambda_max`,
+and `hessian_tol` / `hessian_relative_tol` for the post-hoc classification, which
+uses the exact ForwardDiff Hessian of `‖r‖²`.
+
+Steps are projected onto `bounds`. A non-finite residual at the start, a step
+that cannot be accepted before `lambda_max`, or a stall returns the current point
+with `converged = false`; there is no fallback to another method.
+"""
+Base.@kwdef struct LevenbergMarquardt{F} <: RefinementMethod
+    residual::F
+    g_abstol::Float64 = 1e-10
+    x_abstol::Float64 = 1e-14
+    f_reltol::Float64 = 1e-15
+    max_iterations::Int = 200
+    max_time::Union{Float64,Nothing} = 60.0
+    lambda0::Float64 = 1e-3
+    lambda_up::Float64 = 10.0
+    lambda_down::Float64 = 0.1
+    lambda_max::Float64 = 1e12
+    hessian_tol::Float64 = 1e-6
+    hessian_relative_tol::Float64 = 0.0
+end
+needs_gradient(::LevenbergMarquardt) = true
+method_name(::LevenbergMarquardt) = :levenberg_marquardt
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Factory
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -210,6 +252,7 @@ const _VALID_METHOD_NAMES = [
     :bfgs,
     :conjugategradient,
     :gradientdescent,
+    :levenberg_marquardt,
 ]
 
 """
@@ -217,7 +260,8 @@ const _VALID_METHOD_NAMES = [
 
 Construct a `RefinementMethod` by symbolic name. Valid names:
 `newton_cp`, `newton_minimize`, `neldermead`, `lbfgs`, `bfgs`,
-`conjugategradient`, `gradientdescent`.
+`conjugategradient`, `gradientdescent`, `levenberg_marquardt` (requires the
+`residual` keyword).
 
 Keyword arguments are forwarded to the constructor of the matching type.
 
@@ -237,5 +281,6 @@ function refinement_method(name::Union{Symbol,AbstractString}; kwargs...)
     sym === :bfgs ? OptimBFGS(; kwargs...) :
     sym === :conjugategradient ? OptimConjugateGradient(; kwargs...) :
     sym === :gradientdescent ? OptimGradientDescent(; kwargs...) :
+    sym === :levenberg_marquardt ? LevenbergMarquardt(; kwargs...) :
     error("Unknown refinement method: $name. Valid: $(join(_VALID_METHOD_NAMES, ", "))")
 end

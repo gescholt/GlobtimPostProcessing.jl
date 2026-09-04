@@ -154,6 +154,7 @@ export classify_eigenvalues
 export RefinementMethod
 export NewtonCP, NewtonMinimize
 export OptimNelderMead, OptimLBFGS, OptimBFGS, OptimConjugateGradient, OptimGradientDescent
+export LevenbergMarquardt
 export refinement_method, refine_point, refine_points
 export method_name, needs_gradient, needs_hessian
 

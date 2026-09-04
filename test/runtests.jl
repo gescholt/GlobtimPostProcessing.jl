@@ -183,6 +183,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_benefit_matrix.jl")
     end
 
+    # Levenberg–Marquardt refinement on residual vectors (September 2026 — bead rai5.9)
+    @testset "Levenberg-Marquardt Refinement" begin
+        include("test_refinement_lm.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end
