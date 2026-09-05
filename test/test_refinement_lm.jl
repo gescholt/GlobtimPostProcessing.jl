@@ -25,10 +25,33 @@ using Random
     @test isapprox(res.point, xls; atol = 1e-8)
     @test isapprox(res.objective_value, f(xls); rtol = 1e-10)
     @test res.cp_type == :min
-    @test res.gradient_norm <= m.g_abstol
+    # convergence is by either gradient test; state the criterion rather than
+    # assuming the absolute one fired (at this scaling it cannot -- see the
+    # scaled-gradient testset below).
+    rstar = r(res.point)
+    @test maximum(abs, A' * rstar) <= m.g_reltol * maximum(norm, eachcol(A)) * norm(rstar)
     @test res.iterations >= 1
     @test length(res.eigenvalues) == 3 && all(>(0), res.eigenvalues)
     @test res.gradient_method == :forwarddiff
+end
+
+@testset "scaled gradient test converges where the absolute one cannot" begin
+    # ‖∇‖r‖²‖ = ‖2J'r‖ carries the scale of the problem. Blow the residual up and
+    # its floating-point floor sits far above `g_abstol`, exactly as the
+    # integrator's evaluation noise does on an ODE misfit: the absolute test is
+    # then unreachable at the solution. The scale-free test still certifies
+    # first-order optimality, which is what `converged` must report.
+    rng = MersenneTwister(11)
+    A = 1e4 .* randn(rng, 20, 4)
+    xstar = [0.5, -1.0, 2.0, 0.25]
+    b = A * xstar .+ 1e3 .* randn(rng, 20)
+    xls = A \ b
+    r(x) = A * x .- b
+    res = refine_point(LevenbergMarquardt(; residual = r), x -> sum(abs2, r(x)), zeros(4))
+    @test res.converged
+    @test res.gradient_norm > 1e-10            # the absolute test never fires here
+    @test isapprox(res.point, xls; rtol = 1e-8)
+    @test res.cp_type == :min
 end
 
 @testset "Rosenbrock residuals from (-1.2, 1) reach (1, 1)" begin

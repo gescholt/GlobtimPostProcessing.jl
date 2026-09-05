@@ -213,19 +213,38 @@ the scalar `objective` handed to `refine_point` is evaluated once at the final
 point for the reported `objective_value` and is not used in the iteration.
 
 Fields: `residual` (required; `x::AbstractVector -> AbstractVector`),
-`g_abstol` (sup-norm of `∇‖r‖²` that counts as converged), `x_abstol` and
+`g_abstol` (sup-norm of `∇‖r‖²` that counts as converged), `g_reltol` (the
+scale-free companion test: the largest cosine between `r` and a column of `J`,
+MINPACK's `gtol`), `x_abstol` and
 `f_reltol` (step / relative-decrease stalls, returned unconverged), `max_iterations`,
 `max_time`, the damping schedule `lambda0`, `lambda_up`, `lambda_down`, `lambda_max`,
 and `hessian_tol` / `hessian_relative_tol` for the post-hoc classification, which
 uses the exact ForwardDiff Hessian of `‖r‖²`.
 
-Steps are projected onto `bounds`. A non-finite residual at the start, a step
-that cannot be accepted before `lambda_max`, or a stall returns the current point
-with `converged = false`; there is no fallback to another method.
+Steps are projected onto `bounds`. A non-finite residual at the start returns the
+current point with `converged = false`; there is no fallback to another method.
+`converged` is a property of the *final* point (first-order optimality by either
+gradient test), not of how the iteration exited, so a step-size or
+relative-decrease stall at an optimal point is a successful termination — the
+role MINPACK's `ftol`/`xtol` codes play.
+
+On an ODE misfit `‖∇‖r‖²‖ = ‖2J'r‖` is floored by the integrator's evaluation
+noise in `r`, so the absolute test alone is unreachable at a zero-residual
+minimizer. Worse, that noise is not in the range of `J` and is not smooth, so
+the scale-free `g_reltol` test does not fire either (measured: `relg ≈ 1e-3` at
+the floor on a tight-box FHN-3D fit). `disp_tol` is the test that decides those
+instances: the undamped Gauss–Newton step `(J'J)^{-1} J'r` is the displacement
+from the current point to the stationary point predicted by the same Newton
+argument the capture certificate uses, and it is stated in parameter units, so
+dividing by the curvature makes it insensitive to noise in `r` itself. A
+rank-deficient `J'J` (a flat valley) leaves this test unfired rather than
+declaring convergence.
 """
 Base.@kwdef struct LevenbergMarquardt{F} <: RefinementMethod
     residual::F
     g_abstol::Float64 = 1e-10
+    g_reltol::Float64 = 1e-8
+    disp_tol::Float64 = 1e-6
     x_abstol::Float64 = 1e-14
     f_reltol::Float64 = 1e-15
     max_iterations::Int = 200

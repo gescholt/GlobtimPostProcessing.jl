@@ -274,12 +274,45 @@ function refine_point(
     f = finite_start ? sumsq(r) : Inf
     g = 2.0 .* (J' * r)                         # ∇‖r‖²
     gnorm(v) = all(isfinite, v) ? maximum(abs, v) : Inf
+    # MINPACK's scale-free gradient test: the largest cosine between the residual
+    # and a column of J. ∇‖r‖² = 2J'r is floored by the evaluation noise in r
+    # (an ODE misfit at integrator tolerance never reaches an absolute 1e-10), so
+    # the absolute test alone is unreachable on exactly the problems this refiner
+    # exists for. This one is invariant to ‖r‖.
+    function relgrad(Jm, rv)
+        (all(isfinite, Jm) && all(isfinite, rv)) || return Inf
+        nr = LinearAlgebra.norm(rv)
+        nr == 0 && return 0.0
+        worst = 0.0
+        for j in axes(Jm, 2)
+            cj = @view Jm[:, j]
+            nj = LinearAlgebra.norm(cj)
+            nj == 0 && continue
+            worst = max(worst, abs(LinearAlgebra.dot(cj, rv)) / (nj * nr))
+        end
+        return worst
+    end
+    # The undamped Gauss-Newton step: the displacement from x to the stationary
+    # point predicted by the same Newton argument the capture certificate uses.
+    # Stated in parameter units, and dividing by the curvature makes it robust to
+    # the evaluation noise in r that defeats both gradient tests on an ODE misfit.
+    # A singular J'J (a flat valley) leaves the test unfired.
+    function gnstep(Jm, rv)
+        (all(isfinite, Jm) && all(isfinite, rv)) || return Inf
+        try
+            return LinearAlgebra.norm((Jm' * Jm) \ (Jm' * rv))
+        catch err
+            err isa LinearAlgebra.SingularException || rethrow()
+            return Inf
+        end
+    end
+    is_optimal(Jm, rv, gv) = gnorm(gv) <= m.g_abstol || relgrad(Jm, rv) <= m.g_reltol
     initial_gnorm = gnorm(g)
     trace && (push!(trace_pts, copy(x)); push!(trace_g, initial_gnorm))
     lambda = m.lambda0
     iterations = 0
     rejected = 0
-    converged = finite_start && initial_gnorm <= m.g_abstol
+    converged = finite_start && is_optimal(J, r, g)
     stalled = !finite_start
     while !converged && !stalled && iterations < m.max_iterations
         if m.max_time !== nothing && time() - t0 > m.max_time
@@ -307,7 +340,7 @@ function refine_point(
             lambda = max(lambda * m.lambda_down, 1e-15)
             iterations += 1
             trace && (push!(trace_pts, copy(x)); push!(trace_g, gnorm(g)))
-            if gnorm(g) <= m.g_abstol
+            if is_optimal(J, r, g)
                 converged = true
             elseif step <= m.x_abstol || decrease <= m.f_reltol
                 stalled = true                  # accepted step too small to matter
@@ -319,9 +352,20 @@ function refine_point(
             lambda > m.lambda_max && (stalled = true)
         end
     end
-    # A projected point sits on the box: a zero gradient there is not
-    # first-order optimality of the box problem, but the convention shared with
-    # the other methods is gradient-based, so `converged` means ‖∇f‖∞ ≤ g_abstol.
+    # Convergence is a property of the FINAL point, not of how the loop exited: a
+    # step-size or relative-decrease stall at a first-order-optimal point is a
+    # successful termination (MINPACK's ftol/xtol codes), not a failure. A
+    # projected point sits on the box, where a zero gradient is not first-order
+    # optimality of the box problem, but the convention shared with the other
+    # methods is gradient-based.
+    # The displacement test enters only here, at the exit: it converts a stall into
+    # a certified convergence when the point is optimal, and never pre-empts an
+    # iteration that is still descending (which would forfeit accuracy the
+    # gradient tests can still reach on well-conditioned algebraic problems).
+    converged =
+        finite_start &&
+        all(isfinite, r) &&
+        (is_optimal(J, r, g) || gnstep(J, r) <= m.disp_tol)
     obj_value = try
         Float64(objective(x))
     catch
