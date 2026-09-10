@@ -17,8 +17,7 @@ designed to surface: the tracked subdivision runs (`per_axis_audit/`) never solv
 critical points, so **`recovery_error` is `missing` for every subdivision-on cell** —
 the existing data literally cannot say how much subdivision improved PE recovery. The
 one end-to-end subdivision→recovery datapoint (Phase G: fhn3d 2.06e-7, lv4d 4.81e-8)
-is an *untracked sandbox smoke* (`experiments/sandbox/smoke_step15_wide_r.jl`,
-writeups in gitignored `_generated/phase_G_*.md`) at a different configuration.
+is an *untracked sandbox smoke* at a different configuration.
 
 # Data sources
 

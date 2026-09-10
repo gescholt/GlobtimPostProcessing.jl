@@ -1,7 +1,7 @@
 # LandscapeCaptureTypes.jl
 # Data types and JSON loaders for landscape capture analysis
 #
-# Promoted from experiments/sandbox/plot_landscape_capture.jl into the
+# Promoted from a sandbox script into the
 # GlobtimPostProcessing package. These types hold visualization-oriented
 # summaries of degree sweep and subdivision experiments for landscape
 # capture diagnostics (CP counts, refinement paths, leaf spatial data).

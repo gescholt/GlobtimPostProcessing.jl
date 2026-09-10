@@ -320,7 +320,7 @@ function save_refined_results(
         comparison_df[!, :gradient_valid] = gradient_valid_col
     end
 
-    # Add Newton-step-norm validation columns if provided (bead 62qv).
+    # Add Newton-step-norm validation columns if provided.
     # Same per-row expansion as gradient_validation: only converged points get
     # finite values, the rest are Inf / false.
     if step_validation !== nothing
@@ -416,7 +416,7 @@ function save_refined_results(
 
     # Newton-step-norm validation — ‖H⁻¹ ∇f‖ < step_tol. Invariant to ‖H‖ scale,
     # so this is the right "is this a critical point?" criterion for ODE-error
-    # objectives where ‖∇f‖ is dominated by Hessian magnitude (bead 62qv).
+    # objectives where ‖∇f‖ is dominated by Hessian magnitude.
     step_stats = if step_validation !== nothing
         Dict(
             "n_step_valid" => step_validation.n_step_valid,
@@ -496,7 +496,7 @@ function save_refined_results(
         # Gradient validation
         "raw_gradient_validation" => raw_gradient_stats,
         "gradient_validation" => gradient_stats,
-        # Newton-step-norm validation (62qv) — ‖H⁻¹ ∇f‖ < step_tol; scale-invariant
+        # Newton-step-norm validation — ‖H⁻¹ ∇f‖ < step_tol; scale-invariant
         "step_validation" => step_stats,
         # Hessian classification
         "hessian_classification" => hessian_stats,

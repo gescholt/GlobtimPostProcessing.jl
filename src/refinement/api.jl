@@ -200,7 +200,6 @@ function refine_experiment_results(
 
     # 7b-step. Newton-step-norm validation — invariant to ‖H‖ scale, the right
     # criterion for ODE-error objectives where ‖∇f‖ is dominated by Hessian magnitude.
-    # See bead 62qv for context.
     step_validation = if n_converged > 0
         validate_newton_steps(
             refined_points,

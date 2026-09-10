@@ -699,7 +699,7 @@ fixtures_dir = joinpath(@__DIR__, "fixtures")
     end
 end
 
-@testset "Newton-step-norm validation (bead 62qv)" begin
+@testset "Newton-step-norm validation" begin
     # ‖∇f‖ < tol fails on stiff/ill-conditioned objectives because gradient
     # magnitudes scale with ‖H‖. ‖H⁻¹ ∇f‖ < step_tol is invariant under that
     # rescaling. Goal of this testset: prove the new criterion succeeds where

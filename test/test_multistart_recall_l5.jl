@@ -1,5 +1,5 @@
 """
-Level-5 multi-start recall tests (bead dx2h).
+Level-5 multi-start recall tests.
 
 L4 asked "does refinement converge from a start near a known CP?". L5 asks the
 harder question: launched from a dense grid and from random points, does a method
@@ -151,7 +151,7 @@ const RECALL_CASES = [
 
 _bench(name) = BENCHMARK_FUNCTIONS[findfirst(b -> b.name == name, BENCHMARK_FUNCTIONS)]
 
-@testset "L5 Multi-Start Recall (dx2h)" begin
+@testset "L5 Multi-Start Recall" begin
 
     # ========================================================================
     # Harness self-checks — a recall number is worthless if the scaffolding lies
@@ -294,7 +294,7 @@ _bench(name) = BENCHMARK_FUNCTIONS[findfirst(b -> b.name == name, BENCHMARK_FUNC
     end
 
     @testset "Newton classification is correct near known minima" begin
-        # Classification accuracy (bead scope): started near a known minimum,
+        # Classification accuracy: started near a known minimum,
         # Newton must both land on it and label it :min.
         b = _bench("himmelblau")
         for m in b.known_minima

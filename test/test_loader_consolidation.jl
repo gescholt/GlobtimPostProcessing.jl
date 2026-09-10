@@ -1,4 +1,4 @@
-# Tests for the consolidated critical point and config loaders (bead tibf).
+# Tests for the consolidated critical point and config loaders.
 #
 # Verifies that:
 #   - UnifiedPipeline._load_critical_points handles both _raw_ and non-raw naming

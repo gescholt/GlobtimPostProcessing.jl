@@ -1,4 +1,4 @@
-# Levenberg–Marquardt refinement on residual vectors (bead rai5.9).
+# Levenberg–Marquardt refinement on residual vectors.
 #
 # The pipeline's Phase 3 refined every critical point with Nelder–Mead; on the
 # squared ODE loss that refiner stalls at objective ~1e-10 and loses narrow

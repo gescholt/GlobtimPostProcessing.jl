@@ -199,7 +199,7 @@ needs_gradient(::OptimGradientDescent) = true
 method_name(::OptimGradientDescent) = :gradientdescent
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Levenberg–Marquardt on a residual vector (bead rai5.9)
+# Levenberg–Marquardt on a residual vector
 # ═══════════════════════════════════════════════════════════════════════════════
 
 """

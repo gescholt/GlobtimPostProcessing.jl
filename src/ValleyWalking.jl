@@ -12,7 +12,7 @@ using Printf: @printf
 # Dual-compatible and should be preferred when walking ODE landscapes: near a sloppy
 # direction (small transverse Hessian eigenvalue λ) the projection divides gradient
 # noise by λ, so FiniteDiff's ~1e-9 noise produces O(noise/λ) drift per corrector call
-# while ForwardDiff stays exact (see experiments/sandbox/valley_ideal_ode_validation.jl).
+# while ForwardDiff stays exact.
 
 function _vw_gradient(f, x::AbstractVector, method::Symbol)
     if method == :forwarddiff

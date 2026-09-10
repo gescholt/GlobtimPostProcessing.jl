@@ -365,16 +365,16 @@ end
 
 Post-hoc Newton-step-norm validation on a refinement-comparison DataFrame.
 Mirror of `add_gradient_validation!`, but writes three columns:
-  - `step_norm` — `‖H⁻¹∇f‖` at each refined CP (bead 62qv).
-  - `step_valid` — `step_norm < step_tolerance` (bead 62qv).
+  - `step_norm` — `‖H⁻¹∇f‖` at each refined CP.
+  - `step_valid` — `step_norm < step_tolerance`.
   - `hessian_min_eigval` — `min |λ(H_f)|` per point; the empirical estimator for
     the Morse-class Hessian floor `ℓ̂` used in calibrating Thm 1's (epsdAi)
-    bound (bead EPSDAI-1 / `cskw.1`). NaN for rows whose refined coords are NaN.
+    bound. NaN for rows whose refined coords are NaN.
 
 The point of this function (vs `validate_newton_steps` directly): re-process
 existing `refinement_comparison_deg_K.csv` files in place without re-running
 globtim. Rows with NaN coordinates (failed refinement) get `step_norm = Inf`
-and `step_valid = false`. This is the post-hoc tool for bead 62qv.
+and `step_valid = false`.
 """
 function add_step_norm_validation!(
     comparison_df::DataFrame,
@@ -514,8 +514,7 @@ Compute Newton-step norms `‖H⁻¹ ∇f(x)‖` plus the spectral magnitude bou
 `min |λ(H)|` and `max |λ(H)|` at each point.
 
 The minimum |λ| at a refined CP is an estimator for the empirical Morse-class
-Hessian floor `ℓ̂` used in calibrating Thm 1's (epsdAi) bound. See bead `cskw`
-(EPSDAI-CAL).
+Hessian floor `ℓ̂` used in calibrating Thm 1's (epsdAi) bound.
 
 The Hessian inverse uses the same truncated-eigenvalue pseudo-inverse as
 `refine_to_critical_point` in `newton_refinement.jl`: directions whose eigenvalue

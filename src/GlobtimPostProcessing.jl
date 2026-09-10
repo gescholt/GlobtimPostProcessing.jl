@@ -140,7 +140,7 @@ export RefinementDistanceResult, compute_refinement_distances
 export compute_gradient_norms, compute_gradient_norm
 export validate_critical_points, add_gradient_validation!
 export GradientValidationResult
-# Newton-step-norm validation (62qv): ‖H⁻¹ ∇f‖ < step_tol — scale-invariant
+# Newton-step-norm validation: ‖H⁻¹ ∇f‖ < step_tol — scale-invariant
 export validate_newton_steps,
     compute_newton_step_norms, compute_newton_step_diagnostics, add_step_norm_validation!
 export StepNormValidationResult
@@ -177,7 +177,7 @@ export run_valley_analysis
 export ValleyIdealConfig, ValleyIdealResult, ValleyIdealGenerator
 export recover_vanishing_ideal, physical_generator, generator_string
 
-# Consensus validation exports (stiff/sloppy tube across two fits — beads n1hx/pxvr)
+# Consensus validation exports (stiff/sloppy tube across two fits)
 export ConsensusValidationConfig, ConsensusCP, ConsensusValidationResult
 export validate_consensus, match_critical_point_sets
 export EnsembleCluster, EnsembleConsensusResult, ensemble_consensus
@@ -293,7 +293,7 @@ include("ValleyWalking.jl")
 # Valley ideal (approximate vanishing ideal of a sampled valley)
 include("ValleyIdeal.jl")
 
-# Consensus validation (stiff/sloppy tube across two independent fits — beads n1hx/pxvr)
+# Consensus validation (stiff/sloppy tube across two independent fits)
 include("ConsensusValidation.jl")
 
 # Subdivision tree analysis (adaptive subdivision postprocessing - January 2026)

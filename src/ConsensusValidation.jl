@@ -1,6 +1,6 @@
 # Consensus validation of critical points across two independent polynomial fits.
 #
-# Motivation (beads n1hx / pxvr). Fitting an objective twice from different sample points (or noise
+# Motivation. Fitting an objective twice from different sample points (or noise
 # draws) and keeping the critical points that appear in BOTH is a variance filter: it drops
 # fit-specific (sampling-dependent) spurious CPs. On a SLOPPY landscape, however, the objective
 # cannot localize a critical point along its flat valley, so the two fits' copies of a true CP spread
@@ -325,7 +325,7 @@ Pool the critical-point sets of `K = length(cp_sets)` independent fits, greedily
 (`config.match_tol`; a point joins the nearest cluster centroid within τ, else opens a new one),
 and score each cluster by **recurrence** = fraction of distinct fits represented.
 
-# Semantics — measured, not aspirational (FHN3D_1 / LV2D, 2026-08-20, beads pxvr/2f1i)
+# Semantics — measured, not aspirational (FHN3D_1 / LV2D, 2026-08-20)
 
 On sloppy landscapes recurrence is a **systematicity** score, *not* a validity score: noise-pinned
 valley structures recur across every fit and take the top recurrence, while the true minimizer's

@@ -1,7 +1,7 @@
-# Level-4 single-point refinement tests (bead hcua).
+# Level-4 single-point refinement tests.
 #
 # test_capture_analysis.jl already covers Newton min/max/saddle/box/batch/
-# Hessian-skip/accept_tol/f_accept_tol. This file fills the remaining hcua
+# Hessian-skip/accept_tol/f_accept_tol. This file fills the remaining
 # scope: NelderMead behavior near a saddle, LBFGS near a minimum, tolerance
 # and trust-region sensitivity, early-exit + f-value safeguard semantics,
 # parameter validation, and trace structure.
@@ -11,7 +11,7 @@ using GlobtimPostProcessing
 using LinearAlgebra
 using Optim
 
-@testset "L4 Single-Point Refinement (hcua)" begin
+@testset "L4 Single-Point Refinement" begin
     @testset "NelderMead converges near a minimum" begin
         f(x) = (x[1] - 1.0)^2 + (x[2] + 0.5)^2
         result = refine_critical_point(

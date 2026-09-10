@@ -251,7 +251,7 @@ function refine_point(
     )
 end
 
-# ── Levenberg–Marquardt on a residual vector (bead rai5.9) ──────────────────
+# ── Levenberg–Marquardt on a residual vector ──────────────────
 
 function refine_point(
     m::LevenbergMarquardt,

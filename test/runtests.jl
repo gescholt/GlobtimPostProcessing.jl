@@ -85,13 +85,13 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_capture_analysis.jl")
     end
 
-    # Level-4 single-point refinement (bead hcua) — NM/LBFGS/Newton convergence,
+    # Level-4 single-point refinement — NM/LBFGS/Newton convergence,
     # tolerance + trust-region sensitivity, early-exit, f-safeguard, trace
     @testset "L4 Single-Point Refinement" begin
         include("test_refinement_l4_single_point.jl")
     end
 
-    # Level-5 multi-start recall (bead dx2h) — from grid + seeded random starts,
+    # Level-5 multi-start recall — from grid + seeded random starts,
     # does each descent method reach EVERY known local minimum? Recall/precision,
     # basin coverage, false-merge audit, worst-case starts, Newton classification.
     @testset "L5 Multi-Start Recall" begin
@@ -108,7 +108,7 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_unified_pipeline.jl")
     end
 
-    # Run Loader Consolidation tests (tibf — February 2026)
+    # Run Loader Consolidation tests (February 2026)
     @testset "Loader Consolidation" begin
         include("test_loader_consolidation.jl")
     end
@@ -138,7 +138,7 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_valley_ideal.jl")
     end
 
-    # Run Consensus Validation tests (August 2026, beads n1hx/pxvr)
+    # Run Consensus Validation tests (August 2026)
     @testset "Consensus Validation" begin
         include("test_consensus_validation.jl")
     end
@@ -183,7 +183,7 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_benefit_matrix.jl")
     end
 
-    # Levenberg–Marquardt refinement on residual vectors (September 2026 — bead rai5.9)
+    # Levenberg–Marquardt refinement on residual vectors (September 2026)
     @testset "Levenberg-Marquardt Refinement" begin
         include("test_refinement_lm.jl")
     end
