@@ -2,6 +2,39 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-09-10
+
+### Added
+
+- **Consensus validation** — `validate_consensus`, `ensemble_consensus`,
+  `match_critical_point_sets` and their result types (`ConsensusCP`,
+  `ConsensusValidationConfig`, `ConsensusValidationResult`, `EnsembleCluster`,
+  `EnsembleConsensusResult`). Fitting one objective twice from independent
+  sample sets and scoring each cluster by recurrence across fits. On sloppy
+  landscapes recurrence measures *systematicity*, not validity: a noise-pinned
+  point recurs. The headline output is the identifiable-value estimate.
+- **`LevenbergMarquardt`** refinement method — LM on the residual vector with
+  the exact forward-mode Jacobian, selected through the same
+  `refine_critical_points` dispatch as the existing methods. It replaces
+  Nelder--Mead as the default polisher for sum-of-squares objectives, where a
+  derivative-free refiner stalls along flat valleys and reports the stalls as
+  distinct minima.
+- Newton-step-norm validation columns (`step_norm`, `step_valid`) and
+  `hessian_min_eigval` on refinement output. `‖H⁻¹∇f‖` is invariant to the
+  scale of `‖H‖`, which a bare gradient-norm test is not.
+
+### Fixed
+
+- Bounded refinement now works in normalized coordinates, fixing a silent
+  no-op on tight boxes.
+
+### Changed
+
+- **Relicensed from GPL-3.0 to MIT.** This takes effect from 0.1.3 forward;
+  0.1.2 and earlier remain GPL-3.0.
+- Comments and docstrings no longer cite internal issue ids or monorepo-only
+  script paths, neither of which resolves for anyone installing this package.
+
 ## [0.1.2] - 2026-08-05
 
 ### Fixed

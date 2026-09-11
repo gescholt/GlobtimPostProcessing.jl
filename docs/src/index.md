@@ -117,4 +117,4 @@ save_plot(fig, "analysis.png")
 
 ## License
 
-GPL-3.0
+MIT
