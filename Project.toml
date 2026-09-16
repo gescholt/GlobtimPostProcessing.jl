@@ -35,7 +35,7 @@ GlobtimExt = "Globtim"
 
 [compat]
 AbstractTrees = "0.3, 0.4"
-CSV = "0.10"
+CSV = "0.10, 1"
 DataFrames = "1.6"
 Dates = "1"
 FiniteDiff = "2"
