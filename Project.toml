@@ -35,6 +35,10 @@ GlobtimExt = "Globtim"
 
 [compat]
 AbstractTrees = "0.3, 0.4"
+# CSV 1 is not installable here: it requires Parsers 3, and JSON3 (capped at
+# 1.14.3) requires Parsers <= 2.8.8, so forcing CSV 1 is unsatisfiable. The
+# CompatHelper "0.10, 1" widen would be a no-op today and an untested upgrade
+# the day JSON3 gains Parsers 3. Revisit then. (Checked 2026-09-16.)
 CSV = "0.10"
 DataFrames = "1.6"
 Dates = "1"
@@ -48,6 +52,11 @@ LineSearches = "7"
 LinearAlgebra = "1"
 Logging = "1"
 Optim = "1, 2"
+# PrettyTables 3 dropped Highlighter, tf_unicode_rounded, ft_printf and the
+# header_crayon kwarg (verified against 3.4.8). display_helpers.jl and the dozen
+# pretty_table call sites in experiment_display.jl use all four, so the widen
+# stays refused until that display layer is ported. It was tried once and
+# reverted: green locally on a manifest pinned to 2.x, red on a fresh CI resolve.
 PrettyTables = "2"
 Printf = "1"
 ProgressMeter = "1.10"
