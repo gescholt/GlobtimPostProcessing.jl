@@ -487,8 +487,12 @@ function _export_convergence_analysis_csv(
     println("Per-observation data: $output_file")
     println("Aggregated summary:   $summary_file")
     println()
-    println("Plot with experiments/sandbox/lv4d_plots/LV4DPlots.jl (monorepo, julia --project=profiles/viz):")
-    println("  using DataFrames, CSV; include(\"experiments/sandbox/lv4d_plots/LV4DPlots.jl\"); using .LV4DPlots")
+    println(
+        "Plot with experiments/sandbox/lv4d_plots/LV4DPlots.jl (monorepo, julia --project=profiles/viz):",
+    )
+    println(
+        "  using DataFrames, CSV; include(\"experiments/sandbox/lv4d_plots/LV4DPlots.jl\"); using .LV4DPlots",
+    )
     println("  df = CSV.read(\"$summary_file\", DataFrame)")
     println("  fig = plot_lv4d_convergence_rate(df)")
     println()
