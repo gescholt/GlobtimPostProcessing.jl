@@ -57,6 +57,12 @@ Optim = "1, 2"
 # pretty_table call sites in experiment_display.jl use all four, so the widen
 # stays refused until that display layer is ported. It was tried once and
 # reverted: green locally on a manifest pinned to 2.x, red on a fresh CI resolve.
+# Consequence worth knowing before chasing it (measured 2026-09-17): this cap is
+# also what holds HomotopyContinuation at 2.17.1. HC 2.22.4 requires
+# PrettyTables 3.1.0 - 3.4.8, so 2.17.1 is the highest HC the resolver can pick
+# while any workspace member asks for PrettyTables 2 (here, DynamicObjectives,
+# IsingControlN, GlobTimRL, Opt_Traj). `Pkg.status --outdated` marks HC with ⌃
+# ("may be upgradable"), which is misleading — it is blocked, not lagging.
 PrettyTables = "2"
 Printf = "1"
 ProgressMeter = "1.10"
