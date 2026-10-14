@@ -69,6 +69,141 @@ function newton_critical_point(f, x0::AbstractVector{<:Real};
 end
 
 """
+    lm_critical_point(f, x0; lo, hi, iters=100, gtol=1e-10, step_max=Inf, mu0=1e-3, grad, hess)
+        -> (x, converged, gnorm)
+
+Levenberg–Marquardt on the system `∇f = 0` with the Hessian as its Jacobian:
+`step = −(H² + μI)⁻¹ H ∇f`, accepted when `‖∇f‖₂` decreases, `μ` adapted as in
+Gauss–Newton/LM. Converges to saddles and maxima like
+[`newton_critical_point`](@ref) but is damped: on landscapes where the quadratic
+model is poor far from a critical point (a log-compressed residual norm, say)
+pure Newton's first step can be orders of magnitude too long and run to the box
+faces; LM shortens it. `step_max` caps the step length in the box coordinates.
+A gradient that is not finite (a `NaN` from a plateau-aware `grad`) rejects the
+candidate step.
+"""
+function lm_critical_point(f, x0::AbstractVector{<:Real};
+    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
+    iters::Int = 100, gtol::Float64 = 1e-10, step_max::Float64 = Inf, mu0::Float64 = 1e-3,
+    grad = x -> ForwardDiff.gradient(f, x), hess = x -> ForwardDiff.hessian(f, x))
+    x = clamp.(collect(float.(x0)), lo, hi)
+    g = grad(x)
+    all(isfinite, g) || return (x, false, Inf)
+    μ = mu0
+    n = length(x)
+    for _ in 1:iters
+        gn = maximum(abs, g)
+        gn < gtol && return (x, true, gn)
+        H = hess(x)
+        all(isfinite, H) || return (x, false, gn)
+        Hs = LinearAlgebra.Symmetric(0.5 * (H + H'))
+        HH = Hs * Hs
+        Hg = Hs * g
+        g2 = LinearAlgebra.norm(g)
+        improved = false
+        for _ in 1:14
+            step = try
+                -((HH + μ * LinearAlgebra.I(n)) \ Hg)
+            catch
+                μ *= 100; continue
+            end
+            all(isfinite, step) || (μ *= 100; continue)
+            sn = LinearAlgebra.norm(step)
+            sn > step_max && (step .*= step_max / sn)
+            cand = clamp.(x .+ step, lo, hi)
+            gc = grad(cand)
+            if all(isfinite, gc) && LinearAlgebra.norm(gc) < g2
+                x, g = cand, gc
+                μ = max(μ / 3, 1e-12)
+                improved = true
+                break
+            else
+                μ *= 10
+            end
+        end
+        improved || break
+    end
+    gn = maximum(abs, g)
+    return (x, gn < max(gtol, 1e-7), gn)
+end
+
+"""
+    minmode_saddle(f, x0; lo, hi, iters=300, gtol=1e-10, step_max=0.05, grad, hess)
+        -> (x, converged, gnorm, n_newton)
+
+Index-1 saddle search by min-mode following with the exact Hessian (the
+eigenvector-following / dimer idea of Henkelman and Jónsson, here with an AD
+Hessian instead of a dimer estimate): the step direction is the gradient with
+its component along the softest Hessian eigenvector `v` reversed,
+`−∇f + 2(∇f·v)v`, so the iterate climbs along the one mode and descends in every
+other, and is capped at `step_max` in box units. Once there is exactly one
+negative eigenvalue and the Newton step is shorter than `step_max`, a Newton
+step is tried and kept when it reduces `‖∇f‖₂` (quadratic endgame). Unlike a
+gradient-norm minimiser this does not stall where `H ∇f = 0` with `∇f ≠ 0`. A
+non-finite gradient (plateau) halves the step instead of being taken. Returns
+the number of accepted Newton steps as `n_newton`.
+"""
+function minmode_saddle(f, x0::AbstractVector{<:Real};
+    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
+    iters::Int = 300, gtol::Float64 = 1e-10, step_max::Float64 = 0.05,
+    grad = x -> ForwardDiff.gradient(f, x), hess = x -> ForwardDiff.hessian(f, x))
+    x = clamp.(collect(float.(x0)), lo, hi)
+    g = grad(x)
+    all(isfinite, g) || return (x, false, Inf, 0)
+    α = step_max
+    n_newton = 0
+    for _ in 1:iters
+        gn = maximum(abs, g)
+        gn < gtol && return (x, true, gn, n_newton)
+        H = hess(x)
+        all(isfinite, H) || return (x, false, gn, n_newton)
+        E = LinearAlgebra.eigen(LinearAlgebra.Symmetric(0.5 * (H + H')))
+        v = E.vectors[:, 1]
+        # Newton endgame: exactly one negative mode and a short Newton step
+        if E.values[1] < 0 && (length(E.values) == 1 || E.values[2] > 0)
+            dN = -(E.vectors * ((E.vectors' * g) ./ E.values))
+            if all(isfinite, dN) && LinearAlgebra.norm(dN) < step_max
+                cand = clamp.(x .+ dN, lo, hi)
+                gc = grad(cand)
+                if all(isfinite, gc) && LinearAlgebra.norm(gc) < LinearAlgebra.norm(g)
+                    x, g = cand, gc
+                    n_newton += 1
+                    continue
+                end
+            end
+        end
+        # eigenvector-following step (Cerjan–Miller / Baker): along each eigendirection e_k the
+        # step is −(g·e_k)/|λ_k| e_k (descent in the quadratic model), except along the softest
+        # mode e_1 where the sign is flipped (climb). Equals Newton when λ_1 < 0 < λ_2. The
+        # |λ_k| are floored so a flat valley does not produce an infinite step; the whole step is
+        # capped at the current trust radius α. This is what makes the walk usable on strongly
+        # anisotropic landscapes, where a fixed-length step is either unstable along the stiff
+        # modes or crawls along the soft ones.
+        λ = E.values
+        lam_floor = max(1e-3 * maximum(abs, λ), 1e-8)
+        c = E.vectors' * g
+        d = zeros(length(x))
+        for k in eachindex(λ)
+            s = k == 1 ? +1.0 : -1.0
+            d .+= s * (c[k] / max(abs(λ[k]), lam_floor)) .* E.vectors[:, k]
+        end
+        dn = LinearAlgebra.norm(d)
+        dn > 0 || break
+        dn > α && (d .*= α / dn)
+        cand = clamp.(x .+ d, lo, hi)
+        gc = grad(cand)
+        if !all(isfinite, gc)
+            α = max(α / 2, 1e-6 * step_max)
+            continue
+        end
+        x, g = cand, gc
+        α = min(α * 1.2, step_max)
+    end
+    gn = maximum(abs, g)
+    return (x, gn < max(gtol, 1e-7), gn, n_newton)
+end
+
+"""
     descend_to_minimum(f, x0; lo, hi, maxit=400, gtol=1e-9) -> x
 
 Backtracking gradient descent on `f`, confined to the box. It deliberately

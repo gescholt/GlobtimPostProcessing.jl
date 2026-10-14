@@ -148,7 +148,7 @@ export StepNormValidationResult
 # Newton-based critical point refinement exports
 export CriticalPointRefinementResult
 export refine_to_critical_point, refine_to_critical_points
-export newton_critical_point, descend_to_minimum, morse_data, nearest_point_index, saddle_links
+export newton_critical_point, lm_critical_point, minmode_saddle, descend_to_minimum, morse_data, nearest_point_index, saddle_links
 export classify_eigenvalues
 
 # Modular refinement method exports
