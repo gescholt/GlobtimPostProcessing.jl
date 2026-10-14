@@ -148,6 +148,7 @@ export StepNormValidationResult
 # Newton-based critical point refinement exports
 export CriticalPointRefinementResult
 export refine_to_critical_point, refine_to_critical_points
+export newton_critical_point, descend_to_minimum, morse_data, nearest_point_index, saddle_links
 export classify_eigenvalues
 
 # Modular refinement method exports
@@ -278,6 +279,7 @@ include("refinement/config.jl")           # RefinementConfig struct + bounds hel
 include("refinement/core_refinement.jl")  # Core refinement algorithms
 include("refinement/gradient_validation.jl")  # Gradient norm validation (before io.jl - defines GradientValidationResult)
 include("refinement/newton_refinement.jl")      # Newton-based critical point refinement (∇f=0)
+include("refinement/saddle_links.jl")           # index-1 saddles → the two minima they separate (AD, no surrogate)
 include("refinement/methods.jl")               # Modular refinement method types + factory
 include("refinement/unified_dispatch.jl")      # Unified refine_point dispatch
 include("refinement/capture_analysis.jl")      # Capture analysis for known critical points

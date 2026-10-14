@@ -80,6 +80,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_refinement_phase1.jl")
     end
 
+    # Saddle links: Newton on ∇f=0, descent, Morse data, which minima a saddle separates
+    @testset "Saddle Links" begin
+        include("test_saddle_links.jl")
+    end
+
     # Run Capture Analysis tests (known CP capture rates, no Globtim dependency)
     @testset "Capture Analysis" begin
         include("test_capture_analysis.jl")
