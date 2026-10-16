@@ -193,6 +193,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_refinement_lm.jl")
     end
 
+    # N5: threaded batch refinement, representatives-only refinement from the cluster columns
+    @testset "N5 Batch Refinement" begin
+        include("test_refinement_batch_n5.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end

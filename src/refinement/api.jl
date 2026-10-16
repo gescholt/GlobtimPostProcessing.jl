@@ -85,6 +85,14 @@ best_params = refined.refined_points[refined.best_refined_idx]
 println("Best estimate: ", best_params)
 ```
 
+# Keyword arguments
+- `degree`: which `critical_points_raw_deg_X.csv` to refine (highest by default)
+- `representatives_only = true`: refine one point per surrogate cluster (the
+  `representative` column Globtim writes, N5); `false` refines every raw point
+- `threads = false`: fan the independent f-refinements out over threads
+  (`refine_critical_points_batch`); `objective_pool` supplies one objective instance per
+  thread when the objective is not thread-safe
+
 # Notes
 - Automatically finds highest degree CSV if multiple degrees present (unless `degree` specified)
 - Falls back to old filename format (`critical_points_deg_X.csv`) for compatibility
@@ -97,16 +105,29 @@ function refine_experiment_results(
     objective_func,
     config::RefinementConfig = RefinementConfig();
     degree::Union{Int,Nothing} = nothing,
+    representatives_only::Bool = true,
+    threads::Bool = false,
+    objective_pool::Union{Nothing,AbstractVector} = nothing,
 )
     # 1. Load raw critical points from CSV
     raw_data = load_raw_critical_points(experiment_dir; degree = degree)
+
+    # N5: Globtim polishes every raw root on the surrogate and marks one representative
+    # per cluster (`representative` column); the refinement on f starts from those only.
+    # A CSV without the column marks every point representative, so nothing changes there.
+    sel = representatives_only ? findall(raw_data.representative) : collect(1:raw_data.n_points)
+    raw_points = raw_data.points[sel]
+    n_raw = length(raw_points)
+    if representatives_only && n_raw < raw_data.n_points
+        @info "Refining $n_raw cluster representatives of $(raw_data.n_points) raw critical points (N5 surrogate dedup)"
+    end
 
     # 2. Refine using batch processor
     start_time = time()
 
     refinement_results = refine_critical_points_batch(
         objective_func,
-        raw_data.points;
+        raw_points;
         method = config.method,
         bounds = config.bounds,
         max_time = config.max_time_per_point,
@@ -114,6 +135,8 @@ function refine_experiment_results(
         x_abstol = config.x_abstol,
         max_iterations = config.max_iterations,
         show_progress = config.show_progress,
+        threads = threads,
+        objective_pool = objective_pool,
     )
 
     total_time = time() - start_time
@@ -156,14 +179,14 @@ function refine_experiment_results(
 
     # 6. Create result struct
     result = RefinedExperimentResult(
-        raw_data.points,        # raw_points
+        raw_points,              # raw_points (representatives when representatives_only)
         refined_points,          # refined_points
         raw_values,              # raw_values
         refined_values,          # refined_values
         improvements,            # improvements
         convergence_status,      # convergence_status
         iterations,              # iterations
-        raw_data.n_points,       # n_raw
+        n_raw,                   # n_raw
         n_converged,             # n_converged
         n_failed,                # n_failed
         n_timeout,               # n_timeout
@@ -181,7 +204,7 @@ function refine_experiment_results(
 
     # 7a. Raw gradient validation — check ||∇f(x_raw)|| at raw critical points
     raw_gradient_norms = compute_gradient_norms(
-        raw_data.points,
+        raw_points,
         objective_func;
         gradient_method = config.gradient_method,
     )

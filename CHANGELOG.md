@@ -2,6 +2,19 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added (N5, 2026-10-16)
+
+- **Representatives-only refinement and threaded batches.** `load_raw_critical_points`
+  reads the `representative` / `cluster_size` columns that Globtim's surrogate-side
+  deduplication writes into `critical_points_raw_deg_X.csv` (all `true` / `1` for older
+  files); `refine_experiment_results(...; representatives_only = true)` refines one point
+  per cluster, and `threads = true` fans the independent refinements on `f` out over
+  threads in `refine_critical_points_batch`, with `objective_pool` for objectives that
+  are not thread-safe (one instance per thread, `:static` schedule). N5 of
+  `docs/research/plans/EVIDENCE_MAP_2026-10.md`.
+
 ## [0.1.3] - 2026-09-10
 
 ### Added

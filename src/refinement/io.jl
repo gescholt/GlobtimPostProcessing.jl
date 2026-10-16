@@ -23,7 +23,21 @@ struct RawCriticalPointsData
     degree::Int
     n_points::Int
     source_file::String
+    # N5 (Globtim surrogate_dedup.jl): one representative per cluster of roots that
+    # coincide after a Newton polish on the surrogate; all `true` / `1` when the CSV
+    # predates the columns.
+    representative::Vector{Bool}
+    cluster_size::Vector{Int}
 end
+
+RawCriticalPointsData(points, degree, n_points, source_file) = RawCriticalPointsData(
+    points,
+    degree,
+    n_points,
+    source_file,
+    trues(length(points)),
+    ones(Int, length(points)),
+)
 
 """
     load_raw_critical_points(experiment_dir::String; degree::Union{Int,Nothing}=nothing)
@@ -110,7 +124,18 @@ function load_raw_critical_points(
     # Convert to Vector{Vector{Float64}}
     points = [Vector{Float64}(row[dim_cols]) for row in eachrow(df)]
 
-    return RawCriticalPointsData(points, selected_degree, length(points), csv_path)
+    representative =
+        "representative" in names(df) ? Vector{Bool}(df.representative .!= 0) : trues(length(points))
+    cluster_size =
+        "cluster_size" in names(df) ? Vector{Int}(df.cluster_size) : ones(Int, length(points))
+    return RawCriticalPointsData(
+        points,
+        selected_degree,
+        length(points),
+        csv_path,
+        representative,
+        cluster_size,
+    )
 end
 
 """

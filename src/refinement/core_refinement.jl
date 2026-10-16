@@ -497,8 +497,9 @@ function refine_critical_points_batch(
     max_time::Union{Float64,Nothing} = nothing,
     max_iterations::Int = 300,
     show_progress::Bool = true,
+    threads::Bool = false,
+    objective_pool::Union{Nothing,AbstractVector} = nothing,
 )
-    refined_results = RefinementResult[]
     n_points = length(points)
 
     # Track statistics for summary
@@ -511,44 +512,75 @@ function refine_critical_points_batch(
     lb_vec = bounds !== nothing ? [b[1] for b in bounds] : nothing
     ub_vec = bounds !== nothing ? [b[2] for b in bounds] : nothing
 
-    # Create progress bar (only if show_progress is true)
-    prog =
-        show_progress ?
-        Progress(n_points; desc = "Refining critical points ", showspeed = true) : nothing
-
-    for pt in points
-        # Count points that land on the domain boundary after clamping
-        if lb_vec !== nothing && ub_vec !== nothing
+    # Count points that land on the domain boundary after clamping
+    if lb_vec !== nothing && ub_vec !== nothing
+        for pt in points
             clamped = clamp.(pt, lb_vec, ub_vec)
             if any(clamped .== lb_vec) || any(clamped .== ub_vec)
                 n_boundary += 1
             end
         end
-        result = refine_critical_point(
-            objective_func,
-            pt;
-            method = method,
-            bounds = bounds,
-            f_abstol = f_abstol,
-            x_abstol = x_abstol,
-            max_time = max_time,
-            max_iterations = max_iterations,
-        )
+    end
 
-        push!(refined_results, result)
+    refine_one(obj, pt) = refine_critical_point(
+        obj,
+        pt;
+        method = method,
+        bounds = bounds,
+        f_abstol = f_abstol,
+        x_abstol = x_abstol,
+        max_time = max_time,
+        max_iterations = max_iterations,
+    )
 
-        # Update statistics
-        if result.converged
-            n_converged += 1
-        elseif result.timed_out
-            n_timeout += 1
-        else
-            n_failed += 1
+    if threads && n_points > 0 && Threads.nthreads() > 1
+        # N5: the f-refinements are independent; fan them out. An objective that is not
+        # thread-safe (ODE caches, mutable buffers) is handed in as `objective_pool`, one
+        # instance per thread, indexed by threadid under a :static schedule.
+        if objective_pool !== nothing && length(objective_pool) < Threads.maxthreadid()
+            throw(ArgumentError(
+                "objective_pool has $(length(objective_pool)) entries; need Threads.maxthreadid() = $(Threads.maxthreadid())",
+            ))
         end
+        slots = Vector{RefinementResult}(undef, n_points)
+        Threads.@threads :static for i in 1:n_points
+            obj = objective_pool === nothing ? objective_func : objective_pool[Threads.threadid()]
+            slots[i] = refine_one(obj, points[i])
+        end
+        refined_results = collect(slots)
+        for result in refined_results
+            if result.converged
+                n_converged += 1
+            elseif result.timed_out
+                n_timeout += 1
+            else
+                n_failed += 1
+            end
+        end
+    else
+        refined_results = RefinementResult[]
+        # Create progress bar (only if show_progress is true)
+        prog =
+            show_progress ?
+            Progress(n_points; desc = "Refining critical points ", showspeed = true) : nothing
 
-        # Update progress bar
-        if !isnothing(prog)
-            next!(prog)
+        for pt in points
+            result = refine_one(objective_func, pt)
+            push!(refined_results, result)
+
+            # Update statistics
+            if result.converged
+                n_converged += 1
+            elseif result.timed_out
+                n_timeout += 1
+            else
+                n_failed += 1
+            end
+
+            # Update progress bar
+            if !isnothing(prog)
+                next!(prog)
+            end
         end
     end
 
