@@ -38,6 +38,7 @@ using Statistics
 using LinearAlgebra
 using Printf
 using Dates
+using Random        # Poincaré–Hopf boundary sampling (refinement/newton_census.jl)
 using CSV
 using ProgressMeter
 using StatsBase
@@ -158,6 +159,11 @@ export OptimNelderMead, OptimLBFGS, OptimBFGS, OptimConjugateGradient, OptimGrad
 export LevenbergMarquardt
 export refinement_method, refine_point, refine_points
 export method_name, needs_gradient, needs_hessian
+
+# N6: index-preserving Newton census (refinement/newton_census.jl)
+export NewtonIndexPreserving
+export polish_to_critical, critical_point_kind, dedup_by_radius, read_raw_candidates
+export newton_census, poincare_hopf, census_headline, write_census
 
 # Capture analysis exports
 export KnownCriticalPoints, CaptureResult, capture_rate_at
@@ -282,6 +288,7 @@ include("refinement/newton_refinement.jl")      # Newton-based critical point re
 include("refinement/saddle_links.jl")           # index-1 saddles → the two minima they separate (AD, no surrogate)
 include("refinement/methods.jl")               # Modular refinement method types + factory
 include("refinement/unified_dispatch.jl")      # Unified refine_point dispatch
+include("refinement/newton_census.jl")         # N6: index-preserving Newton census (from lv_critical_census.jl)
 include("refinement/capture_analysis.jl")      # Capture analysis for known critical points
 include("refinement/io.jl")               # Load/save utilities
 include("refinement/api.jl")              # High-level API

@@ -266,6 +266,7 @@ method_name(::LevenbergMarquardt) = :levenberg_marquardt
 const _VALID_METHOD_NAMES = [
     :newton_cp,
     :newton_minimize,
+    :newton_index_preserving,
     :neldermead,
     :lbfgs,
     :bfgs,
@@ -301,5 +302,6 @@ function refinement_method(name::Union{Symbol,AbstractString}; kwargs...)
     sym === :conjugategradient ? OptimConjugateGradient(; kwargs...) :
     sym === :gradientdescent ? OptimGradientDescent(; kwargs...) :
     sym === :levenberg_marquardt ? LevenbergMarquardt(; kwargs...) :
+    sym === :newton_index_preserving ? NewtonIndexPreserving(; kwargs...) :
     error("Unknown refinement method: $name. Valid: $(join(_VALID_METHOD_NAMES, ", "))")
 end

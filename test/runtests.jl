@@ -198,6 +198,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_refinement_batch_n5.jl")
     end
 
+    # N6: index-preserving Newton census (promoted from experiments/sandbox/lv_critical_census.jl)
+    @testset "N6 Newton Census" begin
+        include("test_newton_census.jl")
+    end
+
     # Aqua.jl quality assurance tests
     include("test_aqua.jl")
 end
