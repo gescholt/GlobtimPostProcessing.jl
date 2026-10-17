@@ -4,6 +4,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added (N6, 2026-10-16)
+
+- **Index-preserving Newton census** (`src/refinement/newton_census.jl`), promoted from
+  `experiments/sandbox/lv_critical_census.jl` where it was validated on rc14 (20 of 20
+  predicted critical points): `polish_to_critical` (LM-damped Newton on `∇f = 0`,
+  backtracking on the residual, so a saddle stays a saddle), `critical_point_kind`
+  (exact-AD Hessian spectrum → minimum / saddle / maximum / degenerate + Morse index),
+  `newton_census` (seed dedup, threaded polish into preallocated slots so the result is
+  thread-count independent, absolute `gtol` or scale-free `steptol` acceptance, failures
+  counted never dropped, post-polish dedup), `poincare_hopf`, `census_headline`,
+  `write_census` / `read_raw_candidates`, and `NewtonIndexPreserving` as a
+  `RefinementMethod` (`refine_point` → `CriticalPointRefinementResult`, ForwardDiff,
+  no trust region and no objective-increase safeguard). `Random` is a new dependency
+  (face sampling of the Poincaré–Hopf check). N6 of
+  `docs/research/plans/EVIDENCE_MAP_2026-10.md`; the sandbox script now delegates here.
+
 ### Added (N5, 2026-10-16)
 
 - **Representatives-only refinement and threaded batches.** `load_raw_critical_points`
