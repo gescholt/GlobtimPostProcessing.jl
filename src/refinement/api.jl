@@ -115,7 +115,9 @@ function refine_experiment_results(
     # N5: Globtim polishes every raw root on the surrogate and marks one representative
     # per cluster (`representative` column); the refinement on f starts from those only.
     # A CSV without the column marks every point representative, so nothing changes there.
-    sel = representatives_only ? findall(raw_data.representative) : collect(1:raw_data.n_points)
+    sel =
+        representatives_only ? findall(raw_data.representative) :
+        collect(1:raw_data.n_points)
     raw_points = raw_data.points[sel]
     n_raw = length(raw_points)
     if representatives_only && n_raw < raw_data.n_points

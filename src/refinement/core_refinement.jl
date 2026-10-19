@@ -538,13 +538,17 @@ function refine_critical_points_batch(
         # thread-safe (ODE caches, mutable buffers) is handed in as `objective_pool`, one
         # instance per thread, indexed by threadid under a :static schedule.
         if objective_pool !== nothing && length(objective_pool) < Threads.maxthreadid()
-            throw(ArgumentError(
-                "objective_pool has $(length(objective_pool)) entries; need Threads.maxthreadid() = $(Threads.maxthreadid())",
-            ))
+            throw(
+                ArgumentError(
+                    "objective_pool has $(length(objective_pool)) entries; need Threads.maxthreadid() = $(Threads.maxthreadid())",
+                ),
+            )
         end
         slots = Vector{RefinementResult}(undef, n_points)
         Threads.@threads :static for i in 1:n_points
-            obj = objective_pool === nothing ? objective_func : objective_pool[Threads.threadid()]
+            obj =
+                objective_pool === nothing ? objective_func :
+                objective_pool[Threads.threadid()]
             slots[i] = refine_one(obj, points[i])
         end
         refined_results = collect(slots)
@@ -562,7 +566,8 @@ function refine_critical_points_batch(
         # Create progress bar (only if show_progress is true)
         prog =
             show_progress ?
-            Progress(n_points; desc = "Refining critical points ", showspeed = true) : nothing
+            Progress(n_points; desc = "Refining critical points ", showspeed = true) :
+            nothing
 
         for pt in points
             result = refine_one(objective_func, pt)

@@ -32,10 +32,16 @@ and maxima included). A singular Hessian falls back to a gradient step for that
 iteration. `converged` means `‖∇f‖∞ < gtol` (or `< 1e-7` after the last
 iteration).
 """
-function newton_critical_point(f, x0::AbstractVector{<:Real};
-    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
-    iters::Int = 80, gtol::Float64 = 1e-10,
-    grad = x -> ForwardDiff.gradient(f, x), hess = x -> ForwardDiff.hessian(f, x))
+function newton_critical_point(
+    f,
+    x0::AbstractVector{<:Real};
+    lo::AbstractVector{<:Real},
+    hi::AbstractVector{<:Real},
+    iters::Int = 80,
+    gtol::Float64 = 1e-10,
+    grad = x -> ForwardDiff.gradient(f, x),
+    hess = x -> ForwardDiff.hessian(f, x),
+)
     x = clamp.(collect(float.(x0)), lo, hi)
     g = grad(x)
     all(isfinite, g) || return (x, false, Inf)
@@ -82,10 +88,18 @@ faces; LM shortens it. `step_max` caps the step length in the box coordinates.
 A gradient that is not finite (a `NaN` from a plateau-aware `grad`) rejects the
 candidate step.
 """
-function lm_critical_point(f, x0::AbstractVector{<:Real};
-    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
-    iters::Int = 100, gtol::Float64 = 1e-10, step_max::Float64 = Inf, mu0::Float64 = 1e-3,
-    grad = x -> ForwardDiff.gradient(f, x), hess = x -> ForwardDiff.hessian(f, x))
+function lm_critical_point(
+    f,
+    x0::AbstractVector{<:Real};
+    lo::AbstractVector{<:Real},
+    hi::AbstractVector{<:Real},
+    iters::Int = 100,
+    gtol::Float64 = 1e-10,
+    step_max::Float64 = Inf,
+    mu0::Float64 = 1e-3,
+    grad = x -> ForwardDiff.gradient(f, x),
+    hess = x -> ForwardDiff.hessian(f, x),
+)
     x = clamp.(collect(float.(x0)), lo, hi)
     g = grad(x)
     all(isfinite, g) || return (x, false, Inf)
@@ -105,7 +119,8 @@ function lm_critical_point(f, x0::AbstractVector{<:Real};
             step = try
                 -((HH + μ * LinearAlgebra.I(n)) \ Hg)
             catch
-                μ *= 100; continue
+                μ *= 100
+                continue
             end
             all(isfinite, step) || (μ *= 100; continue)
             sn = LinearAlgebra.norm(step)
@@ -143,10 +158,17 @@ gradient-norm minimiser this does not stall where `H ∇f = 0` with `∇f ≠ 0`
 non-finite gradient (plateau) halves the step instead of being taken. Returns
 the number of accepted Newton steps as `n_newton`.
 """
-function minmode_saddle(f, x0::AbstractVector{<:Real};
-    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
-    iters::Int = 300, gtol::Float64 = 1e-10, step_max::Float64 = 0.05,
-    grad = x -> ForwardDiff.gradient(f, x), hess = x -> ForwardDiff.hessian(f, x))
+function minmode_saddle(
+    f,
+    x0::AbstractVector{<:Real};
+    lo::AbstractVector{<:Real},
+    hi::AbstractVector{<:Real},
+    iters::Int = 300,
+    gtol::Float64 = 1e-10,
+    step_max::Float64 = 0.05,
+    grad = x -> ForwardDiff.gradient(f, x),
+    hess = x -> ForwardDiff.hessian(f, x),
+)
     x = clamp.(collect(float.(x0)), lo, hi)
     g = grad(x)
     all(isfinite, g) || return (x, false, Inf, 0)
@@ -210,10 +232,15 @@ Backtracking gradient descent on `f`, confined to the box. It deliberately
 descends `f` (unlike [`newton_critical_point`](@ref)) so that the returned point
 identifies the basin `x0` lies in.
 """
-function descend_to_minimum(f, x0::AbstractVector{<:Real};
-    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
-    maxit::Int = 400, gtol::Float64 = 1e-9,
-    grad = x -> ForwardDiff.gradient(f, x))
+function descend_to_minimum(
+    f,
+    x0::AbstractVector{<:Real};
+    lo::AbstractVector{<:Real},
+    hi::AbstractVector{<:Real},
+    maxit::Int = 400,
+    gtol::Float64 = 1e-9,
+    grad = x -> ForwardDiff.gradient(f, x),
+)
     x = clamp.(collect(float.(x0)), lo, hi)
     fx = f(x)
     for _ in 1:maxit
@@ -256,7 +283,11 @@ end
 Index of the entry of `pts` nearest `x` in the max norm, or `0` when the nearest
 is further than `tol`.
 """
-function nearest_point_index(x::AbstractVector{<:Real}, pts::AbstractVector; tol::Float64 = 1e-3)
+function nearest_point_index(
+    x::AbstractVector{<:Real},
+    pts::AbstractVector;
+    tol::Float64 = 1e-3,
+)
     best, bestd = 0, Inf
     for (k, p) in enumerate(pts)
         d = maximum(abs, x .- p)
@@ -287,9 +318,16 @@ function `x -> landing point`, e.g. gradient descent followed by a problem-speci
 polish such as Levenberg–Marquardt on a residual; the default is
 [`descend_to_minimum`](@ref) on `f` in the box.
 """
-function saddle_links(f, saddles, minima;
-    lo::AbstractVector{<:Real}, hi::AbstractVector{<:Real},
-    eps_frac::Float64 = 1e-3, match_tol::Float64 = 1e-3, descend = nothing)
+function saddle_links(
+    f,
+    saddles,
+    minima;
+    lo::AbstractVector{<:Real},
+    hi::AbstractVector{<:Real},
+    eps_frac::Float64 = 1e-3,
+    match_tol::Float64 = 1e-3,
+    descend = nothing,
+)
     mins = [collect(float.(m.theta)) for m in minima]
     step = eps_frac * minimum(hi .- lo)
     desc = descend === nothing ? (x -> descend_to_minimum(f, x; lo = lo, hi = hi)) : descend
@@ -306,9 +344,16 @@ function saddle_links(f, saddles, minima;
             push!(pts, landed)
             push!(ends, nearest_point_index(landed, mins; tol = match_tol))
         end
-        push!(links, (saddle = si, min_i = ends[1], min_j = ends[2],
-            distinct = (ends[1] != ends[2] && ends[1] != 0 && ends[2] != 0),
-            endpoints = pts))
+        push!(
+            links,
+            (
+                saddle = si,
+                min_i = ends[1],
+                min_j = ends[2],
+                distinct = (ends[1] != ends[2] && ends[1] != 0 && ends[2] != 0),
+                endpoints = pts,
+            ),
+        )
     end
     return links
 end

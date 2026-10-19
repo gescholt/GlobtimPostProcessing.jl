@@ -125,9 +125,11 @@ function load_raw_critical_points(
     points = [Vector{Float64}(row[dim_cols]) for row in eachrow(df)]
 
     representative =
-        "representative" in names(df) ? Vector{Bool}(df.representative .!= 0) : trues(length(points))
+        "representative" in names(df) ? Vector{Bool}(df.representative .!= 0) :
+        trues(length(points))
     cluster_size =
-        "cluster_size" in names(df) ? Vector{Int}(df.cluster_size) : ones(Int, length(points))
+        "cluster_size" in names(df) ? Vector{Int}(df.cluster_size) :
+        ones(Int, length(points))
     return RawCriticalPointsData(
         points,
         selected_degree,

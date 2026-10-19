@@ -110,7 +110,10 @@ and, aligned with them, the indices into `pts` of the candidates each one absorb
 (itself first): the seed's provenance, so a polished point can be traced back to the
 leaves whose polynomials proposed it.
 """
-function dedup_by_radius(pts::AbstractVector{<:AbstractVector{<:Real}}, rad::AbstractVector{<:Real})
+function dedup_by_radius(
+    pts::AbstractVector{<:AbstractVector{<:Real}},
+    rad::AbstractVector{<:Real},
+)
     keep = Vector{Vector{Float64}}()
     members = Vector{Vector{Int}}()
     for (k, p) in enumerate(pts)
@@ -222,7 +225,8 @@ function newton_census(
             if all(isfinite, H)
                 ev0 = eigvals(Symmetric(H))
                 if minimum(abs, ev0) > htol
-                    nstep = maximum(abs.(Symmetric(H) \ ForwardDiff.gradient(f, p)) ./ width)
+                    nstep =
+                        maximum(abs.(Symmetric(H) \ ForwardDiff.gradient(f, p)) ./ width)
                     nstep < steptol && (by = :step)
                 end
             end
@@ -233,13 +237,24 @@ function newton_census(
             kind, idx, ev = critical_point_kind(f, p; htol = htol)
             eps_b = 1e-6 .* width
             is_int = all(i -> lb[i] + eps_b[i] < p[i] < ub[i] - eps_b[i], eachindex(p))
-            slots[k] = (p = p, val = fv, gnorm = gn, kind = kind, index = idx,
-                        eigs = ev, interior = is_int, iters = it,
-                        moved = norm(p .- s), accepted_by = string(by), newton_step = nstep)
+            slots[k] = (
+                p = p,
+                val = fv,
+                gnorm = gn,
+                kind = kind,
+                index = idx,
+                eigs = ev,
+                interior = is_int,
+                iters = it,
+                moved = norm(p .- s),
+                accepted_by = string(by),
+                newton_step = nstep,
+            )
         end
         if progress
             n = Threads.atomic_add!(done, 1) + 1
-            n % 50 == 0 && (println("  ... $n/$(length(seeds)) seeds polished"); flush(stdout))
+            n % 50 == 0 &&
+                (println("  ... $n/$(length(seeds)) seeds polished"); flush(stdout))
         end
         return nothing
     end
@@ -258,13 +273,26 @@ function newton_census(
 
     distinct = NamedTuple[]
     for x in sort(polished; by = q -> (q.val, q.p))
-        any(q -> all(i -> abs(x.p[i] - q.p[i]) < dedup_tol * width[i], eachindex(x.p)),
-            distinct) && continue
+        any(
+            q -> all(i -> abs(x.p[i] - q.p[i]) < dedup_tol * width[i], eachindex(x.p)),
+            distinct,
+        ) && continue
         push!(distinct, x)
     end
-    return (; raw = raw_v, seeds, members, srec, polished, distinct, nfail, wall,
-            gtol = Float64(gtol), steptol = Float64(steptol),
-            dedup_tol = Float64(dedup_tol), htol = Float64(htol))
+    return (;
+        raw = raw_v,
+        seeds,
+        members,
+        srec,
+        polished,
+        distinct,
+        nfail,
+        wall,
+        gtol = Float64(gtol),
+        steptol = Float64(steptol),
+        dedup_tol = Float64(dedup_tol),
+        htol = Float64(htol),
+    )
 end
 
 """
@@ -315,15 +343,18 @@ Interior counts by kind plus the Poincaré–Hopf result: the ledger headline of
 function census_headline(c, ph)
     ints = [q for q in c.distinct if q.interior]
     return Dict{String,Any}(
-        "n_raw" => length(c.raw), "n_seeds" => length(c.seeds),
-        "n_converged" => length(c.polished), "n_failed" => c.nfail,
+        "n_raw" => length(c.raw),
+        "n_seeds" => length(c.seeds),
+        "n_converged" => length(c.polished),
+        "n_failed" => c.nfail,
         "n_distinct" => length(c.distinct),
         "n_interior_minima" => count(q -> q.kind == :minimum, ints),
         "n_interior_saddles" => count(q -> q.kind == :saddle, ints),
         "n_interior_maxima" => count(q -> q.kind == :maximum, ints),
         "n_interior_degenerate" => count(q -> q.kind == :degenerate, ints),
         "poincare_hopf_sum" => ph.sum,
-        "outward_frac" => ph.nrm == 0 ? nothing : ph.nout / ph.nrm)
+        "outward_frac" => ph.nrm == 0 ? nothing : ph.nout / ph.nrm,
+    )
 end
 
 _jsonsafe(x::AbstractFloat) = isfinite(x) ? x : string(x)
@@ -365,33 +396,72 @@ function write_census(
     end
     if !isempty(seeds_csv)
         open(seeds_csv, "w") do io
-            println(io, "seed,", join(["s$(i)" for i in 1:m], ","),
-                    ",leaf_ids,n_raw,converged,iters,grad_norm,distinct_id,moved,",
-                    join(["p$(i)" for i in 1:m], ","))
+            println(
+                io,
+                "seed,",
+                join(["s$(i)" for i in 1:m], ","),
+                ",leaf_ids,n_raw,converged,iters,grad_norm,distinct_id,moved,",
+                join(["p$(i)" for i in 1:m], ","),
+            )
             for k in eachindex(c.seeds)
                 r = c.srec[k]
                 r === nothing && continue
                 lids = unique(raw_lids[c.members[k]])
                 did = r.ok ? distinct_id(r.p) : 0
-                println(io, k, ",", join(c.seeds[k], ","), ",", join(lids, "|"), ",",
-                        length(c.members[k]), ",", Int(r.ok), ",", r.iters, ",",
-                        r.gnorm, ",", did, ",", norm(r.p .- c.seeds[k]), ",",
-                        join(r.p, ","))
+                println(
+                    io,
+                    k,
+                    ",",
+                    join(c.seeds[k], ","),
+                    ",",
+                    join(lids, "|"),
+                    ",",
+                    length(c.members[k]),
+                    ",",
+                    Int(r.ok),
+                    ",",
+                    r.iters,
+                    ",",
+                    r.gnorm,
+                    ",",
+                    did,
+                    ",",
+                    norm(r.p .- c.seeds[k]),
+                    ",",
+                    join(r.p, ","),
+                )
             end
         end
     end
     doc = Dict{String,Any}(
         "generated" => string(Dates.now()),
-        "entry" => entry_name, "raw" => raw, "gtol" => c.gtol, "step_tol" => c.steptol,
+        "entry" => entry_name,
+        "raw" => raw,
+        "gtol" => c.gtol,
+        "step_tol" => c.steptol,
         "hess_tol" => c.htol,
         "box" => [[lb[i], ub[i]] for i in 1:m],
-        "n_raw" => length(c.raw), "n_seeds" => length(c.seeds),
-        "n_converged" => length(c.polished), "n_failed" => c.nfail,
-        "wall_s" => c.wall, "seeds_csv" => seeds_csv,
-        "points" => [Dict("p" => q.p, "val" => q.val, "grad_norm" => q.gnorm,
-            "kind" => string(q.kind), "index" => q.index, "eigs" => q.eigs,
-            "interior" => q.interior, "moved" => q.moved, "accepted_by" => q.accepted_by,
-            "newton_step" => q.newton_step) for q in distinct])
+        "n_raw" => length(c.raw),
+        "n_seeds" => length(c.seeds),
+        "n_converged" => length(c.polished),
+        "n_failed" => c.nfail,
+        "wall_s" => c.wall,
+        "seeds_csv" => seeds_csv,
+        "points" => [
+            Dict(
+                "p" => q.p,
+                "val" => q.val,
+                "grad_norm" => q.gnorm,
+                "kind" => string(q.kind),
+                "index" => q.index,
+                "eigs" => q.eigs,
+                "interior" => q.interior,
+                "moved" => q.moved,
+                "accepted_by" => q.accepted_by,
+                "newton_step" => q.newton_step,
+            ) for q in distinct
+        ],
+    )
     for (k, v) in extra
         doc[String(k)] = v
     end
@@ -427,8 +497,11 @@ needs_hessian(::NewtonIndexPreserving) = true
 method_name(::NewtonIndexPreserving) = :newton_index_preserving
 
 const _KIND_TO_CP_TYPE = Dict(
-    :minimum => :min, :maximum => :max, :saddle => :saddle,
-    :degenerate => :degenerate, :error => :unknown,
+    :minimum => :min,
+    :maximum => :max,
+    :saddle => :saddle,
+    :degenerate => :degenerate,
+    :error => :unknown,
 )
 
 function refine_point(
@@ -442,20 +515,31 @@ function refine_point(
     lb = bounds === nothing ? fill(-Inf, n) : [b[1] for b in bounds]
     ub = bounds === nothing ? fill(Inf, n) : [b[2] for b in bounds]
     g0 = ForwardDiff.gradient(objective, point)
-    p, gn, it = polish_to_critical(objective, point, lb, ub; iters = m.iters,
-        gtol = m.gtol * 1e-2, ladder = m.ladder, backtracks = m.backtracks,
-        stall_tol = m.stall_tol)
+    p, gn, it = polish_to_critical(
+        objective,
+        point,
+        lb,
+        ub;
+        iters = m.iters,
+        gtol = m.gtol * 1e-2,
+        ladder = m.ladder,
+        backtracks = m.backtracks,
+        stall_tol = m.stall_tol,
+    )
     fv = isfinite(gn) ? objective(p) : Inf
     converged = isfinite(fv) && gn < m.gtol
     if !converged && isfinite(fv) && isfinite(gn) && m.steptol > 0 && bounds !== nothing
         H = ForwardDiff.hessian(objective, p)
         if all(isfinite, H) && minimum(abs, eigvals(Symmetric(H))) > m.htol
-            nstep = maximum(abs.(Symmetric(H) \ ForwardDiff.gradient(objective, p)) ./ (ub .- lb))
+            nstep = maximum(
+                abs.(Symmetric(H) \ ForwardDiff.gradient(objective, p)) ./ (ub .- lb),
+            )
             converged = nstep < m.steptol
         end
     end
-    kind, _, ev = isfinite(fv) ? critical_point_kind(objective, p; htol = m.htol) :
-                  (:error, -1, Float64[])
+    kind, _, ev =
+        isfinite(fv) ? critical_point_kind(objective, p; htol = m.htol) :
+        (:error, -1, Float64[])
     return CriticalPointRefinementResult(
         point = p,
         objective_value = fv,
