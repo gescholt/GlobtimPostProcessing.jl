@@ -108,18 +108,25 @@ method_name(::NewtonMinimize) = :newton_minimize
 # Optim methods
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# During iteration, Optim methods handle their own gradient computation internally
-# (finite differences when only f is passed). The `gradient_method` field on these
-# structs controls only post-hoc Hessian evaluation for CP classification.
+# On the gradient-based Optim methods `gradient_method` selects the ADTypes backend
+# Optim differentiates with during the iteration (`:forwarddiff` -> AutoForwardDiff,
+# `:finitediff` -> central AutoFiniteDiff) AND the post-hoc Hessian used for CP
+# classification, so the two never disagree. Optim's own default, used here until
+# bead hdgw.1, was central finite differences whenever only f was passed.
+# NelderMead never differentiates; its `gradient_method` is the post-hoc Hessian only.
 
 """
     OptimNelderMead <: RefinementMethod
 
 Derivative-free simplex method. Robust for ODE objectives and noisy problems.
+
+`f_abstol` is the one stopping tolerance Optim's NelderMead has: the standard
+deviation of `f` over the simplex vertices (default `1e-8`, Optim's own default).
+There is no `x_abstol`: no parameter-step test exists for this method, and
+[`refine_critical_point`](@ref) refuses one rather than ignore it.
 """
 Base.@kwdef struct OptimNelderMead <: RefinementMethod
-    f_abstol::Float64 = 1e-6
-    x_abstol::Float64 = 1e-6
+    f_abstol::Float64 = 1e-8
     max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     gradient_method::Symbol = :finitediff   # post-hoc classification only
@@ -131,8 +138,8 @@ method_name(::OptimNelderMead) = :neldermead
 """
     OptimLBFGS <: RefinementMethod
 
-Limited-memory BFGS. Uses Optim-internal finite differences for gradient during
-iteration (when only f is passed to Fminbox).
+Limited-memory BFGS. `gradient_method` selects the backend Optim differentiates with
+(default `:forwarddiff`, exact; `:finitediff` for Float64-pinned objectives).
 """
 Base.@kwdef struct OptimLBFGS <: RefinementMethod
     f_abstol::Float64 = 1e-6
@@ -140,7 +147,7 @@ Base.@kwdef struct OptimLBFGS <: RefinementMethod
     max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
     step_size::Float64 = 1.0
-    gradient_method::Symbol = :finitediff   # post-hoc classification only
+    gradient_method::Symbol = :forwarddiff   # iteration gradient + post-hoc classification
     hessian_tol::Float64 = 1e-6
     hessian_relative_tol::Float64 = 0.0
 end
@@ -157,7 +164,7 @@ Base.@kwdef struct OptimBFGS <: RefinementMethod
     x_abstol::Float64 = 1e-6
     max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
-    gradient_method::Symbol = :finitediff   # post-hoc classification only
+    gradient_method::Symbol = :forwarddiff   # iteration gradient + post-hoc classification
     hessian_tol::Float64 = 1e-6
     hessian_relative_tol::Float64 = 0.0
 end
@@ -174,7 +181,7 @@ Base.@kwdef struct OptimConjugateGradient <: RefinementMethod
     x_abstol::Float64 = 1e-6
     max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
-    gradient_method::Symbol = :finitediff   # post-hoc classification only
+    gradient_method::Symbol = :forwarddiff   # iteration gradient + post-hoc classification
     hessian_tol::Float64 = 1e-6
     hessian_relative_tol::Float64 = 0.0
 end
@@ -191,7 +198,7 @@ Base.@kwdef struct OptimGradientDescent <: RefinementMethod
     x_abstol::Float64 = 1e-6
     max_time::Union{Float64,Nothing} = 30.0
     max_iterations::Int = 300
-    gradient_method::Symbol = :finitediff   # post-hoc classification only
+    gradient_method::Symbol = :forwarddiff   # iteration gradient + post-hoc classification
     hessian_tol::Float64 = 1e-6
     hessian_relative_tol::Float64 = 0.0
 end

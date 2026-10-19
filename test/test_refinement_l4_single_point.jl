@@ -18,8 +18,7 @@ using Optim
             f,
             [0.9, -0.4];
             method = Optim.NelderMead(),
-            f_abstol = 1e-10,
-            x_abstol = 1e-10,
+            f_abstol = 1e-10,   # the simplex-spread stop; NelderMead has no x test
         )
         @test result.converged
         @test isapprox(result.refined, [1.0, -0.5]; atol = 1e-4)
@@ -34,7 +33,6 @@ using Optim
             [0.1, 0.05];
             method = Optim.NelderMead(),
             f_abstol = 1e-10,
-            x_abstol = 1e-10,
             max_iterations = 5000,
         )
         @test result.converged

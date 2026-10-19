@@ -189,22 +189,84 @@ function _resolve_optim_method(method::Symbol; step_size::Float64 = 1.0)
 end
 _resolve_optim_method(method; step_size::Float64 = 1.0) = method  # passthrough for Optim objects
 
+# Optim's NelderMead stops on one test only: std of f over the simplex <= g_abstol
+# (nelder_mead.jl `assess_convergence` hijacks the g slot; f_abstol / x_abstol are
+# never read). Mapping f_abstol onto it keeps the user-facing tolerance meaningful;
+# x_abstol / g_abstol cannot act on NelderMead, so passing them is an error, not a
+# silent no-op (bead hdgw.1).
+function _optim_tolerances(
+    method,
+    f_abstol::Union{Nothing,Float64},
+    x_abstol::Union{Nothing,Float64},
+    g_abstol::Union{Nothing,Float64},
+)
+    if method isa Optim.NelderMead
+        x_abstol === nothing || throw(
+            ArgumentError(
+                "x_abstol = $x_abstol has no effect on Optim.NelderMead, whose only stopping test is the simplex spread of f; pass it as f_abstol or choose a gradient-based method",
+            ),
+        )
+        g_abstol === nothing || throw(
+            ArgumentError(
+                "g_abstol = $g_abstol has no effect on Optim.NelderMead (no gradient); its simplex-spread stop is set through f_abstol",
+            ),
+        )
+        spread = f_abstol === nothing ? 1e-8 : f_abstol
+        # f_abstol / x_abstol left at Optim's defaults: NelderMead never reads them.
+        return (f_abstol = 0.0, x_abstol = 0.0, g_abstol = spread)
+    end
+    return (
+        f_abstol = f_abstol === nothing ? 1e-6 : f_abstol,
+        x_abstol = x_abstol === nothing ? 1e-6 : x_abstol,
+        g_abstol = g_abstol === nothing ? 1e-8 : g_abstol,
+    )
+end
+
+# Gradient-based methods differentiate the objective on every iteration: exact Duals.
+# NelderMead only meets a gradient inside Fminbox's outer loop; keep that at finite
+# differences so a Float64-pinned objective is never handed a Dual.
+_default_autodiff(method) =
+    method isa Optim.NelderMead ? AutoFiniteDiff(; fdtype = Val(:central)) :
+    AutoForwardDiff()
+
 """
     refine_critical_point(objective_func, initial_point; method=Optim.NelderMead(), bounds=nothing, kwargs...) -> RefinementResult
 
 Locally refine a single candidate critical `initial_point` of `objective_func` with Optim.jl,
 improving numerical accuracy (typically from ~1e-10 to ~1e-16). Gradient-free NelderMead is the
 default for robustness on ODE-based / stiff objectives; pass `method`, `bounds`, and the tolerance
-keywords (`f_abstol`, `x_abstol`, `max_iterations`, `max_time`, `store_trace`) to tune. See
-[`refine_critical_points`](@ref) for the batch version.
+keywords (`f_abstol`, `x_abstol`, `g_abstol`, `max_iterations`, `max_time`, `store_trace`) to
+tune. See [`refine_critical_points`](@ref) for the batch version.
+
+# Stopping tolerances
+Optim's NelderMead implements exactly one stopping test: the standard deviation of `f` over the
+simplex vertices falls below `g_abstol` (it reuses the gradient slot for it; the `f_abstol` /
+`x_abstol` options are never consulted). This function therefore maps `f_abstol` onto that
+simplex-spread test for NelderMead (default `1e-8`, Optim's own default, so the behaviour of
+existing runs is unchanged) and **errors** if `x_abstol` or `g_abstol` is given with
+NelderMead, since neither can take effect. For gradient-based methods (`:lbfgs`, `:bfgs`,
+`:conjugategradient`, `:gradientdescent` or any `Optim.FirstOrderOptimizer`) the three options
+are passed through as Optim defines them (defaults `1e-6`, `1e-6`, `1e-8`).
+
+# Gradients
+`autodiff` is the ADTypes backend Optim uses to differentiate `objective_func`. Optim's own
+default is central finite differences (`2m` evaluations per gradient, plus truncation noise);
+here gradient-based methods default to `AutoForwardDiff()` (one Dual evaluation per gradient,
+exact). NelderMead itself never differentiates, but `Fminbox` (used when `bounds` is given)
+evaluates the gradient of the barrier objective in its outer loop, so for NelderMead the default
+stays `AutoFiniteDiff()`: the objective is only ever called with `Float64`, which a
+Float64-pinned objective (ODE physics, external code) requires. Pass `autodiff` explicitly to
+override either default.
 """
 function refine_critical_point(
     objective_func,
     initial_point::Vector{Float64};
     method = Optim.NelderMead(),
     bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
-    f_abstol::Float64 = 1e-6,
-    x_abstol::Float64 = 1e-6,
+    f_abstol::Union{Nothing,Float64} = nothing,
+    x_abstol::Union{Nothing,Float64} = nothing,
+    g_abstol::Union{Nothing,Float64} = nothing,
+    autodiff::Union{Nothing,ADTypes.AbstractADType} = nothing,
     max_time::Union{Float64,Nothing} = nothing,
     max_iterations::Int = 300,
     store_trace::Bool = false,
@@ -212,6 +274,9 @@ function refine_critical_point(
 )
     # Resolve symbol methods to Optim objects
     method = _resolve_optim_method(method; step_size = step_size)
+    is_nm = method isa Optim.NelderMead
+    tol = _optim_tolerances(method, f_abstol, x_abstol, g_abstol)
+    autodiff = autodiff === nothing ? _default_autodiff(method) : autodiff
 
     # Unpack bounds
     lb, ub = split_bounds(bounds)
@@ -254,10 +319,12 @@ function refine_critical_point(
     try
         start_time = time()
 
-        # Create optimization options
+        # Create optimization options (NelderMead: g_abstol carries the simplex-spread
+        # stop, see _optim_tolerances)
         opt_options = Optim.Options(
-            f_abstol = f_abstol,
-            x_abstol = x_abstol,
+            f_abstol = tol.f_abstol,
+            x_abstol = tol.x_abstol,
+            g_abstol = tol.g_abstol,
             time_limit = max_time === nothing ? Inf : max_time,
             iterations = max_iterations,
             store_trace = store_trace,
@@ -301,11 +368,18 @@ function refine_critical_point(
                     fill(1.0, length(z0)),
                     z0,
                     Optim.Fminbox(bounded_method),
-                    opt_options,
+                    opt_options;
+                    autodiff = autodiff,
                 )
             end
         else
-            Optim.optimize(objective_func, initial_point, method, opt_options)
+            Optim.optimize(
+                objective_func,
+                initial_point,
+                method,
+                opt_options;
+                autodiff = autodiff,
+            )
         end
 
         elapsed_time = time() - start_time
@@ -343,6 +417,8 @@ function refine_critical_point(
         # Determine primary convergence reason
         convergence_reason = if timed_out
             :timeout
+        elseif g_conv && is_nm
+            :f_tol  # NelderMead: simplex spread of f fell below f_abstol (Optim reports it in the g slot)
         elseif g_conv
             :g_tol  # Gradient norm converged (best for critical points)
         elseif f_conv
@@ -492,8 +568,10 @@ function refine_critical_points_batch(
     points::Vector{Vector{Float64}};
     method = Optim.NelderMead(),
     bounds::Union{Nothing,Vector{Tuple{Float64,Float64}}} = nothing,
-    f_abstol::Float64 = 1e-6,
-    x_abstol::Float64 = 1e-6,
+    f_abstol::Union{Nothing,Float64} = nothing,
+    x_abstol::Union{Nothing,Float64} = nothing,
+    g_abstol::Union{Nothing,Float64} = nothing,
+    autodiff::Union{Nothing,ADTypes.AbstractADType} = nothing,
     max_time::Union{Float64,Nothing} = nothing,
     max_iterations::Int = 300,
     show_progress::Bool = true,
@@ -529,6 +607,8 @@ function refine_critical_points_batch(
         bounds = bounds,
         f_abstol = f_abstol,
         x_abstol = x_abstol,
+        g_abstol = g_abstol,
+        autodiff = autodiff,
         max_time = max_time,
         max_iterations = max_iterations,
     )

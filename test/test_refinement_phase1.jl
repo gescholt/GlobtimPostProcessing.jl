@@ -33,8 +33,8 @@ using Optim  # Need Optim for type checks
         # Default config
         config = RefinementConfig()
         @test config.method isa Optim.NelderMead
-        @test config.f_abstol == 1e-6
-        @test config.x_abstol == 1e-6
+        @test config.f_abstol === nothing   # method default: 1e-8 simplex spread for NelderMead
+        @test config.x_abstol === nothing   # NelderMead has no x test
         @test config.max_iterations == 300  # Actual default
         @test config.max_time_per_point == 30.0  # Actual default
         @test config.robust_mode == true  # Actual default
@@ -59,7 +59,7 @@ using Optim  # Need Optim for type checks
         @test ode_config.method isa Optim.NelderMead
         @test ode_config.max_time_per_point == 60.0  # ODE preset uses 60s
         @test ode_config.robust_mode == true
-        @test ode_config.f_abstol == 1e-6
+        @test ode_config.f_abstol === nothing
 
         # Custom timeout
         custom_ode = ode_refinement_config(max_time_per_point = 30.0)

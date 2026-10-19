@@ -4,6 +4,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed (Optim AD backend and the NelderMead stop, bead hdgw.1, 2026-10-19)
+
+- **Gradient-based Optim refinement differentiates with ForwardDiff.** Optim 2 defaults
+  to central finite differences whenever only `f` is passed (`2m` evaluations per
+  gradient, plus truncation noise), and `refine_critical_point` passed only `f`.
+  It now takes `autodiff` (an ADTypes backend; `ADTypes` is a new dependency) and
+  defaults it to `AutoForwardDiff()` for `:lbfgs` / `:bfgs` / `:conjugategradient` /
+  `:gradientdescent`. On `OptimLBFGS`, `OptimBFGS`, `OptimConjugateGradient` and
+  `OptimGradientDescent` the `gradient_method` field now selects that backend as well as
+  the post-hoc Hessian, so iteration and classification agree, and its default moved
+  from `:finitediff` to `:forwarddiff`. A Float64-pinned objective asks for
+  `gradient_method = :finitediff` explicitly; it is no longer downgraded silently.
+  NelderMead keeps `AutoFiniteDiff` (it only meets a gradient in `Fminbox`'s outer
+  loop, and must never hand such an objective a Dual).
+- **The NelderMead tolerance we expose is the one Optim uses.** Optim's NelderMead has a
+  single stopping test, the standard deviation of `f` over the simplex, read from
+  `g_abstol`; the `f_abstol` / `x_abstol` options we passed were never consulted and
+  the effective stop was always Optim's `1e-8`. `refine_critical_point`,
+  `refine_critical_points_batch`, `OptimNelderMead` and `RefinementConfig` now map
+  `f_abstol` onto that test (default `1e-8`, so existing runs are unchanged unless they
+  set a value) and **refuse** an `x_abstol` or `g_abstol` for NelderMead with an
+  `ArgumentError` instead of ignoring it. `OptimNelderMead` lost its `x_abstol` field;
+  `RefinementConfig.f_abstol` / `.x_abstol` default to `nothing` (the method's own
+  default). A NelderMead run that stopped on the spread reports
+  `convergence_reason = :f_tol`, where it used to say `:g_tol`.
+
 ### Added (N6, 2026-10-16)
 
 - **Index-preserving Newton census** (`src/refinement/newton_census.jl`), promoted from

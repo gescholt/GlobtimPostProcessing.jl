@@ -198,6 +198,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_refinement_batch_n5.jl")
     end
 
+    # hdgw.1: Optim AD backend (no silent finite differences) and the NelderMead stop
+    @testset "Optim AD backend and NelderMead tolerance" begin
+        include("test_optim_ad_and_nm_tolerance.jl")
+    end
+
     # N6: index-preserving Newton census (promoted from experiments/sandbox/lv_critical_census.jl)
     @testset "N6 Newton Census" begin
         include("test_newton_census.jl")

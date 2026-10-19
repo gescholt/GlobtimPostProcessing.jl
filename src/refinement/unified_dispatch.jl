@@ -95,6 +95,18 @@ function refine_point(
     )
 end
 
+# The ADTypes backend Optim differentiates with for a struct's `gradient_method`;
+# the same symbol drives the post-hoc Hessian, so iteration and classification agree.
+function _optim_autodiff(gradient_method::Symbol)
+    gradient_method === :forwarddiff && return AutoForwardDiff()
+    gradient_method === :finitediff && return AutoFiniteDiff(; fdtype = Val(:central))
+    throw(
+        ArgumentError(
+            "gradient_method = $gradient_method: expected :forwarddiff or :finitediff",
+        ),
+    )
+end
+
 # ── Optim: NelderMead ────────────────────────────────────────────────────────
 
 function refine_point(
@@ -110,7 +122,6 @@ function refine_point(
         method = Optim.NelderMead(),
         bounds = bounds,
         f_abstol = m.f_abstol,
-        x_abstol = m.x_abstol,
         max_time = m.max_time,
         max_iterations = m.max_iterations,
         store_trace = trace,
@@ -142,6 +153,7 @@ function refine_point(
         bounds = bounds,
         f_abstol = m.f_abstol,
         x_abstol = m.x_abstol,
+        autodiff = _optim_autodiff(m.gradient_method),
         max_time = m.max_time,
         max_iterations = m.max_iterations,
         step_size = m.step_size,
@@ -174,6 +186,7 @@ function refine_point(
         bounds = bounds,
         f_abstol = m.f_abstol,
         x_abstol = m.x_abstol,
+        autodiff = _optim_autodiff(m.gradient_method),
         max_time = m.max_time,
         max_iterations = m.max_iterations,
         store_trace = trace,
@@ -205,6 +218,7 @@ function refine_point(
         bounds = bounds,
         f_abstol = m.f_abstol,
         x_abstol = m.x_abstol,
+        autodiff = _optim_autodiff(m.gradient_method),
         max_time = m.max_time,
         max_iterations = m.max_iterations,
         store_trace = trace,
@@ -236,6 +250,7 @@ function refine_point(
         bounds = bounds,
         f_abstol = m.f_abstol,
         x_abstol = m.x_abstol,
+        autodiff = _optim_autodiff(m.gradient_method),
         max_time = m.max_time,
         max_iterations = m.max_iterations,
         store_trace = trace,
@@ -537,11 +552,19 @@ function RefinementMethod(config::RefinementConfig)
     max_time = config.max_time_per_point
     gm = config.gradient_method
     ht = config.gradient_tolerance
+    # Unset tolerances take each method's own default (NelderMead: the 1e-8
+    # simplex-spread stop; gradient methods: 1e-6 / 1e-6).
+    f_abstol = something(config.f_abstol, m isa Optim.NelderMead ? 1e-8 : 1e-6)
+    x_abstol = something(config.x_abstol, 1e-6)
 
     if m isa Optim.NelderMead
+        config.x_abstol === nothing || throw(
+            ArgumentError(
+                "RefinementConfig: x_abstol = $(config.x_abstol) has no effect on Optim.NelderMead; its only stop is the simplex spread of f (f_abstol)",
+            ),
+        )
         OptimNelderMead(;
-            f_abstol = config.f_abstol,
-            x_abstol = config.x_abstol,
+            f_abstol,
             max_time,
             max_iterations = config.max_iterations,
             gradient_method = gm,
@@ -549,8 +572,8 @@ function RefinementMethod(config::RefinementConfig)
         )
     elseif m isa Optim.LBFGS
         OptimLBFGS(;
-            f_abstol = config.f_abstol,
-            x_abstol = config.x_abstol,
+            f_abstol,
+            x_abstol,
             max_time,
             max_iterations = config.max_iterations,
             gradient_method = gm,
@@ -558,8 +581,8 @@ function RefinementMethod(config::RefinementConfig)
         )
     elseif m isa Optim.BFGS
         OptimBFGS(;
-            f_abstol = config.f_abstol,
-            x_abstol = config.x_abstol,
+            f_abstol,
+            x_abstol,
             max_time,
             max_iterations = config.max_iterations,
             gradient_method = gm,
@@ -567,8 +590,8 @@ function RefinementMethod(config::RefinementConfig)
         )
     elseif m isa Optim.ConjugateGradient
         OptimConjugateGradient(;
-            f_abstol = config.f_abstol,
-            x_abstol = config.x_abstol,
+            f_abstol,
+            x_abstol,
             max_time,
             max_iterations = config.max_iterations,
             gradient_method = gm,
@@ -576,8 +599,8 @@ function RefinementMethod(config::RefinementConfig)
         )
     elseif m isa Optim.GradientDescent
         OptimGradientDescent(;
-            f_abstol = config.f_abstol,
-            x_abstol = config.x_abstol,
+            f_abstol,
+            x_abstol,
             max_time,
             max_iterations = config.max_iterations,
             gradient_method = gm,

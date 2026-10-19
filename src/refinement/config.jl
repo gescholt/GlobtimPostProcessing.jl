@@ -78,8 +78,8 @@ config_custom = RefinementConfig(
 struct RefinementConfig
     method::Optim.AbstractOptimizer
     max_time_per_point::Union{Nothing,Float64}
-    f_abstol::Float64
-    x_abstol::Float64
+    f_abstol::Union{Nothing,Float64}   # nothing = the method's own default (see RefinementMethod)
+    x_abstol::Union{Nothing,Float64}   # nothing = method default; must stay nothing for NelderMead
     max_iterations::Int
     parallel::Bool
     robust_mode::Bool
@@ -98,8 +98,11 @@ Construct RefinementConfig with keyword arguments.
 # Keyword Arguments
 - `method = Optim.NelderMead()`: Optimization method (gradient-free by default)
 - `max_time_per_point = 30.0`: Timeout per point in seconds
-- `f_abstol = 1e-6`: Function convergence tolerance
-- `x_abstol = 1e-6`: Parameter convergence tolerance
+- `f_abstol = nothing`: Function convergence tolerance; `nothing` takes the method's default
+  (`1e-6` for gradient methods, `1e-8` for NelderMead, where it is the simplex-spread stop and
+  the only stopping test Optim implements)
+- `x_abstol = nothing`: Parameter convergence tolerance (`1e-6` for gradient methods); NelderMead
+  has no such test and refuses a value
 - `max_iterations = 300`: Maximum iterations per point
 - `parallel = false`: Use parallel refinement (not yet implemented)
 - `robust_mode = true`: Return Inf on objective failure
@@ -113,8 +116,8 @@ Construct RefinementConfig with keyword arguments.
 # Default config
 config = RefinementConfig()
 
-# Custom tolerances
-config = RefinementConfig(f_abstol=1e-8, x_abstol=1e-8)
+# Custom tolerances (a gradient method; NelderMead takes f_abstol only)
+config = RefinementConfig(method=Optim.LBFGS(), f_abstol=1e-8, x_abstol=1e-8)
 
 # Silent mode
 config = RefinementConfig(show_progress=false)
@@ -126,8 +129,8 @@ config = RefinementConfig(gradient_method=:finitediff)
 function RefinementConfig(;
     method::Optim.AbstractOptimizer = Optim.NelderMead(),
     max_time_per_point::Union{Nothing,Float64} = 30.0,
-    f_abstol::Float64 = 1e-6,
-    x_abstol::Float64 = 1e-6,
+    f_abstol::Union{Nothing,Float64} = nothing,
+    x_abstol::Union{Nothing,Float64} = nothing,
     max_iterations::Int = 300,
     parallel::Bool = false,
     robust_mode::Bool = true,
