@@ -130,4 +130,67 @@ end
         @test !r_fwd.converged
         @test occursin("Float64-pinned", something(r_fwd.error_message, ""))
     end
+
+    # Bead hdgw.24: with bounds, Optim.g_converged is Fminbox's OUTER projected-gradient
+    # test (against outer_g_abstol), not NelderMead's simplex spread.
+    @testset "bounded NelderMead reports the projected-gradient stop as :g_tol" begin
+        q(x) = (x[1] - 0.3)^2 + 2 * (x[2] + 0.2)^2
+        box = [(-1.0, 1.0), (-1.0, 1.0)]
+        # At the default outer_g_abstol = 1e-8 the central-difference projected gradient
+        # at a NelderMead optimum (~1e-6) rarely passes; the outer loop then stops when an
+        # inner solve leaves x and f exactly unchanged (outer x/f tolerances are 0), which
+        # is reported as :f_tol. A reachable outer_g_abstol exercises the g stop.
+        r = refine_critical_point(
+            q,
+            [0.7, 0.5];
+            bounds = box,
+            f_abstol = 1e-12,
+            outer_g_abstol = 1e-5,
+        )
+        @test r.converged
+        @test r.g_converged
+        @test r.convergence_reason == :g_tol
+        @test norm(r.refined .- [0.3, -0.2]) < 1e-4
+        # The unbounded NelderMead spread stop stays :f_tol.
+        @test refine_critical_point(q, [0.7, 0.5]; f_abstol = 1e-12).convergence_reason ==
+              :f_tol
+        # Same label through the batch entry point.
+        rb = refine_critical_points_batch(
+            q,
+            [[0.7, 0.5]];
+            bounds = box,
+            f_abstol = 1e-12,
+            outer_g_abstol = 1e-5,
+            show_progress = false,
+        )
+        @test only(rb).convergence_reason == :g_tol
+
+        # outer_iterations / outer_g_abstol reach Fminbox: one outer solve against an
+        # unreachable projected-gradient tolerance runs the outer loop out, and that is
+        # recorded rather than reported as a tolerance stop.
+        r1 = refine_critical_point(
+            q,
+            [0.7, 0.5];
+            bounds = box,
+            f_abstol = 1e-12,
+            outer_g_abstol = 0.0,
+            outer_iterations = 1,
+        )
+        @test !r1.converged
+        @test r1.iterations == 1
+        @test r1.convergence_reason == :outer_iterations
+        r3 = only(
+            refine_critical_points_batch(
+                q,
+                [[0.7, 0.5]];
+                bounds = box,
+                f_abstol = 1e-12,
+                outer_g_abstol = 0.0,
+                outer_iterations = 3,
+                show_progress = false,
+            ),
+        )
+        @test r3.iterations == 3
+        @test r3.convergence_reason == :outer_iterations
+    end
 end

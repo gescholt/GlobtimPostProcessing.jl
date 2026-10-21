@@ -48,9 +48,14 @@ Tier 1 Diagnostics (zero-cost, always available):
 - `time_elapsed::Float64`: Actual optimization time in seconds
 - `x_converged::Bool`: Parameter convergence (x_tol)
 - `f_converged::Bool`: Function value convergence (f_tol)
-- `g_converged::Bool`: Gradient norm convergence (g_tol, gradient methods only)
-- `iteration_limit_reached::Bool`: Hit max iteration limit
-- `convergence_reason::Symbol`: Primary stopping reason (:x_tol, :f_tol, :g_tol, :iterations, :timeout, :error)
+- `g_converged::Bool`: Optim's g slot. Unbounded: gradient norm (gradient methods) or the
+  NelderMead simplex spread. Bounded (`Fminbox`): the outer projected-gradient test
+  against `outer_g_abstol`, for every method.
+- `iteration_limit_reached::Bool`: Hit max iteration limit (bounded: of the last inner solve)
+- `convergence_reason::Symbol`: Primary stopping reason (:x_tol, :f_tol, :g_tol, :iterations,
+  :outer_iterations, :timeout, :error). Bounded runs report a passed projected-gradient test
+  as `:g_tol` and an `Fminbox` outer loop that used all `outer_iterations` without passing a
+  test as `:outer_iterations`.
 """
 struct RefinementResult
     # Original fields (backward compatibility)
@@ -248,6 +253,19 @@ NelderMead, since neither can take effect. For gradient-based methods (`:lbfgs`,
 `:conjugategradient`, `:gradientdescent` or any `Optim.FirstOrderOptimizer`) the three options
 are passed through as Optim defines them (defaults `1e-6`, `1e-6`, `1e-8`).
 
+With `bounds`, Optim wraps the method in `Fminbox`, whose outer loop re-solves the barrier
+problem until its own projected-gradient test passes: `‖x - clamp(x - ∇f(x), lb, ub)‖∞ ≤
+outer_g_abstol`, with `∇f` taken by `autodiff` (finite differences for NelderMead) in the
+normalized coordinates `z ∈ [-1, 1]^n`, or until `outer_iterations` outer solves have run.
+Both are pinned here to Optim's defaults (`1e-8`, `1000`) and can be passed. That outer test
+is what `Optim.g_converged` then reports, for NelderMead as well, so a bounded run that passes
+it has `convergence_reason = :g_tol` (projected gradient), and one whose outer loop runs out
+has `:outer_iterations`. `f_abstol` still sets the inner NelderMead simplex-spread stop.
+At the default `outer_g_abstol` the finite-difference projected gradient at a NelderMead
+optimum is usually above `1e-8`, and the outer loop instead ends when an inner solve leaves
+`x` and `f` exactly unchanged (Fminbox's outer x/f tolerances are `0`); that stall is
+reported as `:f_tol`.
+
 # Gradients
 `autodiff` is the ADTypes backend Optim uses to differentiate `objective_func`. Optim's own
 default is central finite differences (`2m` evaluations per gradient, plus truncation noise);
@@ -269,6 +287,8 @@ function refine_critical_point(
     autodiff::Union{Nothing,ADTypes.AbstractADType} = nothing,
     max_time::Union{Float64,Nothing} = nothing,
     max_iterations::Int = 300,
+    outer_g_abstol::Float64 = 1e-8,
+    outer_iterations::Int = 1000,
     store_trace::Bool = false,
     step_size::Float64 = 1.0,
 )
@@ -327,9 +347,14 @@ function refine_critical_point(
             g_abstol = tol.g_abstol,
             time_limit = max_time === nothing ? Inf : max_time,
             iterations = max_iterations,
+            # Fminbox outer loop (bounded case only; ignored by Optim otherwise)
+            outer_g_abstol = outer_g_abstol,
+            outer_iterations = outer_iterations,
             store_trace = store_trace,
             extended_trace = store_trace,
         )
+
+        is_bounded = lb !== nothing && ub !== nothing
 
         # Choose bounded or unbounded optimization
         # Suppress Fminbox "Initial position on boundary" warnings — these are expected
@@ -343,7 +368,7 @@ function refine_critical_point(
         # returns the input (refined == raw, converged = true). The affine
         # change of variables makes the simplex box-scale-invariant. Note
         # x_abstol is therefore box-relative in the bounded case.
-        result = if lb !== nothing && ub !== nothing
+        result = if is_bounded
             norm_center = (lb .+ ub) ./ 2
             norm_radius = (ub .- lb) ./ 2
             all(norm_radius .> 0) ||
@@ -414,9 +439,18 @@ function refine_critical_point(
         # Extract actual optimization time (may differ from elapsed_time)
         time_run = Optim.time_run(result)
 
+        # Fminbox reports its OUTER iteration count; the loop ran out when it used all
+        # outer_iterations without passing an outer test.
+        outer_exhausted =
+            is_bounded &&
+            !(x_conv || f_conv || g_conv) &&
+            Optim.iterations(result) >= outer_iterations
+
         # Determine primary convergence reason
         convergence_reason = if timed_out
             :timeout
+        elseif g_conv && is_bounded
+            :g_tol  # Fminbox outer test: projected gradient <= outer_g_abstol (any method)
         elseif g_conv && is_nm
             :f_tol  # NelderMead: simplex spread of f fell below f_abstol (Optim reports it in the g slot)
         elseif g_conv
@@ -425,6 +459,8 @@ function refine_critical_point(
             :f_tol  # Function value converged
         elseif x_conv
             :x_tol  # Parameters converged
+        elseif outer_exhausted
+            :outer_iterations  # Fminbox outer loop ran out
         elseif iter_limit
             :iterations  # Hit iteration limit without converging
         elseif !Optim.converged(result)
@@ -524,6 +560,9 @@ Refine multiple critical points in batch with progress tracking.
 - `x_abstol::Float64`: Absolute parameter tolerance (default: 1e-6)
 - `max_time::Union{Float64,Nothing}`: Maximum time per point in seconds (default: nothing = no timeout)
 - `max_iterations::Int`: Maximum number of iterations (default: 300, balanced for speed/convergence)
+- `outer_g_abstol::Float64`, `outer_iterations::Int`: `Fminbox` outer projected-gradient
+  stop and outer-loop cap when `bounds` is given (defaults `1e-8`, `1000`, Optim's own);
+  see [`refine_critical_point`](@ref)
 - `show_progress::Bool`: Show progress counter (default: true)
 
 # Returns
@@ -574,6 +613,8 @@ function refine_critical_points_batch(
     autodiff::Union{Nothing,ADTypes.AbstractADType} = nothing,
     max_time::Union{Float64,Nothing} = nothing,
     max_iterations::Int = 300,
+    outer_g_abstol::Float64 = 1e-8,
+    outer_iterations::Int = 1000,
     show_progress::Bool = true,
     threads::Bool = false,
     objective_pool::Union{Nothing,AbstractVector} = nothing,
@@ -611,6 +652,8 @@ function refine_critical_points_batch(
         autodiff = autodiff,
         max_time = max_time,
         max_iterations = max_iterations,
+        outer_g_abstol = outer_g_abstol,
+        outer_iterations = outer_iterations,
     )
 
     if threads && n_points > 0 && Threads.nthreads() > 1
