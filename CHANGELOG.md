@@ -4,6 +4,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-19
+
 Three optional features move into package extensions, and three dependencies are
 dropped. A plain `using GlobtimPostProcessing` loads 94 modules instead of 124 and
 takes about 0.6 s instead of 1.1 s (Julia 1.12, warm cache); the dependency closure
