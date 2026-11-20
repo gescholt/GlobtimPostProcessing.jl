@@ -60,4 +60,3 @@ Requires PrettyTables.jl: load it with `using PrettyTables` (package extension
 `GlobtimPostProcessingPrettyTablesExt`).
 """
 styled_table(args...; kwargs...) = _missing_extension(styled_table, args, "PrettyTables")
-
