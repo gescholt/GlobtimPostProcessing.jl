@@ -11,7 +11,7 @@ using LinearAlgebra
 using DataFrames
 using Statistics
 using CSV
-using JSON3
+using JSON
 
 """
     param_distance(p_found::AbstractVector, p_true::AbstractVector) -> Float64
@@ -58,7 +58,7 @@ function load_experiment_config(experiment_path::String)
     if !isfile(config_file)
         error("Config file not found: $config_file")
     end
-    return JSON3.read(read(config_file, String), Dict)
+    return JSON.parsefile(config_file; dicttype = Dict{String,Any})
 end
 
 """

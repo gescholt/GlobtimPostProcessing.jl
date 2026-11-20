@@ -32,7 +32,6 @@ Created: October 2025
 module GlobtimPostProcessing
 
 using JSON
-using JSON3
 using DataFrames
 using Statistics
 using LinearAlgebra
@@ -41,10 +40,8 @@ using Dates
 using Random        # Poincaré–Hopf boundary sampling (refinement/newton_census.jl)
 using CSV
 using ProgressMeter
-using StatsBase
 using Optim  # Critical point refinement
 using ADTypes: ADTypes, AutoForwardDiff, AutoFiniteDiff  # AD backend handed to Optim
-using LineSearches  # Step size control for LBFGS
 using ForwardDiff  # Gradient computation for validation (algebraic objectives)
 using FiniteDiff   # Numerical gradients for ODE-based objectives
 using PrettyTables  # Rich terminal table formatting

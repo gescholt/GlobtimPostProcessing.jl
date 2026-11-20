@@ -158,6 +158,19 @@ function capture_rate_at(cr::CaptureResult, fraction::Float64)::Float64
 end
 
 """
+    _count_types(types::Vector{Symbol}) -> Dict{Symbol,Int}
+
+Number of occurrences of each critical-point type.
+"""
+function _count_types(types::Vector{Symbol})
+    counts = Dict{Symbol,Int}()
+    for tp in types
+        counts[tp] = get(counts, tp, 0) + 1
+    end
+    return counts
+end
+
+"""
     compute_capture_analysis(known, computed_points; tolerance_fractions) -> CaptureResult
 
 Compute capture analysis: for each known critical point, find the nearest computed point
@@ -213,7 +226,7 @@ function compute_capture_analysis(
         capture_rates = zeros(Float64, length(tol_fracs))
 
         # Per-type rates (all zero)
-        type_counts = StatsBase.countmap(known.types)
+        type_counts = _count_types(known.types)
         type_capture_rates = Dict{Symbol,Vector{Float64}}()
         for (tp, _) in type_counts
             type_capture_rates[tp] = zeros(Float64, length(tol_fracs))
@@ -262,7 +275,7 @@ function compute_capture_analysis(
     end
 
     # Per-type capture rates
-    type_counts = StatsBase.countmap(known.types)
+    type_counts = _count_types(known.types)
     type_capture_rates = Dict{Symbol,Vector{Float64}}()
     for (tp, count) in type_counts
         type_mask = known.types .== tp

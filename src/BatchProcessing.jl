@@ -108,7 +108,7 @@ function batch_analyze_campaign(
 
             !silent && @info "Saving JSON report to: $output_file"
             open(output_file, "w") do io
-                JSON3.pretty(io, json_output)
+                JSON.print(io, json_output, 2)
             end
         else
             # Markdown format (default)

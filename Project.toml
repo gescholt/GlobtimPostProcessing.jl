@@ -15,8 +15,6 @@ FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
@@ -26,7 +24,6 @@ ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
 Globtim = "00da9514-6261-47e9-8848-33640cb1e528"
@@ -37,7 +34,8 @@ GlobtimExt = "Globtim"
 [compat]
 AbstractTrees = "0.3, 0.4"
 # CSV 1 is not installable here: it requires Parsers 3, and JSON3 (capped at
-# 1.14.3) requires Parsers <= 2.8.8, so forcing CSV 1 is unsatisfiable. The
+# 1.14.3; no longer a dependency here, but Globtim and the test suite load
+# it) requires Parsers <= 2.8.8, so forcing CSV 1 is unsatisfiable. The
 # CompatHelper "0.10, 1" widen would be a no-op today and an untested upgrade
 # the day JSON3 gains Parsers 3. Revisit then. (Checked 2026-09-16.)
 CSV = "0.10"
@@ -51,8 +49,6 @@ ForwardDiff = "0.10, 1"
 Globtim = "1"
 JLD2 = "0.5, 0.6"
 JSON = "0.21, 1"
-JSON3 = "1.14"
-LineSearches = "7"
 LinearAlgebra = "1"
 Logging = "1"
 Optim = "1.12, 2"
@@ -73,5 +69,4 @@ Random = "1"
 ProgressMeter = "1.10"
 REPL = "1"
 Statistics = "1"
-StatsBase = "0.34"
 julia = "1.12"

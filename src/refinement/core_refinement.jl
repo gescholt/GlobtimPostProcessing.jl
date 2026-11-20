@@ -139,7 +139,7 @@ Refine a single critical point using local optimization with adaptive tolerances
 - `x_abstol::Float64`: Absolute parameter tolerance for convergence (default: 1e-6)
 - `max_time::Union{Float64,Nothing}`: Maximum time in seconds per refinement (default: nothing = no timeout)
 - `max_iterations::Int`: Maximum number of iterations (default: 300, balanced for speed/convergence)
-- `step_size::Float64`: Initial step length for LBFGS (default: 1.0). Uses `LineSearches.InitialStatic(alpha=step_size)`. Ignored for NelderMead.
+- `step_size::Float64`: Initial step length for LBFGS (default: 1.0). Uses `Optim.LineSearches.InitialStatic(alpha=step_size)`. Ignored for NelderMead.
 
 # Returns
 `RefinementResult` with refined point, values, convergence status, and improvement
@@ -179,7 +179,7 @@ function _resolve_optim_method(method::Symbol; step_size::Float64 = 1.0)
     if method === :neldermead
         Optim.NelderMead()
     elseif method === :lbfgs
-        Optim.LBFGS(alphaguess = LineSearches.InitialStatic(alpha = step_size))
+        Optim.LBFGS(alphaguess = Optim.LineSearches.InitialStatic(alpha = step_size))
     elseif method === :bfgs
         Optim.BFGS()
     elseif method === :conjugategradient
