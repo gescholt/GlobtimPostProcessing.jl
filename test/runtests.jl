@@ -1,5 +1,10 @@
 using Test
 using GlobtimPostProcessing
+# Triggers of the package extensions: the table printers (PrettyTables), the JLD2 tree
+# reader and the interactive TUI (REPL + PrettyTables) are exercised below.
+using PrettyTables
+using JLD2
+using REPL
 
 # Include shared test fixtures once (used by test_capture_analysis, test_refinement_phase1,
 # test_integration_real_fixtures — previously each included it independently, causing
@@ -191,6 +196,11 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
     # Index-preserving Newton census
     @testset "Newton Census" begin
         include("test_newton_census.jl")
+    end
+
+    # Optional dependencies as package extensions (PrettyTables, JLD2, REPL)
+    @testset "Optional Dependencies" begin
+        include("test_optional_deps.jl")
     end
 
     # Aqua.jl quality assurance tests

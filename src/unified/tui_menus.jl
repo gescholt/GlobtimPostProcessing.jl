@@ -132,27 +132,13 @@ end
 Show menu to select experiment type.
 
 Returns the selected ExperimentType singleton or nothing if cancelled.
+
+Requires REPL.jl and PrettyTables.jl (package extension `GlobtimPostProcessingTUIExt`).
+In the Julia REPL, REPL is already loaded and `using PrettyTables` suffices; in a script
+add `using REPL, PrettyTables`.
 """
-function select_experiment_type()::Union{ExperimentType,Nothing}
-    # Build options from SUPPORTED_TYPES
-    options = String[]
-    for (typ, desc) in SUPPORTED_TYPES
-        push!(options, "$(type_name(typ)) - $desc")
-    end
-    push!(options, "Auto-detect from path")
-
-    menu = RadioMenu(options, pagesize = min(8, length(options)))
-    choice = request("Select experiment type:", menu)
-
-    choice == -1 && return nothing
-
-    # Handle auto-detect option
-    if choice == length(options)
-        return nothing  # Signal auto-detect
-    end
-
-    return SUPPORTED_TYPES[choice][1]
-end
+select_experiment_type(args...; kwargs...) =
+    _missing_tui_extension(select_experiment_type, args)
 
 # ============================================================================
 # Results Source Menu
@@ -172,24 +158,13 @@ end
     select_results_source(results_root::String) -> Union{ResultsSource, Nothing}
 
 Show menu to select results source.
+
+Requires REPL.jl and PrettyTables.jl (package extension `GlobtimPostProcessingTUIExt`).
+In the Julia REPL, REPL is already loaded and `using PrettyTables` suffices; in a script
+add `using REPL, PrettyTables`.
 """
-function select_results_source(results_root::String)::Union{ResultsSource,Nothing}
-    options = ["Browse recent experiments", "Enter path manually"]
-
-    menu = RadioMenu(options, pagesize = 2)
-    choice = request("Select results source:", menu)
-
-    choice == -1 && return nothing
-
-    if choice == 1
-        return ResultsSource(:recent, results_root)
-    else
-        print("Enter experiment path: ")
-        path = strip(readline())
-        isempty(path) && return nothing
-        return ResultsSource(:path, path)
-    end
-end
+select_results_source(args...; kwargs...) =
+    _missing_tui_extension(select_results_source, args)
 
 # ============================================================================
 # Recent Experiments Menu
@@ -207,65 +182,13 @@ Show menu to select from recent experiments.
 
 # Returns
 Path to selected experiment or nothing if cancelled.
+
+Requires REPL.jl and PrettyTables.jl (package extension `GlobtimPostProcessingTUIExt`).
+In the Julia REPL, REPL is already loaded and `using PrettyTables` suffices; in a script
+add `using REPL, PrettyTables`.
 """
-function select_recent_experiment(
-    results_root::String;
-    type_filter::Union{ExperimentType,Nothing} = nothing,
-    limit::Int = 15,
-)::Union{String,Nothing}
-    # Build list of experiments
-    experiments = String[]
-
-    # Walk through results_root looking for experiment directories
-    for entry in readdir(results_root, join = true)
-        if isdir(entry) && is_single_experiment(entry)
-            # Apply type filter if specified
-            if type_filter !== nothing
-                detected = detect_experiment_type(entry)
-                typeof(detected) != typeof(type_filter) && continue
-            end
-            push!(experiments, entry)
-        end
-
-        # Also check subdirectories (e.g., lotka_volterra_4d/)
-        if isdir(entry)
-            for subentry in readdir(entry, join = true)
-                if isdir(subentry) && is_single_experiment(subentry)
-                    if type_filter !== nothing
-                        detected = detect_experiment_type(subentry)
-                        typeof(detected) != typeof(type_filter) && continue
-                    end
-                    push!(experiments, subentry)
-                end
-            end
-        end
-    end
-
-    if isempty(experiments)
-        tui_warning("No experiments found in: $results_root")
-        return nothing
-    end
-
-    # Sort by modification time (most recent first)
-    sort!(experiments, by = mtime, rev = true)
-    experiments = experiments[1:min(limit, length(experiments))]
-
-    # Build options with age info
-    options = map(experiments) do exp
-        name = basename(exp)
-        age = time() - mtime(exp)
-        age_str = _format_age(age)
-        typ = detect_experiment_type(exp)
-        type_str = type_name(typ)
-        "[$type_str] $name ($age_str ago)"
-    end
-
-    menu = RadioMenu(options, pagesize = min(12, length(options)))
-    choice = request("Select experiment:", menu)
-
-    choice == -1 && return nothing
-    return experiments[choice]
-end
+select_recent_experiment(args...; kwargs...) =
+    _missing_tui_extension(select_recent_experiment, args)
 
 """
     _format_age(seconds::Real) -> String
@@ -326,17 +249,13 @@ end
     select_analysis_mode(type::ExperimentType) -> Union{Symbol, Nothing}
 
 Show menu to select analysis mode for given experiment type.
+
+Requires REPL.jl and PrettyTables.jl (package extension `GlobtimPostProcessingTUIExt`).
+In the Julia REPL, REPL is already loaded and `using PrettyTables` suffices; in a script
+add `using REPL, PrettyTables`.
 """
-function select_analysis_mode(type::ExperimentType)::Union{Symbol,Nothing}
-    modes = get_analysis_modes(type)
-
-    options = ["$(m.name) - $(m.description)" for m in modes]
-    menu = RadioMenu(options, pagesize = min(8, length(options)))
-    choice = request("Select analysis mode:", menu)
-
-    choice == -1 && return nothing
-    return modes[choice].id
-end
+select_analysis_mode(args...; kwargs...) =
+    _missing_tui_extension(select_analysis_mode, args)
 
 # ============================================================================
 # Confirmation Menu
@@ -346,17 +265,9 @@ end
     confirm_selection(summary::String) -> Bool
 
 Show confirmation with summary of selections.
+
+Requires REPL.jl and PrettyTables.jl (package extension `GlobtimPostProcessingTUIExt`).
+In the Julia REPL, REPL is already loaded and `using PrettyTables` suffices; in a script
+add `using REPL, PrettyTables`.
 """
-function confirm_selection(summary::String)::Bool
-    println()
-    tui_divider()
-    tui_success(summary)
-    tui_divider()
-    println()
-
-    options = ["Yes - Run analysis", "No - Cancel"]
-    menu = RadioMenu(options, pagesize = 2)
-    choice = request("Proceed?", menu)
-
-    return choice == 1
-end
+confirm_selection(args...; kwargs...) = _missing_tui_extension(confirm_selection, args)

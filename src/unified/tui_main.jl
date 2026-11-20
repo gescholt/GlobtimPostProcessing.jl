@@ -62,36 +62,12 @@ postprocess()
     └── Step 5: Run & display results
           → Load → Analyze → Tables/Summary → Return DataFrame
 ```
+
+Requires REPL.jl and PrettyTables.jl (package extension `GlobtimPostProcessingTUIExt`).
+In the Julia REPL, REPL is already loaded and `using PrettyTables` suffices; in a script
+add `using REPL, PrettyTables`.
 """
-function postprocess(; results_root::Union{String,Nothing} = nothing)
-    # Get results root
-    root = results_root === nothing ? find_unified_results_root() : results_root
-
-    tui_header("UNIFIED POST-PROCESSING")
-
-    # Step 1: Select experiment type
-    exp_type = select_experiment_type()
-
-    # Step 2: Select results source and get experiment path
-    source = select_results_source(root)
-    source === nothing && return nothing
-
-    exp_path = _resolve_experiment_path(source, root, exp_type)
-    exp_path === nothing && return nothing
-
-    # Auto-detect type if needed
-    if exp_type === nothing
-        exp_type = detect_experiment_type(exp_path)
-        tui_info("Detected experiment type: $(type_name(exp_type))")
-    end
-
-    # Step 3: Select analysis mode
-    analysis_mode = select_analysis_mode(exp_type)
-    analysis_mode === nothing && return nothing
-
-    # Step 4 & 5: Run analysis (dispatched by type and mode)
-    return _run_unified_analysis(exp_type, analysis_mode, exp_path, root)
-end
+postprocess(args...; kwargs...) = _missing_tui_extension(postprocess, args)
 
 # ============================================================================
 # Path Resolution

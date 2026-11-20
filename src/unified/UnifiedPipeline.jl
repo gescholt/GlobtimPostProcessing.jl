@@ -41,8 +41,27 @@ using Statistics
 using LinearAlgebra
 using Printf
 using Dates
-using REPL.TerminalMenus
-using PrettyTables
+import ..styled_table  # table printer; its methods come from the PrettyTables extension
+
+# The interactive TUI (`postprocess` and the `select_*` / `confirm_selection` menus) lives
+# in the GlobtimPostProcessingTUIExt extension, triggered by REPL and PrettyTables. The
+# functions below are stubs until both are loaded.
+"""
+    _missing_tui_extension(f, args)
+
+Error raised by the TUI stubs when GlobtimPostProcessingTUIExt is not loaded; throws a
+`MethodError` when it is loaded but no method matched `args`.
+"""
+function _missing_tui_extension(f, args)
+    pkg = parentmodule(@__MODULE__)
+    Base.get_extension(pkg, :GlobtimPostProcessingTUIExt) === nothing ||
+        throw(MethodError(f, args))
+    error(
+        "$(nameof(f)) requires REPL.jl and PrettyTables.jl (extension " *
+        "GlobtimPostProcessingTUIExt). In the Julia REPL, REPL is already loaded: add " *
+        "`using PrettyTables`. In a script, add `using REPL, PrettyTables`.",
+    )
+end
 
 # Include submodules in dependency order
 include("experiment_types.jl")

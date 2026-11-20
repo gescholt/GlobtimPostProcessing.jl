@@ -45,6 +45,23 @@ Globtim comes in as a dependency. Add it explicitly, together with
 pkg> add Globtim HomotopyContinuation
 ```
 
+### Optional features (package extensions)
+
+Three features load only when their packages are loaded alongside
+GlobtimPostProcessing:
+
+| Feature | Load | Extension |
+|---|---|---|
+| Terminal table printers: `styled_table`, `print_capture_summary`, `print_poly_summary_table`, `print_comparison_table`, `print_subdivision_tree_report`, the other `print_*_table` functions, and `GLOBTIM_TABLE_STYLE="pretty"` in `analyze_campaign` | `using PrettyTables` | `GlobtimPostProcessingPrettyTablesExt` |
+| `load_subdivision_tree` (binary trees from `Globtim.save_tree`) | `using JLD2` | `GlobtimPostProcessingJLD2Ext` |
+| Interactive `postprocess()` and its menus | `using REPL, PrettyTables` (in the Julia REPL, REPL is already loaded) | `GlobtimPostProcessingTUIExt` |
+
+Without them each function raises an error naming the package to load
+("`load_subdivision_tree requires JLD2.jl`"). PrettyTables is also a dependency of
+DataFrames, so today the table printers are loaded whenever the package is.
+`refine_experiment_results`, `print_refinement_summary`, the JSON loaders and the
+`format_*` text tables need none of them.
+
 ## Features
 
 - **Critical Point Refinement**: Improve numerical accuracy of critical points using local optimization
@@ -336,13 +353,18 @@ src/
 │   ├── capture_analysis.jl        # Capture analysis for known critical points
 │   ├── io.jl                      # CSV/JSON I/O
 │   └── api.jl                     # High-level refinement API
-└── unified/
+├── unified/
     ├── UnifiedPipeline.jl         # Unified pipeline module
     ├── experiment_types.jl        # Experiment type definitions
     ├── base_data.jl               # Base experiment data structures
     ├── loaders.jl                 # Type-aware experiment loaders
     ├── tui_main.jl                # Main TUI entry point
-    └── tui_menus.jl               # TUI menu definitions
+    └── tui_menus.jl               # TUI helpers; the menus are stubs (see ext/)
+ext/
+├── GlobtimExt.jl                          # Globtim types: Hessian classification, tree display
+├── GlobtimPostProcessingPrettyTablesExt/  # Table printers (trigger: PrettyTables)
+├── GlobtimPostProcessingJLD2Ext.jl        # load_subdivision_tree (trigger: JLD2)
+└── GlobtimPostProcessingTUIExt.jl         # postprocess() and menus (triggers: REPL, PrettyTables)
 ```
 
 ## License

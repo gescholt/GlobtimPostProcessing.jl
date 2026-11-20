@@ -4,7 +4,6 @@
 Multi-experiment campaign analysis and aggregation.
 """
 
-using PrettyTables
 using CSV
 using DataFrames
 using LinearAlgebra
@@ -478,6 +477,11 @@ function analyze_campaign(campaign::CampaignResults)
         use_pretty_tables = get(ENV, "GLOBTIM_TABLE_STYLE", "grouped") == "pretty"
 
         if use_pretty_tables
+            Base.get_extension(@__MODULE__, :GlobtimPostProcessingPrettyTablesExt) ===
+            nothing && error(
+                "GLOBTIM_TABLE_STYLE=\"pretty\" requires PrettyTables.jl. Add " *
+                "`using PrettyTables`, or unset GLOBTIM_TABLE_STYLE for the grouped table.",
+            )
             println("\n📊 Aggregated Metrics Across Experiments:")
             println("="^80)
             format_metrics_pretty_table(metrics, metric_labels)
@@ -504,65 +508,12 @@ end
 
 Legacy PrettyTables formatting (kept for compatibility).
 Use TableFormatting module for new grouped format.
+
+Requires PrettyTables.jl: load it with `using PrettyTables` (package extension
+`GlobtimPostProcessingPrettyTablesExt`).
 """
-function format_metrics_pretty_table(metrics::Dict, _metric_labels::Dict)
-    # Metric name mappings for better readability
-    metric_labels = Dict(
-        "approximation_quality" => "Approximation Quality (L2 Error)",
-        "parameter_recovery" => "Parameter Recovery Error",
-        "numerical_stability" => "Numerical Stability (Cond. #)",
-        "critical_points" => "Critical Points (Total)",
-        "critical_point_count" => "Critical Points (Raw)",
-        "refined_critical_points" => "Critical Points (Refined)",
-        "refinement_quality" => "Refinement Success Rate",
-        "optimization_quality" => "Optimization Quality",
-        "polynomial_timing" => "Polynomial Construction Time (s)",
-        "solving_timing" => "Solving Time (s)",
-        "refinement_timing" => "Refinement Time (s)",
-        "total_timing" => "Total Computation Time (s)",
-        "timing" => "Total Time (s)",
-    )
-
-    # Create a table with all metrics
-    metric_names = String[]
-    means = String[]
-    mins = String[]
-    maxs = String[]
-    stds = String[]
-    num_exps = Int[]
-    best_exps = String[]
-
-    for (metric_name, metric_data) in sort(collect(metrics), by = x -> x[1])
-        # Use human-readable label
-        readable_name = get(metric_labels, metric_name, metric_name)
-        push!(metric_names, readable_name)
-
-        # Format values
-        push!(means, format_scientific(get(metric_data, "mean", NaN)))
-        push!(mins, format_scientific(get(metric_data, "min", NaN)))
-        push!(maxs, format_scientific(get(metric_data, "max", NaN)))
-        push!(stds, format_scientific(get(metric_data, "std", NaN)))
-        push!(num_exps, get(metric_data, "num_experiments", 0))
-
-        # Extract short readable label from best experiment
-        best_exp = get(metric_data, "best_experiment", "N/A")
-        best_exp_short =
-            best_exp == "N/A" ? "N/A" : extract_experiment_label(best_exp, max_length = 30)
-        push!(best_exps, best_exp_short)
-    end
-
-    # Display table
-    header = ["Metric", "Mean", "Min", "Max", "Std Dev", "N", "Best Experiment"]
-    data = hcat(metric_names, means, mins, maxs, stds, num_exps, best_exps)
-
-    styled_table(
-        data;
-        header = header,
-        alignment = [:l, :r, :r, :r, :r, :c, :l],
-        header_crayon = crayon"bold cyan",
-        border_crayon = crayon"cyan",
-    )
-end
+format_metrics_pretty_table(args...; kwargs...) =
+    _missing_extension(format_metrics_pretty_table, args, "PrettyTables")
 
 """
     generate_campaign_report(campaign::CampaignResults; format::String="markdown") -> String

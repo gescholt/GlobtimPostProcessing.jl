@@ -274,7 +274,10 @@ save_campaign_report
 
 ## Table Formatting API
 
-Functions for terminal-friendly table output.
+Functions for terminal-friendly table output. The `format_*` functions and
+`print_refinement_summary` are plain text; `print_comparison_table`, `styled_table` and
+the other `print_*_table` printers come from the PrettyTables extension and need
+`using PrettyTables` (see the README, "Optional features").
 
 ```@docs
 format_metrics_table

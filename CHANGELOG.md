@@ -4,6 +4,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+Three optional features move into package extensions, and three dependencies are
+dropped. A plain `using GlobtimPostProcessing` loads 94 modules instead of 124 and
+takes about 0.6 s instead of 1.1 s (Julia 1.12, warm cache); the dependency closure
+falls from 119 to 86 packages.
+
+### Changed (breaking)
+
+- **`load_subdivision_tree` needs `using JLD2`.** It lives in the new
+  `GlobtimPostProcessingJLD2Ext`; without JLD2 it raises "load_subdivision_tree
+  requires JLD2.jl". `load_subdivision_result` (JSON) is unchanged.
+- **Table printers need `using PrettyTables`.** `styled_table`, `print_capture_summary`,
+  `print_degree_capture_convergence`, `print_degree_convergence_summary`,
+  `print_comparison_table`, `print_experiment_header`, `print_poly_summary_table`,
+  `print_degree_analysis_table`, `print_parameter_recovery_table(true_params,
+  estimate)`, `print_sparsification_metrics_table`, `print_sparsification_capture_table`,
+  `print_subdivision_tree_report`, `print_tree_comparison_table` and the
+  `GLOBTIM_TABLE_STYLE="pretty"` branch of `analyze_campaign` live in
+  `GlobtimPostProcessingPrettyTablesExt`; each raises "... requires PrettyTables.jl"
+  without it. PrettyTables is still a dependency of DataFrames, so the extension loads
+  with the package today; the requirement matters once DataFrames is optional.
+  `print_refinement_summary`, `print_capture_verdict`, `print_sparsification_summary`,
+  the campaign `print_parameter_recovery_table(::CampaignResults)` and the
+  `format_*` text tables stay in the package, so `refine_experiment_results` needs no
+  extension. The printers still target the PrettyTables 2 API (compat `"2"`).
+- **`postprocess()` and the `select_*` / `confirm_selection` menus need REPL and
+  PrettyTables** (`GlobtimPostProcessingTUIExt`). In the Julia REPL, REPL is already
+  loaded; a script adds `using REPL, PrettyTables`. The non-interactive pipeline
+  (`load_experiment`, `detect_experiment_type`, ...) is unchanged.
+- `load_experiment_config` reads with `JSON.parsefile(...; dicttype = Dict{String,Any})`;
+  the result (a `Dict{String,Any}` with `Vector{Any}` arrays) is the same as before.
+
+### Fixed
+
+- The quality mode of `postprocess()` now finds `styled_table`; it used to fail with an
+  `UndefVarError` inside `UnifiedPipeline`.
+
+### Removed
+
+- Dependencies `JSON3` (JSON does both calls), `StatsBase` (two `countmap` calls became
+  a dictionary count) and `LineSearches` (LBFGS takes `Optim.LineSearches.InitialStatic`,
+  which every Optim release in compat provides). `JLD2`, `PrettyTables` and `REPL` move
+  from `[deps]` to `[weakdeps]`.
+
 ## [0.2.0] - 2026-11-19
 
 The package no longer carries code tied to one study's result layout. The two modules

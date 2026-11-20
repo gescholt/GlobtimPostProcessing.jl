@@ -20,6 +20,16 @@ using Pkg
 Pkg.add("GlobtimPostProcessing")
 ```
 
+Some features are package extensions and load with another package:
+
+- the terminal table printers (`print_capture_summary`, `print_comparison_table`,
+  `styled_table`, ...): `using PrettyTables`;
+- `load_subdivision_tree` for binary JLD2 trees: `using JLD2`;
+- the interactive `postprocess()`: `using REPL, PrettyTables` (in the Julia REPL, REPL is
+  already loaded).
+
+Without them these functions raise an error naming the package to load.
+
 ## Basic Workflow
 
 The typical workflow consists of four steps:

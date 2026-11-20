@@ -44,11 +44,34 @@ using Optim  # Critical point refinement
 using ADTypes: ADTypes, AutoForwardDiff, AutoFiniteDiff  # AD backend handed to Optim
 using ForwardDiff  # Gradient computation for validation (algebraic objectives)
 using FiniteDiff   # Numerical gradients for ODE-based objectives
-using PrettyTables  # Rich terminal table formatting
-# Explicit owned bindings: PrettyTables v3 does not export these top-level
-# names, so `using PrettyTables` alone leaves them unresolved at runtime.
-using PrettyTables: Highlighter, tf_unicode_rounded, ft_printf
-using JLD2          # Tree serialization
+
+# Optional features live in package extensions (ext/), loaded by their trigger
+# packages: PrettyTables -> table printers, JLD2 -> load_subdivision_tree,
+# REPL + PrettyTables -> the interactive `postprocess()` TUI. In src each such
+# function is a catch-all stub that calls `_missing_extension`; the extension
+# adds the more specific methods, so dispatch picks them once it is loaded.
+const _EXTENSION_FOR = Dict(
+    "PrettyTables" => :GlobtimPostProcessingPrettyTablesExt,
+    "JLD2" => :GlobtimPostProcessingJLD2Ext,
+)
+
+"""
+    _missing_extension(f, args, pkg::String)
+
+Error raised by the stub of a function that lives in a package extension. When the
+extension is not loaded the message says which package to load ("`f` requires
+`pkg`.jl"); when it is loaded, no extension method matched `args`, so a
+`MethodError` is thrown instead of a misleading hint.
+"""
+function _missing_extension(f, args, pkg::String)
+    Base.get_extension(@__MODULE__, _EXTENSION_FOR[pkg]) === nothing ||
+        throw(MethodError(f, args))
+    error(_missing_extension_message(nameof(f), pkg))
+end
+
+_missing_extension_message(fname::Symbol, pkg::String) =
+    "$fname requires $pkg.jl. Add `using $pkg` to your session (after adding $pkg " *
+    "to your environment) to load the $(_EXTENSION_FOR[pkg]) extension."
 
 # Core functionality exports
 export load_experiment_results, load_campaign_results
