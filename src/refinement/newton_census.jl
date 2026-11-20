@@ -1,15 +1,14 @@
-# newton_census.jl — the index-preserving Newton census (N6 of
-# docs/research/plans/EVIDENCE_MAP_2026-10.md), promoted from
-# experiments/sandbox/lv_critical_census.jl, where it was validated against theory on
-# rc14 (20 of 20 predicted critical points, 6 minima / 10 index-1 / 4 index-2).
+# newton_census.jl — the index-preserving Newton census. It was validated against
+# theory on a 4-D Lotka-Volterra parameter-estimation landscape whose critical set is
+# known (20 of 20 predicted critical points: 6 minima, 10 index-1, 4 index-2).
 #
 # WHY A SEPARATE REFINER. The box-constrained minimiser (`Fminbox`) that the sweeps
 # used as their census refiner MINIMISES: descent from a saddle lands on a minimum, so
 # that pipeline cannot report a saddle even when the polynomial found one, parks on a
 # box face whenever the descent direction points outward (a face stop that reports
-# λ_min > 0 with ‖∇f‖ of order one passed as a "minimum" on FHN-3D r = 0.5: 22 of 23),
-# and runs one 120 s-capped Optim call per candidate, sequentially — the 4 h time-out
-# of the k0100 arm was ~4,000 such calls. Each candidate here is polished by damped
+# λ_min > 0 with ‖∇f‖ of order one passed as a "minimum" for 22 of 23 reported minima
+# on a 3-D FitzHugh-Nagumo landscape), and runs one time-capped Optim call per
+# candidate, sequentially — a 4 h time-out on a 4-D landscape was ~4,000 such calls. Each candidate here is polished by damped
 # Newton on the SQUARE system ∇f(p) = 0, which converges to whatever critical point it
 # is near, minimum, saddle or maximum alike, and every surviving point carries the
 # evidence to judge it: ‖∇f‖ by exact AD, the full Hessian spectrum, the Morse index,
@@ -30,7 +29,8 @@ through `ladder` rungs (0, 1e-8, ×100, …) until a step decreases the residual
 singular Hessian or a non-finite step falls back to the gradient direction. The loop
 bails when the residual stops shrinking by more than `1 - stall_tol` per iteration (a
 seed walking a flat valley is reported as a failure by the caller, never polished for
-the full budget: on rc14 that tail was 17 % of the seeds and most of the wall).
+the full budget: on the 4-D validation landscape that tail was 17 % of the seeds and
+most of the wall time).
 """
 function polish_to_critical(
     f,

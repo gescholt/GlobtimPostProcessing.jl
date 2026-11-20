@@ -24,7 +24,6 @@ to a gradient norm of 1e-8, or ~1e-12 in high-precision mode.
 - [Installation](#installation)
 - [Features](#features)
 - [Quick Start](#quick-start)
-- [LV4D Analysis](#lv4d-analysis)
 - [Output Files](#output-files)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
@@ -155,35 +154,6 @@ stats = compute_statistics(result)
 # Load campaign (multiple experiments)
 campaign = load_campaign_results("path/to/campaign_dir")
 campaign_stats = analyze_campaign(campaign)
-```
-
-## LV4D Analysis
-
-Interactive analysis for Lotka-Volterra 4D parameter estimation experiments.
-
-### TUI Interface
-
-```julia
-using GlobtimPostProcessing.LV4DAnalysis
-
-# Launch interactive TUI with arrow-key menus
-lv4d()
-```
-
-### Programmatic Analysis
-
-```julia
-using GlobtimPostProcessing.LV4DAnalysis
-
-# Load and analyze experiments
-filter = ExperimentFilter(gn=fixed(8), degree=sweep(4, 12))
-analyze_sweep(nothing, filter)
-
-# Coverage analysis
-report = analyze_coverage(nothing;
-    expected_domains=[0.01, 0.05, 0.1],
-    expected_seeds=1:5)
-print_coverage_report(report)
 ```
 
 ## Output Files
@@ -366,27 +336,13 @@ src/
 │   ├── capture_analysis.jl        # Capture analysis for known critical points
 │   ├── io.jl                      # CSV/JSON I/O
 │   └── api.jl                     # High-level refinement API
-├── unified/
-│   ├── UnifiedPipeline.jl         # Unified pipeline module
-│   ├── experiment_types.jl        # Experiment type definitions
-│   ├── base_data.jl               # Base experiment data structures
-│   ├── loaders.jl                 # Type-aware experiment loaders
-│   ├── tui_main.jl                # Main TUI entry point
-│   └── tui_menus.jl               # TUI menu definitions
-└── lv4d/
-    ├── LV4DAnalysis.jl            # LV4D analysis module
-    ├── common.jl                  # Shared utilities
-    ├── data_loading.jl            # LV4D data loading
-    ├── query.jl                   # Experiment querying
-    ├── sweep.jl                   # Parameter sweep analysis
-    ├── convergence.jl             # Convergence analysis
-    ├── coverage.jl                # Coverage analysis
-    ├── gradients.jl               # Gradient analysis
-    ├── minima.jl                  # Minima analysis
-    ├── quality.jl                 # Quality assessment
-    ├── comparison.jl              # Experiment comparison
-    ├── interactive.jl             # Interactive analysis
-    └── tui.jl                     # LV4D TUI interface
+└── unified/
+    ├── UnifiedPipeline.jl         # Unified pipeline module
+    ├── experiment_types.jl        # Experiment type definitions
+    ├── base_data.jl               # Base experiment data structures
+    ├── loaders.jl                 # Type-aware experiment loaders
+    ├── tui_main.jl                # Main TUI entry point
+    └── tui_menus.jl               # TUI menu definitions
 ```
 
 ## License

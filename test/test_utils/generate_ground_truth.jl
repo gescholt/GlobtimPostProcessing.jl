@@ -10,9 +10,9 @@ For functions with analytically known minima, verifies that the oracle
 finds them. For functions without, does multi-start with high n_starts.
 
 Run with:
-    julia --project=profiles/dev pkg/globtimpostprocessing/test/test_utils/generate_ground_truth.jl
+    julia --project=test test/test_utils/generate_ground_truth.jl
 
-Output directory: pkg/globtimpostprocessing/test/fixtures/ground_truth/
+Output directory: test/fixtures/ground_truth/
 """
 
 using Printf

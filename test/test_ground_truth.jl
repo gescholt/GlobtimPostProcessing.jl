@@ -12,7 +12,7 @@ Tests that:
 6. Expected minimum counts match (where known)
 
 Run with:
-    julia --project=profiles/dev pkg/globtimpostprocessing/test/test_ground_truth.jl
+    julia --project=test test/test_ground_truth.jl
 """
 
 using Test

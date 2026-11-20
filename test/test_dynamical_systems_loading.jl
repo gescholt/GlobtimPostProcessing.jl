@@ -1,7 +1,7 @@
 #=
 ENVIRONMENT NOTE: This is a standalone integration test, NOT part of the package
 test suite (not run by `Pkg.test()`). It requires `Globtim` to be available in
-the active environment (e.g., via a shared monorepo environment). Do NOT run from
+the active environment (e.g., an environment that has both packages). Do NOT run from
 the globtimpostprocessing package environment — Globtim is not declared in its
 Project.toml.
 =#

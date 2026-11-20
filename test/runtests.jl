@@ -118,16 +118,6 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_loader_consolidation.jl")
     end
 
-    # Run LV4D TUI tests (January 2026 - domain filter fix)
-    @testset "LV4D TUI" begin
-        include("test_lv4d_tui.jl")
-    end
-
-    # Run LV4D Sweep tests (January 2026 - error message improvement)
-    @testset "LV4D Sweep" begin
-        include("test_lv4d_sweep.jl")
-    end
-
     # Run Subdivision Tree Analysis tests (January 2026)
     @testset "Subdivision Tree Analysis" begin
         include("test_subdivision_analysis.jl")
@@ -183,28 +173,23 @@ const GT_DIR = joinpath(@__DIR__, "fixtures", "ground_truth")
         include("test_metrics_loader.jl")
     end
 
-    # Benefit matrix assembly (June 2026 — Part A baseline; honest-missing semantics)
-    @testset "Benefit Matrix" begin
-        include("test_benefit_matrix.jl")
-    end
-
     # Levenberg–Marquardt refinement on residual vectors (September 2026)
     @testset "Levenberg-Marquardt Refinement" begin
         include("test_refinement_lm.jl")
     end
 
-    # N5: threaded batch refinement, representatives-only refinement from the cluster columns
-    @testset "N5 Batch Refinement" begin
+    # Threaded batch refinement, representatives-only refinement from the cluster columns
+    @testset "Batch Refinement" begin
         include("test_refinement_batch_n5.jl")
     end
 
-    # hdgw.1: Optim AD backend (no silent finite differences) and the NelderMead stop
+    # Optim AD backend (no silent finite differences) and the NelderMead stop
     @testset "Optim AD backend and NelderMead tolerance" begin
         include("test_optim_ad_and_nm_tolerance.jl")
     end
 
-    # N6: index-preserving Newton census (promoted from experiments/sandbox/lv_critical_census.jl)
-    @testset "N6 Newton Census" begin
+    # Index-preserving Newton census
+    @testset "Newton Census" begin
         include("test_newton_census.jl")
     end
 

@@ -560,8 +560,7 @@ end
 
 ## Related Documentation
 
-- [globtimpostprocessing/.claude/CLAUDE.md](../../globtimpostprocessing/.claude/CLAUDE.md) - Package architecture
-- [globtim/src/refine.jl](../src/refine.jl) - Core refinement implementation (for comparison)
+- [refinement/core_refinement.jl](../src/refinement/core_refinement.jl) - Core refinement implementation
 - [Optim.jl Documentation](https://julianlsolvers.github.io/Optim.jl/stable/) - Upstream API reference
 
 ## Changelog

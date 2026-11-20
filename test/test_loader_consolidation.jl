@@ -3,14 +3,11 @@
 # Verifies that:
 #   - UnifiedPipeline._load_critical_points handles both _raw_ and non-raw naming
 #   - load_critical_points_from_csvs delegates to _load_critical_points
-#   - LV4DAnalysis.load_critical_points_csv delegates to _load_critical_points
-#   - load_experiment_config_json delegates to load_experiment_config
 #   - print_parameter_recovery_table uses p$i columns (not x$i)
 
 using Test
 using GlobtimPostProcessing
 using GlobtimPostProcessing.UnifiedPipeline
-using GlobtimPostProcessing.LV4DAnalysis
 using DataFrames
 using CSV
 using Dates
@@ -137,59 +134,6 @@ end
                 Dict{String,Any}(),
             )
             @test result === nothing
-        end
-    end
-
-    # ---------------------------------------------------------------------------
-    # LV4DAnalysis.load_critical_points_csv
-    # ---------------------------------------------------------------------------
-
-    @testset "load_critical_points_csv: loads non-raw files (original behaviour)" begin
-        mktempdir() do dir
-            write_nonraw_csv(dir, 4, 5)
-            result = LV4DAnalysis.load_critical_points_csv(dir)
-            @test result isa DataFrame
-            @test nrow(result) == 5
-            @test hasproperty(result, :degree)
-            @test unique(result.degree) == [4]
-        end
-    end
-
-    @testset "load_critical_points_csv: now also loads _raw_ files (new unified behaviour)" begin
-        mktempdir() do dir
-            write_raw_csv(dir, 4, 2, 6)
-            result = LV4DAnalysis.load_critical_points_csv(dir)
-            @test result isa DataFrame
-            @test nrow(result) == 6
-            @test unique(result.degree) == [4]
-        end
-    end
-
-    @testset "load_critical_points_csv: empty dir returns empty DataFrame" begin
-        mktempdir() do dir
-            result = LV4DAnalysis.load_critical_points_csv(dir)
-            @test result isa DataFrame
-            @test nrow(result) == 0
-        end
-    end
-
-    # ---------------------------------------------------------------------------
-    # load_experiment_config_json delegates to load_experiment_config
-    # ---------------------------------------------------------------------------
-
-    @testset "load_experiment_config_json: same result as load_experiment_config" begin
-        # Both should return the same config from the fixtures dir
-        config_canonical = load_experiment_config(fixtures_dir)
-        config_json = LV4DAnalysis.load_experiment_config_json(fixtures_dir)
-
-        @test config_json["function_name"] == config_canonical["function_name"]
-        @test config_json["dimension"] == config_canonical["dimension"]
-        @test config_json["p_true"] == config_canonical["p_true"]
-    end
-
-    @testset "load_experiment_config_json: throws on missing file" begin
-        mktempdir() do dir
-            @test_throws Exception LV4DAnalysis.load_experiment_config_json(dir)
         end
     end
 

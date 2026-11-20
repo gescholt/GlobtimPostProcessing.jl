@@ -11,7 +11,7 @@ These oracle utilities are the foundation for all higher-level
 verification tests (L1-L9). They must be rock-solid.
 
 Run with:
-    julia --project=pkg/globtimpostprocessing/test pkg/globtimpostprocessing/test/test_cp_verification.jl
+    julia --project=test test/test_cp_verification.jl
 """
 
 using Test

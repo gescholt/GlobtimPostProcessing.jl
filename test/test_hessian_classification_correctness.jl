@@ -10,7 +10,7 @@ eigenvalue classification). Any disagreement reveals a bug in the
 classification logic or a sensitivity to tolerance parameters.
 
 Run with:
-    julia --project=profiles/dev pkg/globtimpostprocessing/test/test_hessian_classification_correctness.jl
+    julia --project=test test/test_hessian_classification_correctness.jl
 """
 
 using Test

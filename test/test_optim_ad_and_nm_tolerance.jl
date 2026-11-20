@@ -1,4 +1,4 @@
-# Bead hdgw.1 (DEP-AUDIT OPTIM-AD): Optim 2 differentiates with central finite
+# Optim 2 differentiates with central finite
 # differences unless told otherwise, and Optim's NelderMead stops on the simplex
 # spread of f only (it never reads f_abstol / x_abstol). These tests pin the fix:
 # gradient methods get an exact AD backend, and the NelderMead tolerance we expose
@@ -26,7 +26,7 @@ function make_counting_quadratic(m::Int)
     return f, counts
 end
 
-@testset "Optim AD backend and NelderMead tolerance (hdgw.1)" begin
+@testset "Optim AD backend and NelderMead tolerance" begin
     m = 10
     x0 = fill(0.5, m)
 
@@ -131,7 +131,7 @@ end
         @test occursin("Float64-pinned", something(r_fwd.error_message, ""))
     end
 
-    # Bead hdgw.24: with bounds, Optim.g_converged is Fminbox's OUTER projected-gradient
+    # With bounds, Optim.g_converged is Fminbox's OUTER projected-gradient
     # test (against outer_g_abstol), not NelderMead's simplex spread.
     @testset "bounded NelderMead reports the projected-gradient stop as :g_tol" begin
         q(x) = (x[1] - 0.3)^2 + 2 * (x[2] + 0.2)^2

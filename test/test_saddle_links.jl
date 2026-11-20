@@ -1,5 +1,5 @@
 # test_saddle_links.jl — newton_critical_point / descend_to_minimum / morse_data /
-# saddle_links on analytic landscapes (bead globopt_merged-o6q5.4).
+# saddle_links on analytic landscapes.
 #
 # Pure ForwardDiff + LinearAlgebra; no Globtim dependency.
 

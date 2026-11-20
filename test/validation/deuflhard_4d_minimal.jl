@@ -5,7 +5,7 @@ Following standard notebook patterns for critical point computation
 
 NOTE: This is a standalone validation script, NOT part of the package test suite.
 It requires `Globtim` and `StaticArrays` to be available in the active environment
-(e.g., via a shared monorepo environment). Do NOT run from the globtimpostprocessing
+(e.g., an environment that has both packages). Do NOT run from the globtimpostprocessing
 package environment — Globtim is not declared in its Project.toml.
 =#
 

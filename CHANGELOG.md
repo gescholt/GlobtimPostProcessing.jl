@@ -4,8 +4,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-### Changed (Optim AD backend and the NelderMead stop, bead hdgw.1, 2026-10-19)
+## [0.2.0] - 2026-11-19
 
+The package no longer carries code tied to one study's result layout. The two modules
+below read hard-coded result directories and experiment-naming schemes of a single
+private study, so they are not usable outside it; they leave the package unchanged
+in behaviour and are not replaced.
+
+### Removed (breaking)
+
+- **`LV4DAnalysis` submodule** (`GlobtimPostProcessing.LV4DAnalysis`): the Lotka-Volterra
+  4-D sweep / convergence / coverage / method-comparison analysis and its `lv4d()`
+  terminal UI, including `load_lv4d_experiment`, `load_sweep_experiments`,
+  `LV4DExperimentData`, `LV4DSweepData`, `ExperimentFilter` / `fixed` / `sweep`,
+  `query_experiments`, `analyze_sweep`, `analyze_quality`, `analyze_coverage`,
+  `compare_single_vs_subdivision` and the rest of that submodule's exports.
+- **Benefit-matrix assembly**: `assemble_benefit_matrix`, `BenefitCell` and
+  `ODE_PE_SYSTEMS` are no longer exported or defined.
+- **`postprocess()` LV4D-only analysis modes** (`sweep`, `compare`, `coverage`): the
+  interactive pipeline now offers the `quality` and `convergence` modes for every
+  experiment type, LV4D included.
+- `UnicodePlots` dependency (only the removed submodule used it).
+- Internal planning documents (`docs/archive/`), stale guides describing files that no
+  longer exist (`docs/guides/`), and the campaign scripts under `scripts/` together with
+  the root-level `analyze_experiments.jl` driver; none of them were part of the API.
+
+### Changed (breaking)
+
+- **`load_experiment` on an LV4D experiment returns `BaseExperimentData`** (tagged
+  `experiment_type(data) === LV4D`), through the same loader as every other type. It
+  used to delegate to the removed submodule and return `LV4DExperimentData`.
 - **Gradient-based Optim refinement differentiates with ForwardDiff.** Optim 2 defaults
   to central finite differences whenever only `f` is passed (`2m` evaluations per
   gradient, plus truncation noise), and `refine_critical_point` passed only `f`.
@@ -29,33 +57,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `RefinementConfig.f_abstol` / `.x_abstol` default to `nothing` (the method's own
   default). A NelderMead run that stopped on the spread reports
   `convergence_reason = :f_tol`, where it used to say `:g_tol`.
+- **Bounded refinement reports Fminbox's own stop.** With bounds, Optim's
+  `g_converged` is `Fminbox`'s outer projected-gradient test, so such a stop is
+  reported as `:g_tol`; `outer_g_abstol` (default `1e-8`) and `outer_iterations`
+  (default `1000`) are exposed, and an exhausted outer loop is reported as
+  `:outer_iterations`.
+- `Optim` compat floor raised to `1.12` (the ADTypes `autodiff` keyword needs
+  NLSolversBase 7.9 or newer).
 
-### Added (N6, 2026-10-16)
+### Added
 
-- **Index-preserving Newton census** (`src/refinement/newton_census.jl`), promoted from
-  `experiments/sandbox/lv_critical_census.jl` where it was validated on rc14 (20 of 20
-  predicted critical points): `polish_to_critical` (LM-damped Newton on `∇f = 0`,
-  backtracking on the residual, so a saddle stays a saddle), `critical_point_kind`
-  (exact-AD Hessian spectrum → minimum / saddle / maximum / degenerate + Morse index),
-  `newton_census` (seed dedup, threaded polish into preallocated slots so the result is
-  thread-count independent, absolute `gtol` or scale-free `steptol` acceptance, failures
-  counted never dropped, post-polish dedup), `poincare_hopf`, `census_headline`,
-  `write_census` / `read_raw_candidates`, and `NewtonIndexPreserving` as a
-  `RefinementMethod` (`refine_point` → `CriticalPointRefinementResult`, ForwardDiff,
-  no trust region and no objective-increase safeguard). `Random` is a new dependency
-  (face sampling of the Poincaré–Hopf check). N6 of
-  `docs/research/plans/EVIDENCE_MAP_2026-10.md`; the sandbox script now delegates here.
-
-### Added (N5, 2026-10-16)
-
+- **Index-preserving Newton census** (`src/refinement/newton_census.jl`):
+  `polish_to_critical` (LM-damped Newton on `∇f = 0`, backtracking on the residual, so
+  a saddle stays a saddle), `critical_point_kind` (exact-AD Hessian spectrum → minimum /
+  saddle / maximum / degenerate + Morse index), `newton_census` (seed dedup, threaded
+  polish into preallocated slots so the result is thread-count independent, absolute
+  `gtol` or scale-free `steptol` acceptance, failures counted never dropped,
+  post-polish dedup), `poincare_hopf`, `census_headline`, `write_census` /
+  `read_raw_candidates`, and `NewtonIndexPreserving` as a `RefinementMethod`
+  (`refine_point` → `CriticalPointRefinementResult`, ForwardDiff, no trust region and no
+  objective-increase safeguard). Validated on a 4-D Lotka-Volterra landscape with a
+  known critical set (20 of 20 predicted critical points). `Random` is a new dependency
+  (face sampling of the Poincaré–Hopf check).
+- **Saddle links** (`src/refinement/saddle_links.jl`): `newton_critical_point` (damped
+  Newton on `∇f = 0` in a box, converging to saddles and maxima as readily as to
+  minima), `lm_critical_point`, `minmode_saddle` (eigenvector following with the exact
+  Hessian), `descend_to_minimum`, `morse_data`, `nearest_point_index`, and
+  `saddle_links`, which names the two minima an index-1 saddle separates.
 - **Representatives-only refinement and threaded batches.** `load_raw_critical_points`
   reads the `representative` / `cluster_size` columns that Globtim's surrogate-side
   deduplication writes into `critical_points_raw_deg_X.csv` (all `true` / `1` for older
   files); `refine_experiment_results(...; representatives_only = true)` refines one point
   per cluster, and `threads = true` fans the independent refinements on `f` out over
   threads in `refine_critical_points_batch`, with `objective_pool` for objectives that
-  are not thread-safe (one instance per thread, `:static` schedule). N5 of
-  `docs/research/plans/EVIDENCE_MAP_2026-10.md`.
+  are not thread-safe (one instance per thread, `:static` schedule).
 
 ## [0.1.3] - 2026-09-10
 
@@ -374,9 +409,6 @@ cd /path/to/globtimpostprocessing
 julia --project=. examples/test_minimal_l2_plot.jl \
     /path/to/your/campaign/hpc_results
 
-# Example with existing data
-julia --project=. examples/test_minimal_l2_plot.jl \
-    ../globtimcore/experiments/lotka_volterra_4d_study/configs_20251006_160051/hpc_results
 ```
 
 Expected: Interactive L2 convergence plot opens in browser

@@ -1,11 +1,11 @@
-# N5: threaded batch refinement with a per-thread objective pool, and representatives-only
+# Threaded batch refinement with a per-thread objective pool, and representatives-only
 # refinement driven by the cluster columns Globtim writes into critical_points_raw_deg_X.csv.
 
 using Test
 using GlobtimPostProcessing
 using CSV, DataFrames
 
-@testset "N5 batch refinement" begin
+@testset "batch refinement" begin
     dw(x) = (x[1]^2 - 0.25)^2 + x[2]^2
     starts = [[0.45, 0.02], [-0.52, -0.03], [0.48, -0.01], [-0.47, 0.02], [0.51, 0.03], [-0.5, 0.01]]
     bounds = [(-1.0, 1.0), (-1.0, 1.0)]

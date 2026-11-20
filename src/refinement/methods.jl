@@ -111,8 +111,8 @@ method_name(::NewtonMinimize) = :newton_minimize
 # On the gradient-based Optim methods `gradient_method` selects the ADTypes backend
 # Optim differentiates with during the iteration (`:forwarddiff` -> AutoForwardDiff,
 # `:finitediff` -> central AutoFiniteDiff) AND the post-hoc Hessian used for CP
-# classification, so the two never disagree. Optim's own default, used here until
-# bead hdgw.1, was central finite differences whenever only f was passed.
+# classification, so the two never disagree. Optim's own default, used here before
+# 0.2.0, is central finite differences whenever only f is passed.
 # NelderMead never differentiates; its `gradient_method` is the post-hoc Hessian only.
 
 """

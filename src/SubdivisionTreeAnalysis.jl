@@ -141,7 +141,7 @@ Load a subdivision experiment result from a JSON file.
 
 The JSON format contains sections: `parameters`, `tree`, `recovery_raw`,
 `refined`, and optionally `refinement_details`. This is the portable format
-produced by sandbox experiment scripts, as opposed to the binary JLD2 format
+written by experiment scripts, as opposed to the binary JLD2 format
 loaded by [`load_subdivision_tree`](@ref).
 
 # JSON structure

@@ -2,9 +2,8 @@
 # saddle_links.jl — which minima does an index-1 saddle separate?
 #
 # Analysis on a TRUE objective f (ForwardDiff gradients and Hessians), independent
-# of any surrogate. Generalised from `pkg/BioObjectives/src/analysis.jl` (bead
-# MARS-SADDLE-LINKS, globopt_merged-o6q5.4), where the same logic answers the GLV
-# Gate-6 question; BioObjectives keeps its own copy to stay Globtim-free.
+# of any surrogate. The typical question it answers: given the minima and index-1
+# saddles of a landscape, which pairs of minima are connected by a mountain pass?
 #
 # The pieces:
 #   newton_critical_point  damped Newton on ∇f = 0 — backtracking on ‖∇f‖∞, so it

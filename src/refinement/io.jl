@@ -23,7 +23,7 @@ struct RawCriticalPointsData
     degree::Int
     n_points::Int
     source_file::String
-    # N5 (Globtim surrogate_dedup.jl): one representative per cluster of roots that
+    # Globtim's surrogate-side dedup: one representative per cluster of roots that
     # coincide after a Newton polish on the surrogate; all `true` / `1` when the CSV
     # predates the columns.
     representative::Vector{Bool}

@@ -88,7 +88,7 @@ println("Best estimate: ", best_params)
 # Keyword arguments
 - `degree`: which `critical_points_raw_deg_X.csv` to refine (highest by default)
 - `representatives_only = true`: refine one point per surrogate cluster (the
-  `representative` column Globtim writes, N5); `false` refines every raw point
+  `representative` column Globtim writes); `false` refines every raw point
 - `threads = false`: fan the independent f-refinements out over threads
   (`refine_critical_points_batch`); `objective_pool` supplies one objective instance per
   thread when the objective is not thread-safe
@@ -112,7 +112,7 @@ function refine_experiment_results(
     # 1. Load raw critical points from CSV
     raw_data = load_raw_critical_points(experiment_dir; degree = degree)
 
-    # N5: Globtim polishes every raw root on the surrogate and marks one representative
+    # Globtim polishes every raw root on the surrogate and marks one representative
     # per cluster (`representative` column); the refinement on f starts from those only.
     # A CSV without the column marks every point representative, so nothing changes there.
     sel =
@@ -121,7 +121,7 @@ function refine_experiment_results(
     raw_points = raw_data.points[sel]
     n_raw = length(raw_points)
     if representatives_only && n_raw < raw_data.n_points
-        @info "Refining $n_raw cluster representatives of $(raw_data.n_points) raw critical points (N5 surrogate dedup)"
+        @info "Refining $n_raw cluster representatives of $(raw_data.n_points) raw critical points (surrogate dedup)"
     end
 
     # 2. Refine using batch processor

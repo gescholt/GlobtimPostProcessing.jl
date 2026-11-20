@@ -7,7 +7,6 @@ Tests type detection, unified loading, and backward compatibility.
 using Test
 using GlobtimPostProcessing
 using GlobtimPostProcessing.UnifiedPipeline
-using GlobtimPostProcessing.LV4DAnalysis
 using DataFrames
 
 # Test fixture paths
@@ -126,53 +125,25 @@ const GENERIC_FIXTURE = joinpath(TEST_FIXTURES, "generic_minimal")
         @test :degree in propertynames(cp)
     end
 
-    @testset "LV4D Experiment Loading" begin
+    @testset "LV4D Experiment Loading (generic loader)" begin
         # Skip if fixture doesn't exist
         !isdir(LV4D_FIXTURE) && return
 
-        # Test that LV4DExperimentData has proper base
-        # First rename fixture directory temporarily to have lv4d_ prefix
-        lv4d_test_dir =
-            joinpath(dirname(LV4D_FIXTURE), "lv4d_GN8_deg4_dom0.1_seed1_20260124_120000")
-
-        # Copy fixture to properly named directory
-        cp_dir = false
-        if !isdir(lv4d_test_dir)
+        # Type detection reads the directory prefix, so copy the fixture under an
+        # lv4d_-prefixed name.
+        mktempdir() do tmp
+            lv4d_test_dir = joinpath(tmp, "lv4d_GN8_deg4_dom0.1_seed1_20260124_120000")
             cp(LV4D_FIXTURE, lv4d_test_dir)
-            cp_dir = true
-        end
 
-        try
-            data = LV4DAnalysis.load_lv4d_experiment(lv4d_test_dir)
+            data = load_experiment(lv4d_test_dir)
 
-            @test data isa LV4DExperimentData
-            @test data.base isa BaseExperimentData
-
-            # Test base accessors work
-            @test experiment_id(data) == "lv4d_GN8_deg4_dom0.1_seed1_20260124_120000"
+            @test data isa BaseExperimentData
             @test experiment_type(data) === LV4D
-
-            # Test LV4D-specific fields
-            @test data.p_true == [0.2, 0.3, 0.5, 0.6]
-            @test data.p_center == [0.2, 0.3, 0.5, 0.6]
-            @test data.domain_size == 0.1
-            @test data.dim == 4
-
-            # Test unified accessors (via get_base protocol)
+            @test experiment_id(data) == "lv4d_GN8_deg4_dom0.1_seed1_20260124_120000"
             @test experiment_path(data) == lv4d_test_dir
-            @test degree_results(data) === data.base.degree_results
-            @test critical_points(data) === data.base.critical_points
 
-            # Test critical points
             @test has_critical_points(data)
-            cp = critical_points(data)
-            @test nrow(cp) == 5
-            @test :dist_to_true in propertynames(cp)  # LV4D adds this column
-        finally
-            # Clean up temporary directory
-            if cp_dir && isdir(lv4d_test_dir)
-                rm(lv4d_test_dir, recursive = true)
-            end
+            @test nrow(critical_points(data)) == 5
         end
     end
 

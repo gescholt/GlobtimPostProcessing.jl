@@ -11,7 +11,7 @@ These tests verify the fix for the type dispatch bug where ODE-model objectives
 GlobtimExt override was constrained to ::Function.
 
 Run with:
-    julia --project=profiles/dev -e 'include("pkg/globtimpostprocessing/test/test_hessian_dispatch.jl")'
+    julia --project=test -e 'include("test/test_hessian_dispatch.jl")'
 """
 
 using Test

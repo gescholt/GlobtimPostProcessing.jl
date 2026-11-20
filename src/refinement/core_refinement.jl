@@ -198,7 +198,7 @@ _resolve_optim_method(method; step_size::Float64 = 1.0) = method  # passthrough 
 # (nelder_mead.jl `assess_convergence` hijacks the g slot; f_abstol / x_abstol are
 # never read). Mapping f_abstol onto it keeps the user-facing tolerance meaningful;
 # x_abstol / g_abstol cannot act on NelderMead, so passing them is an error, not a
-# silent no-op (bead hdgw.1).
+# silent no-op.
 function _optim_tolerances(
     method,
     f_abstol::Union{Nothing,Float64},
@@ -657,7 +657,7 @@ function refine_critical_points_batch(
     )
 
     if threads && n_points > 0 && Threads.nthreads() > 1
-        # N5: the f-refinements are independent; fan them out. An objective that is not
+        # The f-refinements are independent; fan them out. An objective that is not
         # thread-safe (ODE caches, mutable buffers) is handed in as `objective_pool`, one
         # instance per thread, indexed by threadid under a :static schedule.
         if objective_pool !== nothing && length(objective_pool) < Threads.maxthreadid()

@@ -209,15 +209,13 @@ julia --project=../.. generate_postprocessing_fixtures.jl
 1. ✅ Parameter recovery tests (need fixture with p_true, e.g., Lotka-Volterra)
 2. ✅ Campaign-level integration test (multiple experiments)
 3. ✅ Basis comparison test (Chebyshev vs Legendre fixtures)
-4. ✅ Mode 1-5 script integration test (analyze_experiments.jl)
-5. ✅ Export functionality test (markdown/CSV/JSON reports)
+4. ✅ Export functionality test (markdown/CSV/JSON reports)
 
 ## Related Documentation
 
 - `test/fixtures/README.md` - Fixture data description
 - `test/test_refinement_phase1.jl` - Refinement unit tests (simple functions)
 - `test/test_quality_diagnostics.jl` - Quality diagnostics unit tests
-- `CONSOLIDATION_PLAN.md` - Overall integration plan
 
 ---
 

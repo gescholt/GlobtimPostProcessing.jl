@@ -43,7 +43,7 @@ using CSV
 using ProgressMeter
 using StatsBase
 using Optim  # Critical point refinement
-using ADTypes: ADTypes, AutoForwardDiff, AutoFiniteDiff  # AD backend handed to Optim (hdgw.1)
+using ADTypes: ADTypes, AutoForwardDiff, AutoFiniteDiff  # AD backend handed to Optim
 using LineSearches  # Step size control for LBFGS
 using ForwardDiff  # Gradient computation for validation (algebraic objectives)
 using FiniteDiff   # Numerical gradients for ODE-based objectives
@@ -81,7 +81,6 @@ export param_distance, load_experiment_config, load_critical_points_for_degree
 export detect_csv_schema, get_coordinate_columns
 export extract_true_parameters
 export compute_parameter_recovery_stats, generate_parameter_recovery_table, has_ground_truth
-export assemble_benefit_matrix, BenefitCell, ODE_PE_SYSTEMS
 
 # Quality diagnostics exports (Issue #7, Phase 3)
 export load_quality_thresholds
@@ -108,7 +107,7 @@ export print_sparsification_metrics_table, print_sparsification_capture_table
 export print_sparsification_summary, build_sparsification_plot_entries
 # Formal postprocessing pipeline
 export PostprocessingResult, postprocess_experiment
-# Landscape capture data types (promoted from sandbox)
+# Landscape capture data types
 export LandscapeRefinementDetails, LandscapeMethodResult, LandscapeSubdivisionData
 export parse_landscape_refinement, load_landscape_degree_sweep, load_landscape_subdivision
 
@@ -167,7 +166,7 @@ export LevenbergMarquardt
 export refinement_method, refine_point, refine_points
 export method_name, needs_gradient, needs_hessian
 
-# N6: index-preserving Newton census (refinement/newton_census.jl)
+# Index-preserving Newton census (refinement/newton_census.jl)
 export NewtonIndexPreserving
 export polish_to_critical, critical_point_kind, dedup_by_radius, read_raw_candidates
 export newton_census, poincare_hopf, census_headline, write_census
@@ -295,7 +294,7 @@ include("refinement/newton_refinement.jl")      # Newton-based critical point re
 include("refinement/saddle_links.jl")           # index-1 saddles → the two minima they separate (AD, no surrogate)
 include("refinement/methods.jl")               # Modular refinement method types + factory
 include("refinement/unified_dispatch.jl")      # Unified refine_point dispatch
-include("refinement/newton_census.jl")         # N6: index-preserving Newton census (from lv_critical_census.jl)
+include("refinement/newton_census.jl")         # Index-preserving Newton census
 include("refinement/capture_analysis.jl")      # Capture analysis for known critical points
 include("refinement/io.jl")               # Load/save utilities
 include("refinement/api.jl")              # High-level API
@@ -318,7 +317,7 @@ include("SubdivisionTreeAnalysis.jl")
 # Tree display (live terminal display during adaptive_refine - promoted March 2026)
 include("TreeDisplay.jl")
 
-# Landscape capture data types (promoted from sandbox - March 2026)
+# Landscape capture data types (March 2026)
 include("LandscapeCaptureTypes.jl")
 
 # Enhanced analysis (moved from globtim - January 2026)
@@ -328,11 +327,7 @@ include("EnhancedAnalysis.jl")
 # JSONL metrics loader (May 2026 — consumer of Globtim.Metrics.MetricsLogger)
 include("MetricsLoader.jl")
 
-# Subdivision × sparsification → recovery benefit matrix (June 2026 — Part A baseline)
-include("BenefitMatrix.jl")
-
 # Unified pipeline module (type-aware experiment loading - January 2026)
-# MUST be included before LV4DAnalysis which depends on it
 include("unified/UnifiedPipeline.jl")
 
 # Re-export unified pipeline symbols
@@ -345,9 +340,6 @@ using .UnifiedPipeline: BaseExperimentData, get_base
 using .UnifiedPipeline: experiment_id, experiment_path, experiment_type
 using .UnifiedPipeline:
     degree_results, critical_points, has_critical_points, available_degrees
-
-# LV4D analysis module (unified LV4D post-processing - January 2026)
-include("lv4d/LV4DAnalysis.jl")
 
 # NOTE: Plotting functionality has been moved to GlobtimPlots package
 # To create visualizations, use:

@@ -292,7 +292,7 @@ end
 
     @testset "Integration: Nested campaign discovery" begin
         mktempdir() do tmpdir
-            # Create realistic structure: experiments/cluster/system/collection/hpc_results/experiments
+            # Create realistic structure: <root>/cluster/<system>/<collection>/hpc_results/<experiment>
             system_path = joinpath(tmpdir, "cluster", "lotka_volterra_4d")
             mkpath(system_path)
 

@@ -23,13 +23,13 @@ This is the main unified entry point for loading any experiment. It:
 - `type::Union{ExperimentType, Nothing}=nothing`: Optional explicit type (auto-detected if nothing)
 
 # Returns
-- Type-specific experiment data (e.g., `LV4DExperimentData`, `BaseExperimentData`)
+- `BaseExperimentData` tagged with the detected experiment type
 
 # Examples
 ```julia
 # Auto-detect type
-data = load_experiment("globtim_results/lotka_volterra_4d/lv4d_GN8_deg4-12_...")
-# => LV4DExperimentData
+data = load_experiment("results/lv4d_GN8_deg4-12_...")
+# => BaseExperimentData with experiment_type(data) === LV4D
 
 # Explicit type
 data = load_experiment("some_experiment", type=DEUFLHARD)
@@ -60,18 +60,16 @@ end
 # ============================================================================
 
 """
-    load_experiment(::LV4DType, path::String) -> LV4DExperimentData
+    load_experiment(::LV4DType, path::String) -> BaseExperimentData
 
-Load LV4D experiment data.
+Load Lotka-Volterra 4D experiment data.
 
-Delegates to LV4DAnalysis.load_lv4d_experiment() but constructs proper
-base data for unified interface.
+Returns BaseExperimentData. Callers that need LV4D-specific fields (true
+parameters, domain size, distance-to-truth columns) build them on top of the
+base data.
 """
 function load_experiment(::LV4DType, path::String)
-    # LV4DAnalysis has its own loader - delegate to it
-    # This will be updated in Phase 2 to return proper LV4DExperimentData with base
-    # For now, call the existing loader
-    return Main.GlobtimPostProcessing.LV4DAnalysis.load_lv4d_experiment(path)
+    return _load_generic_experiment(path, LV4D)
 end
 
 """
@@ -359,7 +357,7 @@ end
 
 Generic single experiment check.
 
-Type-specific dispatches (e.g., LV4DType) are defined in their respective modules.
+Methods for specific experiment types can be added by dispatching on the type argument.
 """
 function is_single_experiment(::ExperimentType, path::String)::Bool
     files = readdir(path)

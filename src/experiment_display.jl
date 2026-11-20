@@ -1141,7 +1141,7 @@ objective = make_lv4d_objective(p_true, ic, tspan, numpoints)
 
 # Run full pipeline
 result = postprocess_experiment(
-    "globtim_results/lv4d_basic",
+    "path/to/lv4d_experiment",
     objective;
     bounds = [(0.195, 0.205), (0.295, 0.305), (0.495, 0.505), (0.595, 0.605)],
 )

@@ -314,30 +314,10 @@ const COMMON_ANALYSIS_MODES = [
 ]
 
 """
-LV4D-specific analysis modes.
-"""
-const LV4D_ANALYSIS_MODES = [
-    AnalysisMode(
-        :quality,
-        "Quality",
-        "Single experiment critical point diagnostics",
-        [LV4DType],
-    ),
-    AnalysisMode(:sweep, "Sweep", "Aggregate domain × degree analysis", [LV4DType]),
-    AnalysisMode(:convergence, "Convergence", "Log-log convergence rate", [LV4DType]),
-    AnalysisMode(:compare, "Compare", "Method comparison (log vs standard)", [LV4DType]),
-    AnalysisMode(:coverage, "Coverage", "Coverage analysis & gap detection", [LV4DType]),
-]
-
-"""
     get_analysis_modes(type::ExperimentType) -> Vector{AnalysisMode}
 
 Get available analysis modes for an experiment type.
 """
-function get_analysis_modes(::LV4DType)
-    return LV4D_ANALYSIS_MODES
-end
-
 function get_analysis_modes(::ExperimentType)
     return COMMON_ANALYSIS_MODES
 end

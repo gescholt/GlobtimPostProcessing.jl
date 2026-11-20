@@ -1,4 +1,4 @@
-# N6: the index-preserving Newton census promoted from experiments/sandbox/lv_critical_census.jl.
+# The index-preserving Newton census.
 # Guards: saddles stay saddles (the Fminbox refiner slid them onto minima), the output
 # does not depend on the thread count, failures are counted and never dropped, the
 # scale-free step acceptance works where the absolute gradient test cannot, and the
@@ -9,7 +9,7 @@ using GlobtimPostProcessing
 using LinearAlgebra
 using JSON
 
-@testset "Newton census (N6)" begin
+@testset "Newton census" begin
     # double well: minima at (±1, 0), index-1 saddle at the origin
     dw(x) = (x[1]^2 - 1)^2 + x[2]^2
     lb = [-2.0, -2.0]

@@ -9,7 +9,7 @@ for all benchmark functions at their known critical points. This quantifies
 the numerical noise floor that the pipeline must handle.
 
 Run with:
-    julia --project=profiles/dev pkg/globtimpostprocessing/test/test_gradient_hessian_accuracy.jl
+    julia --project=test test/test_gradient_hessian_accuracy.jl
 """
 
 using Test

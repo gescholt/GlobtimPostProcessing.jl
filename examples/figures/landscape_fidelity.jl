@@ -1,12 +1,14 @@
 # landscape_fidelity.jl
 # Regenerate the landscape-fidelity illustration for GlobtimPostProcessing docs.
 #
-# Run with:
-#   julia --project=profiles/viz pkg/globtimpostprocessing/examples/figures/landscape_fidelity.jl
+# Run with (from the package root, in an environment with Globtim, CSV, DataFrames
+# and CairoMakie):
+#   julia examples/figures/landscape_fidelity.jl <refinement_comparison.csv>
 #
-# Output: pkg/globtimpostprocessing/docs/src/assets/landscape_fidelity.png
+# Output: docs/src/assets/landscape_fidelity.png
 #
-# Loads the deuflhard_2d_ext refinement_comparison CSV (deg 10) and overlays:
+# Loads a Deuflhard 2-D refinement-comparison CSV (raw and refined critical points of
+# a degree-10 approximant) and overlays:
 #   • objective contour
 #   • raw polynomial CPs (★)
 #   • refined CPs coloured by Morse type (●, ▲, ▼)
@@ -22,9 +24,9 @@ using ForwardDiff
 using LinearAlgebra
 using CairoMakie
 
-const REPO_ROOT = abspath(joinpath(@__DIR__, "..", "..", "..", ".."))
-const CSV_PATH  = joinpath(REPO_ROOT,
-    "globtim_results", "cluster", "deuflhard_2d", "refinement_comparison_deg_10.csv")
+length(ARGS) == 1 ||
+    error("usage: julia examples/figures/landscape_fidelity.jl <refinement_comparison.csv>")
+const CSV_PATH  = abspath(ARGS[1])
 const ASSET_DIR = abspath(joinpath(@__DIR__, "..", "..", "docs", "src", "assets"))
 isdir(ASSET_DIR) || mkpath(ASSET_DIR)
 
